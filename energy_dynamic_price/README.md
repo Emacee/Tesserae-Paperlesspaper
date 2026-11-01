@@ -31,6 +31,25 @@ morgen zijn verzonnen, want die waren nog niet gepubliceerd.)*
   beeld zijn. Zijn de prijzen van morgen er nog niet, dan staat er op lg
   "Prijzen morgen vanaf ~13:00".
 
+## Portrait / paperlesspaper
+
+Getest op portrait-celmaten van de paperlesspaper **OpenPaper 7**
+(480×800) en **OpenPaper L** (1200×1600), zowel schermvullend als
+half scherm:
+
+| OpenPaper 7, 480×800 | OpenPaper L, 1200×1600 |
+|---|---|
+| ![OpenPaper 7](screenshots/openpaper7_portrait.png) | ![OpenPaper L](screenshots/openpaper_l_portrait.png) |
+
+- De tekst in de grafiek volgt dezelfde schaal als de rest van de widget
+  (`clamp(14px, 7cqmin, 28px)`), dus ook in hoge, smalle cellen blijft hij
+  goed leesbaar.
+- In smalle cellen (≤ 560 px breed) laat de titelchip "40 NU" weg, zodat de
+  titel past. De huidige prijs staat dan in de legenda.
+- In smalle én lage cellen (zoals een halve OpenPaper 7, 480×400) toont de
+  legenda alleen de huidige prijs. Laagste en hoogste staan al in de chip en
+  op de lijn, zo houdt de grafiek zijn hoogte.
+
 ## Bronnen
 
 | Bron | Sleutel | Prijs |
