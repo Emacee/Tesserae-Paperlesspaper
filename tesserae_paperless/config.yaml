@@ -1,10 +1,7 @@
 name: Tesserae + paperlesspaper
 version: "0.1.0"
 slug: tesserae_paperless
-description: >-
-  Tesserae with the Overhead fork and a paperlesspaper bridge: compose e-ink
-  dashboards in Home Assistant and send them to paperlesspaper frames on
-  their own firmware, and switch what each frame shows.
+description: "Calm e-ink dashboards from Home Assistant on your paperlesspaper frame. No flashing: stock firmware, Tesserae widgets, one place to run it all."
 url: https://github.com/Emacee/Tesserae-Paperlesspaper
 arch:
   - aarch64

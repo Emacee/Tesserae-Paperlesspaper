@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <title>Tesserae Paperlesspaper</title>
+  <g transform="translate(0 0)">
+    <rect x="36.86" y="40.96" width="450.56" height="450.56" rx="25.60" fill="#000" opacity="0.18"/>
+    <rect x="30.72" y="30.72" width="450.56" height="450.56" rx="25.60" fill="#2A2C30"/>
+    <rect x="37.63" y="37.63" width="436.74" height="436.74" rx="20.48" fill="none" stroke="#45484E" stroke-width="4.10"/>
+    <rect x="69.12" y="69.12" width="373.76" height="373.76" rx="6.14" fill="#F4F1EA"/>
+    <rect x="69.12" y="69.12" width="373.76" height="9.22" fill="#000" opacity="0.08"/>
+    <rect x="123.11" y="122.39" width="59.14" height="59.14" rx="4.73" fill="#2E56B3" transform="rotate(-1.2 152.67 151.96)"/>
+    <rect x="191.49" y="122.89" width="59.14" height="59.14" rx="4.73" fill="#D8C42C" transform="rotate(0.8 221.06 152.46)"/>
+    <rect x="261.23" y="123.03" width="59.14" height="59.14" rx="4.73" fill="#D8C42C" transform="rotate(-0.6 290.80 152.60)"/>
+    <rect x="329.90" y="122.46" width="59.14" height="59.14" rx="4.73" fill="#E8ECEA" stroke="#C9CFCC" stroke-width="1.72" transform="rotate(1.1 359.47 152.03)"/>
+    <rect x="123.11" y="191.56" width="59.14" height="59.14" rx="4.73" fill="#2E56B3" transform="rotate(-1.2 152.67 221.13)"/>
+    <rect x="191.49" y="192.06" width="59.14" height="59.14" rx="4.73" fill="#D8C42C" transform="rotate(0.8 221.06 221.63)"/>
+    <rect x="261.23" y="192.20" width="59.14" height="59.14" rx="4.73" fill="#E8ECEA" stroke="#C9CFCC" stroke-width="1.72" transform="rotate(-0.6 290.80 221.77)"/>
+    <rect x="329.90" y="191.63" width="59.14" height="59.14" rx="4.73" fill="#A8322B" transform="rotate(1.1 359.47 221.20)"/>
+    <rect x="123.11" y="260.73" width="59.14" height="59.14" rx="4.73" fill="#3F7D4B" transform="rotate(-1.2 152.67 290.30)"/>
+    <rect x="191.49" y="261.23" width="59.14" height="59.14" rx="4.73" fill="#2E56B3" transform="rotate(0.8 221.06 290.80)"/>
+    <rect x="261.23" y="261.38" width="59.14" height="59.14" rx="4.73" fill="#A8322B" transform="rotate(-0.6 290.80 290.94)"/>
+    <rect x="329.90" y="260.80" width="59.14" height="59.14" rx="4.73" fill="#A8322B" transform="rotate(1.1 359.47 290.37)"/>
+    <rect x="123.11" y="329.90" width="59.14" height="59.14" rx="4.73" fill="#3F7D4B" transform="rotate(-1.2 152.67 359.47)"/>
+    <rect x="191.49" y="330.40" width="59.14" height="59.14" rx="4.73" fill="#3F7D4B" transform="rotate(0.8 221.06 359.97)"/>
+    <rect x="261.23" y="330.55" width="59.14" height="59.14" rx="4.73" fill="#1F2226" transform="rotate(-0.6 290.80 360.12)"/>
+    <rect x="329.90" y="329.97" width="59.14" height="59.14" rx="4.73" fill="#A8322B" transform="rotate(1.1 359.47 359.54)"/>
+  </g>
+</svg>
