@@ -8,5 +8,11 @@
   "highest": "Highest",
   "average": "Average",
   "tomorrow_pending": "Tomorrow's prices from ~13:00",
-  "no_data": "No prices available."
+  "no_data": "No prices available.",
+  "title_battery": "Electricity price & home battery",
+  "battery_soc": "SOC today",
+  "battery_target": "target",
+  "battery_grid": "grid charging",
+  "slot": "Slot",
+  "next": "next"
 }

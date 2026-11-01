@@ -193,3 +193,14 @@ def test_delay_against_normal(tmp_path: Path) -> None:
     files = list((tmp_path / "baseline").glob("*.json"))
     assert files and all("example" not in f.name for f in files)  # the file names do not carry the sensor
     assert json.loads(files[0].read_text())["weeks"] == 6
+
+
+def test_sensors_and_names_are_secrets() -> None:
+    manifest = json.loads((HERE / "plugin.json").read_text())
+    people = [o for o in manifest["cell_options"] if o["name"].startswith("person_")]
+    assert people and all(o.get("secret") is True and o.get("mask") is False for o in people)
+
+
+def test_language_switch(tmp_path: Path) -> None:
+    got = S.fetch({**OPTS, "language": "de"}, {}, ctx={"data_dir": str(tmp_path)}, now=at(2, 7, 45), core=FakeCore(STATES))
+    assert got["lang"] == "de" and got["strings"]["to_work"] == "Fahrzeit zur Arbeit"

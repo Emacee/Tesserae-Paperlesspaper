@@ -145,3 +145,19 @@ def test_fit_zoom() -> None:
     near = [(52.0, 5.0), (52.02, 5.03)]
     far = [(52.0, 5.0), (52.3, 5.5)]
     assert MAPS.fit_zoom(near, 800, 500) > MAPS.fit_zoom(far, 800, 500)
+
+
+def test_row_is_the_nearest_three_without_a_map(faked) -> None:
+    d = run(faked, {"layout": "row", "order": "lowest", "count": 6, "language": "nl"}, w=898, h=350)
+    assert d["layout"] == "row" and "map" not in d and d["lang"] == "nl"
+    kms = [a["km"] for a in d["aircraft"]]
+    assert len(kms) == 3 and kms == sorted(kms)  # nearest first, whatever the order option says
+    assert d["more"] == 4  # seven under the ceiling
+    a = d["aircraft"][0]
+    assert {"gs", "dir", "alt", "km"} <= set(a)
+
+
+def test_row_empty_sky(faked) -> None:
+    faked["feed"]["now"] = []
+    d = run(faked, {"layout": "row"})
+    assert d["state"] == "empty" and d["layout"] == "row" and "map" not in d

@@ -1,0 +1,154 @@
+{
+  "tesserae_compat": "1.x",
+  "name": "Home batteries",
+  "version": "0.1.0",
+  "kind": "widget",
+  "description": "Small rings for the batteries in the house: the home battery (a Deye inverter through the Solarman integration) with its state of charge, whether it charges, discharges or rests, its work mode and the target of the current time-of-use slot; and the car (Tibber or any integration) with its state of charge, charge limit, range in km and whether it charges or is plugged in. Requires the Home Assistant Core plugin.",
+  "icon": "ph-battery-charging",
+  "category": "home-assistant",
+  "locales": [
+    "en",
+    "nl",
+    "de"
+  ],
+  "supports": {
+    "sizes": [
+      "xs",
+      "sm",
+      "md",
+      "lg"
+    ]
+  },
+  "cell_options": [
+    {
+      "name": "home_device",
+      "type": "select",
+      "label": "Home battery: inverter",
+      "default": "",
+      "choices_from": "solarman_device",
+      "help": "A Deye inverter from the Solarman integration (the device of its Work Mode select). The widget reads its battery, work mode and time-of-use slots. Kept as a secret.",
+      "secret": true,
+      "mask": false
+    },
+    {
+      "name": "home_name",
+      "type": "string",
+      "label": "Home battery: name",
+      "default": "",
+      "help": "Blank: 'Home battery' in the widget's language.",
+      "secret": true,
+      "mask": false
+    },
+    {
+      "name": "grid_min_soc",
+      "type": "select",
+      "label": "Grid charging counts from",
+      "default": "10",
+      "advanced": true,
+      "choices": [
+        {
+          "value": "0",
+          "label": "a target above 0%"
+        },
+        {
+          "value": "5",
+          "label": "a target above 5%"
+        },
+        {
+          "value": "10",
+          "label": "a target above 10%"
+        },
+        {
+          "value": "20",
+          "label": "a target above 20%"
+        }
+      ],
+      "help": "A slot set to charge from the grid with a target this low charges nothing; it is not shown as grid charging."
+    },
+    {
+      "name": "car_soc",
+      "type": "select",
+      "label": "Car: state of charge",
+      "default": "",
+      "choices_from": "entity",
+      "help": "The car's battery in %. Leave blank for no car. All car sensors are kept as secrets.",
+      "secret": true,
+      "mask": false
+    },
+    {
+      "name": "car_target",
+      "type": "select",
+      "label": "Car: charge limit",
+      "default": "",
+      "choices_from": "entity",
+      "secret": true,
+      "mask": false
+    },
+    {
+      "name": "car_range",
+      "type": "select",
+      "label": "Car: range",
+      "default": "",
+      "choices_from": "entity",
+      "help": "In m, km or mi: shown in km.",
+      "secret": true,
+      "mask": false
+    },
+    {
+      "name": "car_charging",
+      "type": "select",
+      "label": "Car: charging",
+      "default": "",
+      "choices_from": "entity",
+      "secret": true,
+      "mask": false
+    },
+    {
+      "name": "car_plug",
+      "type": "select",
+      "label": "Car: plugged in",
+      "default": "",
+      "choices_from": "entity",
+      "secret": true,
+      "mask": false
+    },
+    {
+      "name": "car_name",
+      "type": "string",
+      "label": "Car: name",
+      "default": "",
+      "help": "Blank: 'Car' in the widget's language.",
+      "secret": true,
+      "mask": false
+    },
+    {
+      "name": "language",
+      "type": "select",
+      "label": "Language",
+      "default": "auto",
+      "choices": [
+        {
+          "value": "auto",
+          "label": "The dashboard's language"
+        },
+        {
+          "value": "nl",
+          "label": "Nederlands"
+        },
+        {
+          "value": "en",
+          "label": "English"
+        },
+        {
+          "value": "de",
+          "label": "Deutsch"
+        }
+      ],
+      "help": "The widget's words in this language, whatever the dashboard's. Set the same on every widget of a page for one language throughout."
+    }
+  ],
+  "render": {
+    "dither": "none",
+    "needs_network": true
+  }
+}

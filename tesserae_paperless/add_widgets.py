@@ -23,6 +23,7 @@ PLUGINS = (
     "energy_dynamic_price",
     "travel_time",
     "weather_today",
+    "home_batteries",
     "paperlesspaper_core",
 )
 DEVICES = ("paperlesspaper",)

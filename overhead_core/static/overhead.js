@@ -174,6 +174,73 @@ function clusterPage(d) {
    map. The map image comes from the server with the world pixel of its corner, so the page puts
    points on it with the same Web Mercator sum; the layout (one column of lines up to three
    aircraft, two from four) is the server's too, so the map is drawn at the size it is shown. */
+const L10N = {
+  en: { within: (km) => `within ${km} km`, below: (ft) => `below ${ft} ft`, nearest: (a, b) => (b > a ? `nearest ${a} of ${b}` : ''), more: (n) => `and ${n} more within reach`, none: 'Nothing within reach right now.', height: 'Track: height', speed: 'Track: speed', private: 'private', positions: (f) => `positions from ${f}` },
+  nl: { within: (km) => `binnen ${km} km`, below: (ft) => `onder ${ft} ft`, nearest: (a, b) => (b > a ? `dichtstbij ${a} van ${b}` : ''), more: (n) => `en nog ${n} binnen bereik`, none: 'Niets binnen bereik op dit moment.', height: 'Spoor: hoogte', speed: 'Spoor: snelheid', private: 'privé', positions: (f) => `posities van ${f}` },
+  de: { within: (km) => `im Umkreis von ${km} km`, below: (ft) => `unter ${ft} ft`, nearest: (a, b) => (b > a ? `nächste ${a} von ${b}` : ''), more: (n) => `und ${n} weitere in Reichweite`, none: 'Gerade nichts in Reichweite.', height: 'Spur: Höhe', speed: 'Spur: Geschwindigkeit', private: 'privat', positions: (f) => `Positionen von ${f}` },
+};
+function langOf(d) { const l = String(d.lang && d.lang !== 'auto' ? d.lang : d.locale || 'en').slice(0, 2); return L10N[l] ? l : 'en'; }
+function areaText(d, L, nf, shown) {
+  const bits = [L.within(nf.format(d.radius_km || 0))];
+  if (d.ceiling_ft) bits.push(L.below(nf.format(d.ceiling_ft)));
+  const near = L.nearest(shown, shown + (Number(d.more) || 0));
+  return bits.join(', ') + (near ? ` · ${near}` : '');
+}
+function uniHead(d, L, nf, shown, s) {
+  return `<div class="uh" style="font-size:${Math.round(21 * s)}px"><span class="uh-t">${esc(d.title || 'Overhead')}</span><span class="uh-c" style="font-size:${Math.round(19 * s)}px">${esc(areaText(d, L, nf, shown))}</span></div>`;
+}
+const UNI_CSS = `
+  .oh.font-page .uh, .oh.font-page .mp, .oh.font-page .rw { font-family: var(--font-family, inherit); }
+  .uh { display: flex; align-items: baseline; gap: 12px; padding: 14px 20px 8px; flex: none; border-bottom: 1.5px solid var(--ink); margin: 0 8px; }
+  .uh-t { font-weight: 800; letter-spacing: .06em; text-transform: uppercase; white-space: nowrap; }
+  .uh-c { margin-left: auto; font-weight: 700; opacity: .65; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .uf { flex: none; font-size: 12px; font-weight: 600; opacity: .6; padding: 2px 20px 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+`;
+function uniFoot(d, L) {
+  if (d.footer === 'hide') return '';
+  const feed = String(d.attribution || '').replace(/^positions from /, '');
+  const bits = [...(d.credits || []), feed && d.attribution !== 'positions from your receiver' ? L.positions(feed) : ''].filter(Boolean);
+  return bits.length ? `<div class="uf">${bits.map(esc).join(' · ')}</div>` : '';
+}
+
+/* ---- one row without the map: the nearest three ----
+   Each aircraft's registration over its picture, then its type and operator, then its height,
+   speed in km/h, distance and a compass arrow pointing where it is from the place. */
+function compassArrow(deg, size) {
+  return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" style="vertical-align:-0.2em;transform:rotate(${Math.round(Number(deg) || 0)}deg)" aria-hidden="true"><circle cx="12" cy="12" r="10.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 4.5 L16.5 15 L12 12.6 L7.5 15 Z" fill="currentColor"/></svg>`;
+}
+function rowPage(d) {
+  const W0 = d.cell_w || 900, H0 = d.cell_h || 350;
+  const s = Math.max(0.6, Math.min(1.3, Math.min(W0 / 900, H0 / 350)));
+  const lang = langOf(d), L = L10N[lang];
+  const nf = new Intl.NumberFormat(lang, { maximumFractionDigits: 1 });
+  const list = (d.aircraft || []).slice(0, 3);
+  const cards = list.map((a) => {
+    const who = a.air === 'private' ? L.private : a.air || '';
+    const kmh = a.gs ? `${nf.format(Math.round((a.gs * 1.852) / 5) * 5)} km/h` : '';
+    const facts = [a.ground ? '' : `${nf.format(a.alt || 0)} ft`, kmh, `${nf.format(a.km || 0)} km`].filter(Boolean).join(' · ');
+    return `<div class="rw-card">
+      <div class="rw-reg" style="font-size:${Math.round(27 * s)}px">${esc(a.reg || a.cs)}</div>
+      <div class="rw-pic">${picture(a, 'rw-img')}</div>
+      <div class="rw-typ" style="font-size:${Math.round(18 * s)}px">${esc([a.typ, who].filter(Boolean).join(' · '))}</div>
+      <div class="rw-facts" style="font-size:${Math.round(18 * s)}px">${esc(facts)} ${compassArrow(a.dir, Math.round(22 * s))}</div>
+    </div>`;
+  }).join('<div class="rw-rule"></div>');
+  const body = list.length ? `<div class="rw">${cards}</div>` : `<div class="rw rw-none" style="font-size:${Math.round(24 * s)}px">${esc(L.none)}</div>`;
+  return `${uniHead(d, L, nf, list.length, s)}${body}${uniFoot(d, L)}
+    <style>${UNI_CSS}
+      .rw { flex: 1; min-height: 0; display: flex; align-items: stretch; padding: 10px 8px 4px; }
+      .rw-none { align-items: center; justify-content: center; font-weight: 700; opacity: .65; }
+      .rw-card { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; align-items: center; text-align: center; }
+      .rw-rule { width: 1px; background: currentColor; opacity: .18; margin: 18px 4px; }
+      .rw-reg { font-weight: 800; letter-spacing: .03em; }
+      .rw-pic { flex: 1; min-height: 0; width: 100%; display: flex; align-items: center; justify-content: center; padding: 4px 10px; box-sizing: border-box; }
+      .rw-pic .rw-img { max-width: 100%; max-height: 100%; object-fit: contain; } .rw-pic img.rw-img.cut { mix-blend-mode: multiply; } .rw-pic .oh-nopic.rw-img { width: 55%; height: 100%; }
+      .rw-typ { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+      .rw-facts { font-weight: 700; white-space: nowrap; margin-top: 2px; }
+    </style>`;
+}
+
 const BADGES = ['#2157ba', '#2f2f2c', '#7b3fa8', '#c2407a', '#5b6670', '#8a5a2b'];
 function mapScale(w, h) { return Math.max(0.55, Math.min(1.4, Math.min(w / 860, (h / 880) * 1.2))); }
 function mercator(lat, lon, z) {
@@ -242,16 +309,18 @@ function mapPage(d) {
     list.slice().reverse().forEach((a, ri) => { svg += trackSvg(a, n - 1 - ri, project, ramp, key, hi); });
   }
   const gradient = [0, 0.5, 1].map((o) => `<stop offset="${o}" stop-color="${ramp(o)}"/>`).join('');
-  const legend = `<div class="mp-legend" style="font-size:${Math.round(14 * s)}px">${key === 'speed' ? 'Track: speed' : 'Track: height'} <span>0</span><svg width="${Math.round(110 * s)}" height="10"><defs><linearGradient id="mp-g">${gradient}</linearGradient></defs><rect width="100%" height="10" rx="5" fill="url(#mp-g)"/></svg><span>${key === 'speed' ? '200 kt' : `${hi.toLocaleString('en')} ft`}</span></div>`;
+  const lang = langOf(d), L = L10N[lang];
+  const nf = new Intl.NumberFormat(lang, { maximumFractionDigits: 1 });
+  const legend = `<div class="mp-legend" style="font-size:${Math.round(14 * s)}px">${esc(key === 'speed' ? L.speed : L.height)} <span>0</span><svg width="${Math.round(110 * s)}" height="10"><defs><linearGradient id="mp-g">${gradient}</linearGradient></defs><rect width="100%" height="10" rx="5" fill="url(#mp-g)"/></svg><span>${key === 'speed' ? '200 kt' : `${nf.format(hi)} ft`}</span></div>`;
   const mapBox = `<div class="mp-map" style="width:${mw}px;height:${mh}px">${m ? `<img src="${m.src}" alt="" decoding="sync">` : ''}<svg width="${mw}" height="${mh}">${svg}</svg>${n ? legend : ''}${m ? `<span class="mp-credit">${esc(m.credit || '')}</span>` : ''}</div>`;
   const cw = (W0 - 8 * s) / cols;
   const items = list.map((a, k) => `<div class="mp-item" style="width:${cw - 12 * s}px;height:${rowH - 8 * s}px">
       <div class="mp-pic" style="width:${(cols === 1 ? 150 : 104) * s}px">${picture(a, 'mp-img')}</div>${badge(k, Math.round((cols === 1 ? 30 : 28) * s))}
       <div class="mp-cap" style="font-size:${(cols === 1 ? 20 : 17) * s}px"><b style="font-size:${(cols === 1 ? 27 : 22) * s}px">${esc(a.reg || a.cs)}</b><span>${(a.lines || []).map(esc).join(' · ')}</span></div></div>`).join('');
-  const more = d.more ? `<div class="mp-more" style="font-size:${17 * s}px">and ${d.more} more within reach</div>` : '';
-  const empty = !n ? `<div class="mp-none" style="font-size:${26 * s}px">Nothing within reach right now.</div>` : '';
-  return `${head(d)}<div class="mp" style="--mpg:${18 * s}px">${mapBox}${empty}<div class="mp-list" style="--cols:${cols}">${items}</div>${more}</div>${foot(d)}
-    <style>
+  const more = d.more ? `<div class="mp-more" style="font-size:${17 * s}px">${esc(L.more(d.more))}</div>` : '';
+  const empty = !n ? `<div class="mp-none" style="font-size:${26 * s}px">${esc(L.none)}</div>` : '';
+  return `${uniHead({ ...d, more: 0 }, L, nf, n, s)}<div class="mp" style="--mpg:${18 * s}px">${mapBox}${empty}<div class="mp-list" style="--cols:${cols}">${items}</div>${more}</div>${uniFoot(d, L)}
+    <style>${UNI_CSS}
       .mp { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; padding: .4cqmin ${4 * s}px 0; }
       .mp-map { position: relative; flex: none; border-radius: 12px; overflow: hidden; border: 1.5px solid #cfcac0; }
       .mp-map > img, .mp-map > svg { position: absolute; left: 0; top: 0; width: 100%; height: 100%; }
@@ -262,10 +331,10 @@ function mapPage(d) {
       .mp-pic { flex: none; height: 100%; display: flex; align-items: center; justify-content: center; }
       .mp-pic .mp-img { max-width: 100%; max-height: 100%; object-fit: contain; } .mp-pic img.mp-img.cut { mix-blend-mode: multiply; } .mp-pic .oh-nopic.mp-img { width: 70%; aspect-ratio: 1; }
       .mp-badge { flex: none; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; color: #fff; font-family: Inter, Arial, sans-serif; font-weight: 800; }
-      .mp-cap { min-width: 0; line-height: 1.22; } .mp-cap b { display: block; font-family: var(--sc); font-weight: normal; letter-spacing: .03em; }
-      .mp-cap span { font-style: italic; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-      .mp-more { width: 100%; text-align: right; font-style: italic; opacity: .75; padding-right: ${10 * s}px; }
-      .mp-none { font-family: var(--serif); font-style: italic; opacity: .7; margin-top: ${16 * s}px; }
+      .mp-cap { min-width: 0; line-height: 1.22; } .mp-cap b { display: block; font-family: var(--sc); font-weight: 800; letter-spacing: .03em; }
+      .mp-cap span { font-weight: 600; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .mp-more { width: 100%; text-align: right; font-weight: 600; opacity: .7; padding-right: ${10 * s}px; }
+      .mp-none { font-weight: 700; opacity: .65; margin-top: ${16 * s}px; }
     </style>`;
 }
 
@@ -416,7 +485,7 @@ function scenePage(d) {
 export async function render(shadow, ctx, widget) {
   const d = ctx.data || {};
   const size = ctx.cell?.size || 'md';
-  d.cell_w = ctx.cell?.w; d.cell_h = ctx.cell?.h;
+  d.cell_w = ctx.cell?.w; d.cell_h = ctx.cell?.h; d.locale = ctx.locale;
   if (widget === 'map' && shadow.host && typeof getComputedStyle !== 'undefined') {
     // the tracks take the page's accents, the energy chart's: cheap/low, middle, dear/high
     const cs = getComputedStyle(shadow.host);
@@ -426,6 +495,7 @@ export async function render(shadow, ctx, widget) {
   let body;
   if (!d.widget && !d.error) body = `<div class="msg"><div class="msg-t">Overhead</div><div class="msg-b">No data from the server yet.</div></div>`;
   else if (d.state === 'error' || d.error) body = message(d, d.title || 'Overhead', d.error || 'Something went wrong.', d.hint);
+  else if (d.state === 'empty' && widget === 'map' && d.layout === 'row') body = rowPage({ ...d, aircraft: [] });
   else if (d.state === 'empty' && widget === 'map' && d.map) body = mapPage({ ...d, aircraft: [] });
   else if (d.state === 'empty') body = message(d, d.title || 'Overhead', 'Nothing in the air within reach.', d.hint);
   else if (d.state === 'painting') body = message(d, d.title || 'Overhead', 'Nothing painted yet.', d.hint);
@@ -440,7 +510,7 @@ export async function render(shadow, ctx, widget) {
       const made = await packCluster(d);
       if (made && made.src) { await predecode(made.src); body = packedPage(d, made); }
       else body = clusterPage(d);
-    } else if (widget === 'map') body = mapPage(d);
+    } else if (widget === 'map') body = d.layout === 'row' ? rowPage(d) : mapPage(d);
     else body = widget === 'photo' ? photoPage(d) : widget === 'plate' ? (['pass', 'tiles', 'poster', 'split'].includes(d.look) ? modernPage(d) : platePage(d)) : widget === 'scene' ? scenePage(d) : clusterPage(d);
   }
   const paper = PAPER[d.paper] || PAPER.cream;

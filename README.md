@@ -68,6 +68,7 @@ An unchanged page is never uploaded twice.
 | **Energy, Dynamic Price**: EPEX and Tibber electricity prices for today and tomorrow | [`energy_dynamic_price/`](energy_dynamic_price/) |
 | **Travel time**: to work in the morning, home in the afternoon, with the delay against normal, from Waze (or other) sensors in Home Assistant | [`travel_time/`](travel_time/) |
 | **Weather, Today**: today's weather as a column, hour by hour, for a narrow portrait cell | [`weather_today/`](weather_today/) |
+| **Home batteries**: small rings for the home battery (Deye via Solarman) and the car, with state of charge, target, mode and range | [`home_batteries/`](home_batteries/) |
 
 Each widget folder is a self-contained Tesserae plugin (`plugin.json` +
 `server.py`, and `client.js` for widgets).
@@ -128,19 +129,27 @@ existing cells keep working). The version is `0.11.3.1`: a catalog update to
 
 ## Example: a paperlesspaper L page (1200 × 1600, portrait)
 
-Overhead, travel time, electricity prices and today's weather on one
-portrait page. Set the device's panel to portrait (1200 by 1600), then:
+Batteries, travel time, the aircraft overhead, electricity prices with the
+home battery, and today's weather on one portrait page. Set the device's
+panel to portrait (1200 by 1600), then:
 
 | Cell | Widget | Settings |
 |---|---|---|
-| Left, top (about 860 × 880) | **Overhead: Map** | Within 10 km, Below 1,500 ft, Colour of the tracks: height or speed |
-| Left, middle (about 860 × 240) | **Travel time** | Per person a name and the two sensors; Home from 14:00; At the weekend: Hide |
-| Left, bottom (about 860 × 420) | **Energy, Dynamic Price** | Today, plus tomorrow when available |
-| Right, full height (about 290 × 1570) | **Weather, Today** | Your place; Hours from 07:00 |
+| Left, top (about 440 × 380) | **Home batteries** | The inverter and the car's sensors |
+| Left, top right (about 440 × 380) | yours | Free room beside the rings |
+| Left, second (about 900 × 230) | **Travel time** | Per person a name and the two sensors; Home from 14:00; At the weekend: Hide |
+| Left, third (about 900 × 350) | **Overhead: Map** | Layout: One row; Within 10 km; Below 1,500 ft |
+| Left, bottom (about 900 × 550) | **Energy, Dynamic Price** | Home battery: the inverter |
+| Right, full height (about 250 × 1570) | **Weather, Today** | Your place; Hours from 07:00 |
+
+Set **Language** to the same on every widget for one language throughout.
+Every Home Assistant entity the page reads is picked in the cell's options
+and kept as a secret: it never appears in the page's markup or in an
+exported template, and none is in this repository.
 
 A cell cannot give its room away, so at the weekend the Travel time cell is
-just empty. For a weekend page with a taller map, make a second page
-without that cell and schedule it for Saturday and Sunday.
+just empty. For a weekend page without it, make a second page and schedule
+it for Saturday and Sunday.
 
 ## Changelog
 

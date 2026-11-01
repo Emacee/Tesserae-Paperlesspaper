@@ -8,5 +8,11 @@
   "highest": "Höchster",
   "average": "Durchschnitt",
   "tomorrow_pending": "Preise für morgen ab ~13:00",
-  "no_data": "Keine Preise verfügbar."
+  "no_data": "Keine Preise verfügbar.",
+  "title_battery": "Strompreis & Hausbatterie",
+  "battery_soc": "SOC heute",
+  "battery_target": "Ziel",
+  "battery_grid": "Netzladen",
+  "slot": "Zeitfenster",
+  "next": "nächstes"
 }

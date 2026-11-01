@@ -54,7 +54,10 @@ export function iconSvg(name, size) {
 
 export default function render(shadow, ctx) {
   const data = ctx?.data ?? {};
-  const t = ctx?.t || ((key, fallback) => fallback ?? key);
+  // the cell's own language, when it names one, before the dashboard's
+  const own = data.strings && typeof data.strings === "object" ? data.strings : null;
+  const t = (key, fallback) => (own && key in own ? own[key] : ctx?.t ? ctx.t(key, fallback) : fallback ?? key);
+  const locale = data.lang || ctx?.locale || "en";
   const w = shadow.host?.clientWidth || ctx?.cell?.w || 300;
   const h = shadow.host?.clientHeight || ctx?.cell?.h || 1500;
   const style = `
@@ -89,7 +92,7 @@ export default function render(shadow, ctx) {
   let date = data.date || "";
   try {
     const d = new Date(`${data.date}T12:00:00`);
-    date = new Intl.DateTimeFormat(ctx?.locale || "en", { weekday: "short", day: "numeric", month: "long" }).format(d).replace(".", "");
+    date = new Intl.DateTimeFormat(locale, { weekday: "short", day: "numeric", month: "long" }).format(d).replace(".", "");
   } catch (_) { /* the ISO date then */ }
   const unit = data.unit || "°";
   const cond = t(`cond_${data.now.cond}`, data.now.cond);
@@ -102,7 +105,7 @@ export default function render(shadow, ctx) {
       <div class="wt-cond" style="font-size:${23 * s}px;margin:${8 * s}px ${12 * s}px 0">${esc(cond)}</div>
       <div class="wt-range" style="font-size:${21 * s}px;margin-top:${14 * s}px">
         <span class="wt-hi">↑${esc(data.max ?? "–")}°</span> <span class="wt-lo">↓${esc(data.min ?? "–")}°</span>
-        · <span class="wt-mm">${esc(String(data.mm ?? 0).replace(".", (ctx?.locale || "en").startsWith("en") ? "." : ","))} ${esc(t("mm", "mm"))}</span>
+        · <span class="wt-mm">${esc(String(data.mm ?? 0).replace(".", locale.startsWith("en") ? "." : ","))} ${esc(t("mm", "mm"))}</span>
       </div>
     </div>
     <div class="wt-rule" style="margin:${22 * s}px ${22 * s}px ${12 * s}px"></div>`;

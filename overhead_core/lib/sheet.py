@@ -89,6 +89,9 @@ MAP_MAX = 6  # the map numbers its aircraft with a badge each: six stay apart on
 TRACK_MINUTES = ("10", "30", "60")
 TRACK_COLOURS = ("altitude", "speed")
 MAP_STYLES = ("grey", "colour")
+MAP_LAYOUTS = ("map", "row")  # the map with a list under it, or one row of the nearest three without it
+ROW_MAX = 3
+LANGS = ("auto", "nl", "en", "de")
 PICTURE_PX = 700
 HERO_PX = 1400
 PHOTO_PX = 1600
@@ -616,8 +619,13 @@ def fetch(
     ceiling = int(_choice(options.get("max_alt_ft"), CEILINGS, "") or 0)
     order = _choice(options.get("order"), ORDERS)
     count = _int(options.get("count"), 8, 1, MAX_COUNT)
+    layout = "map"
     if widget == "map":
         count = _int(options.get("count"), MAP_MAX, 1, MAP_MAX)
+        layout = _choice(options.get("layout"), MAP_LAYOUTS)
+        if layout == "row":
+            # one row: the nearest three, whatever the order says
+            count, order = min(count, ROW_MAX), "nearest"
     if widget in ("photo", "plate", "scene"):
         count = 1 + (_int(options.get("strip"), 5, 0, 8) if widget == "photo" else 0)
     include_ground = str(options.get("include_ground") or "").lower() in (
@@ -725,7 +733,7 @@ def fetch(
         "backdrop": backdrop,
         "photo_fit": _choice(options.get("photo_fit"), ("cover", "contain")),
         "font_css": N.font_css(("im_fell", "im_fell_sc", "archivo_narrow")),
-        "font": _choice(options.get("font"), FONTS),
+        "font": _choice(options.get("font"), FONTS, "page" if widget == "map" else ""),
         "scale": _int(options.get("scale"), 100, 40, 100),
         "packing": _choice(options.get("packing"), PACKINGS),
     }
@@ -815,7 +823,9 @@ def fetch(
         else None
     )
     if not shown and not ufo:
-        if widget == "map":
+        if widget == "map" and layout == "row":
+            base.update(layout="row", radius_km=radius, ceiling_ft=ceiling, lang=_choice(options.get("language"), LANGS))
+        elif widget == "map":
             # an empty sky on the map: the place and its radius, nothing on them
             base.update(
                 home=[float(place[0]), float(place[1])],
@@ -1178,7 +1188,15 @@ def fetch(
         ]  # an unpainted contact is no contact
     base["aircraft"] = shown
     base["shown"] = len(shown)
-    if widget == "map":
+    if widget == "map" and layout == "row":
+        base.update(
+            layout="row",
+            more=max(0, len(eligible) - len(shown)),
+            radius_km=radius,
+            ceiling_ft=ceiling,
+            lang=_choice(options.get("language"), LANGS),
+        )
+    elif widget == "map":
         # the tracks come from the watch on the place, kept whatever the page shows
         w_ = watch_of(options, source, place, radius, data_dir, ua) if not err else None
         if w_ is not None and period != "since":
@@ -1195,6 +1213,8 @@ def fetch(
             track_minutes=minutes,
             show_radius=str(options.get("show_radius", True)).lower() not in ("false", "0", "off", "no"),
             map=map_of(shown, place, radius, ctx, data_dir, ua, _choice(options.get("map_style"), MAP_STYLES), more > 0),
+            layout="map",
+            lang=_choice(options.get("language"), LANGS),
         )
         if base["map"] and base["map"].get("credit"):
             credits.insert(0, base["map"]["credit"])

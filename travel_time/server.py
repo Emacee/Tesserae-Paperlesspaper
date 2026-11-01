@@ -266,7 +266,7 @@ def _int(value: Any, default: int, low: int, high: int) -> int:
         return default
 
 
-def fetch(
+def _fetch(
     options: dict[str, Any],
     settings: dict[str, Any],
     *,
@@ -338,3 +338,30 @@ def fetch(
         "people": rows,
         "source": "Waze" if any(r["waze"] for r in rows) else "",
     }
+
+
+# ----------------------------------------------------------------------
+# The widget's own language (a cell option), whatever the dashboard's
+# ----------------------------------------------------------------------
+LANGUAGES = ("nl", "en", "de")
+
+
+def strings_for(options: dict[str, Any]) -> tuple[str, dict[str, str]]:
+    """(language, its strings) when the cell names a language, else ("", {}):
+    the page then keeps the dashboard's own."""
+    lang = str(options.get("language") or "auto")
+    if lang not in LANGUAGES:
+        return "", {}
+    try:
+        got = json.loads((Path(__file__).resolve().parent / "strings" / f"{lang}.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return lang, {}
+    return lang, got if isinstance(got, dict) else {}
+
+
+def fetch(options: dict[str, Any], settings: dict[str, Any], *, ctx: dict[str, Any], **kw: Any) -> dict[str, Any]:
+    data = _fetch(options, settings, ctx=ctx, **kw)
+    lang, strings = strings_for(options)
+    if lang and isinstance(data, dict):
+        data["lang"], data["strings"] = lang, strings
+    return data

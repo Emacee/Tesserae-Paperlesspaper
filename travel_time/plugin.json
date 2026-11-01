@@ -25,7 +25,9 @@
       "type": "string",
       "label": "Person 1: name",
       "default": "",
-      "help": "Shown on the page. Blank uses the sensor's name."
+      "help": "Shown on the page. Blank uses the sensor's name. Kept as a secret, like the sensors: never in the page's markup or an exported template.",
+      "secret": true,
+      "mask": false
     },
     {
       "name": "person_1_to_work",
@@ -33,7 +35,9 @@
       "label": "Person 1: to work",
       "default": "",
       "choices_from": "travel_sensor",
-      "help": "A travel-time sensor in Home Assistant (Waze Travel Time, Google Maps Travel Time, or any sensor in minutes) from home to work."
+      "help": "A travel-time sensor in Home Assistant (Waze Travel Time, Google Maps Travel Time, or any sensor in minutes) from home to work.",
+      "secret": true,
+      "mask": false
     },
     {
       "name": "person_1_to_home",
@@ -41,47 +45,61 @@
       "label": "Person 1: home",
       "default": "",
       "choices_from": "travel_sensor",
-      "help": "The same, from work to home."
+      "help": "The same, from work to home.",
+      "secret": true,
+      "mask": false
     },
     {
       "name": "person_2_name",
       "type": "string",
       "label": "Person 2: name",
-      "default": ""
+      "default": "",
+      "secret": true,
+      "mask": false
     },
     {
       "name": "person_2_to_work",
       "type": "select",
       "label": "Person 2: to work",
       "default": "",
-      "choices_from": "travel_sensor"
+      "choices_from": "travel_sensor",
+      "secret": true,
+      "mask": false
     },
     {
       "name": "person_2_to_home",
       "type": "select",
       "label": "Person 2: home",
       "default": "",
-      "choices_from": "travel_sensor"
+      "choices_from": "travel_sensor",
+      "secret": true,
+      "mask": false
     },
     {
       "name": "person_3_name",
       "type": "string",
       "label": "Person 3: name",
-      "default": ""
+      "default": "",
+      "secret": true,
+      "mask": false
     },
     {
       "name": "person_3_to_work",
       "type": "select",
       "label": "Person 3: to work",
       "default": "",
-      "choices_from": "travel_sensor"
+      "choices_from": "travel_sensor",
+      "secret": true,
+      "mask": false
     },
     {
       "name": "person_3_to_home",
       "type": "select",
       "label": "Person 3: home",
       "default": "",
-      "choices_from": "travel_sensor"
+      "choices_from": "travel_sensor",
+      "secret": true,
+      "mask": false
     },
     {
       "name": "switch_hour",
@@ -210,6 +228,31 @@
       "default": "",
       "advanced": true,
       "help": "Blank: 'Travel time to work' or 'Travel time home' in the display language."
+    },
+    {
+      "name": "language",
+      "type": "select",
+      "label": "Language",
+      "default": "auto",
+      "choices": [
+        {
+          "value": "auto",
+          "label": "The dashboard's language"
+        },
+        {
+          "value": "nl",
+          "label": "Nederlands"
+        },
+        {
+          "value": "en",
+          "label": "English"
+        },
+        {
+          "value": "de",
+          "label": "Deutsch"
+        }
+      ],
+      "help": "The widget's words in this language, whatever the dashboard's. Set the same on every widget of a page for one language throughout."
     }
   ],
   "render": {

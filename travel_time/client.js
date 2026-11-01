@@ -12,7 +12,10 @@ const CAR = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 16V12l2-5h1
 
 export default function render(shadow, ctx) {
   const data = ctx?.data ?? {};
-  const t = ctx?.t || ((key, fallback) => fallback ?? key);
+  // the cell's own language, when it names one, before the dashboard's
+  const own = data.strings && typeof data.strings === "object" ? data.strings : null;
+  const t = (key, fallback) => (own && key in own ? own[key] : ctx?.t ? ctx.t(key, fallback) : fallback ?? key);
+  const locale = data.lang || ctx?.locale || "en";
   const w = shadow.host?.clientWidth || ctx?.cell?.w || 600;
   const h = shadow.host?.clientHeight || ctx?.cell?.h || 240;
   const title = (data.title || "").trim()

@@ -138,11 +138,56 @@
       "help": "Only aircraft at or below this height (barometric, in feet) are shown; the rest are left out before the count is taken. With a small radius, 1,000 or 1,500 ft leaves the helicopters, light aircraft and whatever is landing or taking off close by; airliners at cruise never show. Aircraft on the ground count as 0 ft and follow Include aircraft on the ground."
     },
     {
+      "name": "layout",
+      "type": "select",
+      "label": "Layout",
+      "default": "map",
+      "choices": [
+        {
+          "value": "map",
+          "label": "The map, with a line for each aircraft under it"
+        },
+        {
+          "value": "row",
+          "label": "One row without the map: the nearest three"
+        }
+      ],
+      "help": "One row shows the three nearest aircraft side by side, each with its registration, picture, type and operator, height, speed in km/h, distance and a compass arrow pointing where it is from the place; any more within reach are counted in the title line."
+    },
+    {
       "name": "count",
       "type": "number",
       "label": "How many",
       "default": 6,
-      "help": "1 to 6: fewer show when fewer are within reach, and the rest are counted under the list."
+      "help": "1 to 6 on the map (3 in one row): fewer show when fewer are within reach, and the rest are counted.",
+      "show_if": {
+        "layout": "map"
+      }
+    },
+    {
+      "name": "language",
+      "type": "select",
+      "label": "Language",
+      "default": "auto",
+      "choices": [
+        {
+          "value": "auto",
+          "label": "The dashboard's language"
+        },
+        {
+          "value": "nl",
+          "label": "Nederlands"
+        },
+        {
+          "value": "en",
+          "label": "English"
+        },
+        {
+          "value": "de",
+          "label": "Deutsch"
+        }
+      ],
+      "help": "The page's words (title line, lines under each aircraft, legend) in this language. Set the same on every widget of a page for one language throughout."
     },
     {
       "name": "track_colour",
@@ -159,6 +204,9 @@
           "label": "Ground speed: green slow, through ochre, to red fast"
         }
       ],
+      "show_if": {
+        "layout": "map"
+      },
       "help": "The same colours as the energy price chart. Height runs from the ground to the ceiling under Below (5,000 ft without one); speed from 0 to 200 knots. The badges stay in a colour of their own, one per aircraft."
     },
     {
@@ -180,6 +228,9 @@
           "label": "Hour"
         }
       ],
+      "show_if": {
+        "layout": "map"
+      },
       "help": "The tracks come from a watch on the place, asked every minute (every thirty seconds with a receiver of your own) while a page asks for it and for three hours after; a page's first render has only where each aircraft is now."
     },
     {
@@ -197,6 +248,9 @@
           "label": "In OpenStreetMap's own colours"
         }
       ],
+      "show_if": {
+        "layout": "map"
+      },
       "advanced": true
     },
     {
@@ -205,6 +259,9 @@
       "label": "Radius ring",
       "default": true,
       "help": "A dashed ring at the distance under Within, round the place.",
+      "show_if": {
+        "layout": "map"
+      },
       "advanced": true
     },
     {
@@ -1322,7 +1379,7 @@
       "name": "font",
       "type": "select",
       "label": "Typeface",
-      "default": "fell",
+      "default": "page",
       "choices": [
         {
           "value": "fell",

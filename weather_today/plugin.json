@@ -93,6 +93,31 @@
           "label": "Imperial (°F)"
         }
       ]
+    },
+    {
+      "name": "language",
+      "type": "select",
+      "label": "Language",
+      "default": "auto",
+      "choices": [
+        {
+          "value": "auto",
+          "label": "The dashboard's language"
+        },
+        {
+          "value": "nl",
+          "label": "Nederlands"
+        },
+        {
+          "value": "en",
+          "label": "English"
+        },
+        {
+          "value": "de",
+          "label": "Deutsch"
+        }
+      ],
+      "help": "The widget's words in this language, whatever the dashboard's. Set the same on every widget of a page for one language throughout."
     }
   ],
   "render": {

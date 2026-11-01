@@ -11,6 +11,14 @@ under its version number.
 
 ## [Unreleased]
 
+### Changed
+- One typeface across the new widgets: Overhead: Map now defaults to the
+  dashboard's own font, like Travel time, Weather, Today, Energy, Dynamic
+  Price and Home batteries; text varies only in size and weight, with
+  nothing thin at small sizes, for e-paper.
+- Travel time: the people's names and sensors are kept as secrets: never
+  in the page's markup, and left out of an exported template.
+
 ### Added
 - **Overhead: Map**: the aircraft near your place on an OpenStreetMap map,
   quietened for e-paper. Each one's track over the last 10, 30 or 60
@@ -30,6 +38,24 @@ under its version number.
 - **Weather, Today**: today's weather as a column for a narrow portrait
   cell: the weather now, the day's high, low and rain, and below it every
   hour with its icon, temperature and a rain bar. Open-Meteo, no key.
+- **Home batteries**: small rings for the home battery (a Deye inverter
+  through the Solarman integration: state of charge, charging,
+  discharging or resting, work mode, the target of the current
+  time-of-use slot) and the car (state of charge, charge limit, range in
+  km, charging or plugged in), with small icons drawn for e-paper.
+- Energy, Dynamic Price: **the home battery over the prices**. Pick a Deye
+  inverter and the chart shows its time-of-use targets as a dashed blue
+  line on a 0–100% axis of its own, slots that charge from the grid drawn
+  heavy with a pylon, the current slot outlined, and the battery's state
+  of charge today as a pale blue line. The legend names the current and
+  the next slot.
+- Overhead: Map, **one row without the map**: the three nearest aircraft
+  side by side, each with its registration over its picture, type and
+  operator, height, speed in km/h, distance and a compass arrow pointing
+  where it is from the place.
+- A **Language** switch on Travel time, Weather, Today, Energy, Dynamic
+  Price, Home batteries and Overhead: Map (Nederlands, English, Deutsch,
+  or the dashboard's own), so a page can be one language throughout.
 - Overhead: a **Paper** choice "The page's own", so a widget has no paper of
   its own and sits on the dashboard's background (the default for the map).
 

@@ -141,7 +141,7 @@ def _round(v: Any) -> int | None:
     return int(round(n)) if n is not None else None
 
 
-def fetch(options: dict[str, Any], settings: dict[str, Any], *, ctx: dict[str, Any]) -> dict[str, Any]:
+def _fetch(options: dict[str, Any], settings: dict[str, Any], *, ctx: dict[str, Any]) -> dict[str, Any]:
     del settings
     label = str(options.get("label") or "")
     lat_raw, lon_raw = options.get("latitude"), options.get("longitude")
@@ -180,3 +180,29 @@ def fetch(options: dict[str, Any], settings: dict[str, Any], *, ctx: dict[str, A
     view["label"] = label
     return view
 
+
+# ----------------------------------------------------------------------
+# The widget's own language (a cell option), whatever the dashboard's
+# ----------------------------------------------------------------------
+LANGUAGES = ("nl", "en", "de")
+
+
+def strings_for(options: dict[str, Any]) -> tuple[str, dict[str, str]]:
+    """(language, its strings) when the cell names a language, else ("", {}):
+    the page then keeps the dashboard's own."""
+    lang = str(options.get("language") or "auto")
+    if lang not in LANGUAGES:
+        return "", {}
+    try:
+        got = json.loads((Path(__file__).resolve().parent / "strings" / f"{lang}.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return lang, {}
+    return lang, got if isinstance(got, dict) else {}
+
+
+def fetch(options: dict[str, Any], settings: dict[str, Any], *, ctx: dict[str, Any], **kw: Any) -> dict[str, Any]:
+    data = _fetch(options, settings, ctx=ctx, **kw)
+    lang, strings = strings_for(options)
+    if lang and isinstance(data, dict):
+        data["lang"], data["strings"] = lang, strings
+    return data
