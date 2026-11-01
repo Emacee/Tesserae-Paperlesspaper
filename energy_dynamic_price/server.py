@@ -376,7 +376,7 @@ def _downsample(points: list[list[float]], step: float) -> list[list[float]]:
 
 def battery_overlay(
     view: dict[str, Any], options: dict[str, Any], now: datetime, core: Any = None
-) -> dict[str, Any] | None:
+) -> dict[str, Any]:
     """The overlay in the chart's own units: x in slots from the window's
     first, SOC in %. Segments for every time-of-use slot that touches the
     window (the program repeats each day), the current one, the next, and
@@ -385,7 +385,8 @@ def battery_overlay(
     deye = _deye()
     prefix = str(options.get("battery_device") or "").strip()
     if core is None or deye is None or not prefix:
-        return None
+        # said, not dropped: the chart shows no battery, and the data says why
+        return {"reason": "no Home Assistant Core" if core is None else "Home batteries is not installed" if deye is None else "no device"}
     start = datetime.fromisoformat(view["start"])
     tz = start.tzinfo
     local = now.astimezone(tz)
@@ -397,8 +398,8 @@ def battery_overlay(
         min_soc = 10.0
     try:
         states = {str(s.get("entity_id")): s for s in core.get_states() if isinstance(s, dict)}
-    except Exception:  # noqa: BLE001 - the chart without the battery
-        return None
+    except Exception as err:  # noqa: BLE001 - the chart without the battery
+        return {"reason": f"Home Assistant: {type(err).__name__}: {str(err)[:160]}"}
     b = deye.read(states, prefix, local, min_soc)
     x_of = lambda dt: (dt - start) / slot  # noqa: E731
     day0 = start.replace(hour=0, minute=0, second=0, microsecond=0)
@@ -499,7 +500,10 @@ def _fetch(
 
     view = build_view(raw, options, now)
     if options.get("battery_device") and "error" not in view:
-        view["battery"] = battery_overlay(view, options, now)
+        try:
+            view["battery"] = battery_overlay(view, options, now)
+        except Exception as err:  # noqa: BLE001 - the prices without the battery
+            view["battery"] = {"reason": f"{type(err).__name__}: {str(err)[:160]}"}
     view["title"] = title
     view["source"] = source
     return view

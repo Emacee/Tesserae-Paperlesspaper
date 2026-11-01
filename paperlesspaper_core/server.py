@@ -206,6 +206,15 @@ def configure_ha(app: Any, env: dict[str, str] | None = None) -> str:
     return "set"
 
 
+def save_device_values(store: Any, device_id: str, values: dict[str, Any]) -> None:
+    if hasattr(store, "update_item"):
+        store.update_item("devices", device_id, values)
+        return
+    section = store.get_section("devices") or {}
+    merged = {**dict(section.get(device_id) or {}), **values}
+    store.patch_section("devices", {device_id: merged})
+
+
 DEVICE_ID = re.compile(r"^[a-z][a-z0-9_-]{1,31}$")
 
 
@@ -247,13 +256,18 @@ def setup_device(app: Any, body: dict[str, Any]) -> tuple[int, dict[str, Any]]:
         schema_fields = [f for f in config_fields_from_schema(device.config_schema) if f["name"] in values]
     except Exception:  # noqa: BLE001 - an older Tesserae: the fields as the schema has them
         schema_fields = [{"name": k, **v} for k, v in (device.config_schema or {}).items() if k in values and isinstance(v, dict)]
-    problem = device_service.save_device_config(store, devices, device, values, schema_fields) if schema_fields else None
-    if created:
+    problem = None
+    if schema_fields and hasattr(device_service, "save_device_config"):
+        problem = device_service.save_device_config(store, devices, device, values, schema_fields)
+    else:  # Tesserae before save_device_config: the device's settings as the link form saves them
+        save_device_values(store, device.id, values)
+    if created and hasattr(device_service, "device_added"):
         device_service.device_added(store, device)
+    if created:
         with contextlib.suppress(Exception):
             renderer_loader.seed_device_settings_from_base(app.config["RENDERER_REGISTRY"], store)
-        with contextlib.suppress(Exception):
-            app.config["REBUILD_TRANSPORT"]()
+    with contextlib.suppress(Exception):
+        app.config["REBUILD_TRANSPORT"]()
     return 200, {"id": device.id, "created": created, "orientation": orientation, "config_problem": problem}
 
 
