@@ -11,6 +11,10 @@ under its version number.
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-01
+
+Built on Tesserae 0.480.0, from commit `37edbac`.
+
 ### Changed
 - One typeface across the new widgets: Overhead: Map now defaults to the
   dashboard's own font, like Travel time, Weather, Today, Energy, Dynamic
@@ -104,7 +108,8 @@ Built on Tesserae 0.480.0, from commit `ad7e2ba`.
 - Energy, Dynamic Price: EPEX and Tibber electricity prices for today and
   tomorrow.
 
-[Unreleased]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/e786d19...master
+[Unreleased]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/37edbac...master
+[0.2.0]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/e786d19...37edbac
 [0.1.2]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/6c5e271...e786d19
 [0.1.1]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/ad7e2ba...6c5e271
 [0.1.0]: https://github.com/Emacee/Tesserae-Paperlesspaper/tree/ad7e2ba26e101fa9fbb8248146d5efc8d31c096e
