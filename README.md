@@ -26,9 +26,9 @@ Settings › Apps › App store › ⋮ › Repositories:
 Hoe het werkt: Home Assistant bouwt het image zelf, vanaf het officiële
 `ghcr.io/dmellok/tesserae` (versie in
 [`tesserae_paperless/build.yaml`](tesserae_paperless/build.yaml)), en zet de
-plugins en het device-type uit deze repo erin, van de tag `WIDGETS_REF`. Voor
-een nieuwe versie van de app: tag deze repo (`v0.1.1`, …), zet die tag in
-`build.yaml` en dezelfde versie in `config.yaml`.
+plugins en het device-type uit deze repo erin, van de commit `WIDGETS_REF`.
+Voor een nieuwe versie van de app: zet de commit-SHA (of een tag) van de
+nieuwe stand in `build.yaml` en verhoog `version` in `config.yaml`.
 
 Het frame wordt wakker op de update-periodes uit de paperlesspaper-app en
 haalt dan het plaatje op dat Tesserae naar zijn paper heeft geüpload; een
