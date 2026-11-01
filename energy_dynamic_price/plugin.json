@@ -1,0 +1,128 @@
+{
+  "tesserae_compat": "1.x",
+  "name": "Energy, Dynamic Price",
+  "version": "0.1.0",
+  "kind": "widget",
+  "description": "Dynamic (EPEX day-ahead) electricity prices for today, plus tomorrow once published (~13:00). Stepped price curve in 15-minute or hourly slots with the lowest and highest price marked and a subtle 'now' marker. Data from EnergyZero (no key) or your Tibber account.",
+  "icon": "ph-lightning",
+  "category": "finance",
+  "locales": ["en", "nl", "de"],
+  "supports": {
+    "sizes": ["xs", "sm", "md", "lg"]
+  },
+  "requires": [
+    "network:public.api.energyzero.nl",
+    "network:api.tibber.com",
+    "settings:plugin"
+  ],
+  "cell_options": [
+    {
+      "name": "source",
+      "type": "select",
+      "label": "Price source",
+      "default": "energyzero",
+      "choices": [
+        { "value": "energyzero", "label": "EnergyZero, EPEX NL (no key)" },
+        { "value": "tibber", "label": "Tibber (API token in widget settings)" }
+      ],
+      "help": "EnergyZero publishes the Dutch EPEX day-ahead prices for free. Tibber shows your own contract price, exactly as in the Tibber app; add your token under Settings → Widgets → Energy, Dynamic Price."
+    },
+    {
+      "name": "price_type",
+      "type": "select",
+      "label": "Price",
+      "default": "all_in_with_vat",
+      "show_if": { "source": "energyzero" },
+      "choices": [
+        { "value": "all_in_with_vat", "label": "All-in incl. VAT (what you pay)" },
+        { "value": "all_in", "label": "All-in excl. VAT" },
+        { "value": "base_with_vat", "label": "Market price incl. VAT" },
+        { "value": "base", "label": "Market price (EPEX)" }
+      ],
+      "help": "All-in = EPEX market price + energy tax + purchasing fee."
+    },
+    {
+      "name": "range",
+      "type": "select",
+      "label": "Show",
+      "default": "auto",
+      "choices": [
+        { "value": "auto", "label": "Today, plus tomorrow when available" },
+        { "value": "ahead", "label": "From now on (rest of today + tomorrow)" },
+        { "value": "today", "label": "Today only" }
+      ]
+    },
+    {
+      "name": "resolution",
+      "type": "select",
+      "label": "Interval",
+      "default": "15",
+      "choices": [
+        { "value": "15", "label": "15 minutes" },
+        { "value": "60", "label": "60 minutes" }
+      ]
+    },
+    {
+      "name": "title",
+      "type": "string",
+      "label": "Title",
+      "default": "",
+      "help": "Leave empty for 'Electricity price' in the display language."
+    },
+    {
+      "name": "stats_scope",
+      "type": "select",
+      "label": "Lowest / highest over",
+      "default": "upcoming",
+      "advanced": true,
+      "choices": [
+        { "value": "upcoming", "label": "From now on" },
+        { "value": "window", "label": "Whole chart, including the past" }
+      ]
+    },
+    {
+      "name": "decimals",
+      "type": "select",
+      "label": "Decimals",
+      "default": "0",
+      "advanced": true,
+      "choices": [
+        { "value": "0", "label": "42 ct" },
+        { "value": "1", "label": "42.3 ct" }
+      ]
+    }
+  ],
+  "settings": [
+    {
+      "name": "tibber_token",
+      "type": "string",
+      "label": "Tibber API token",
+      "secret": true,
+      "help": "Create one at developer.tibber.com → Access token. Only needed for the Tibber source."
+    },
+    {
+      "name": "tibber_home_id",
+      "type": "string",
+      "label": "Tibber home ID",
+      "advanced": true,
+      "help": "Only when your account has more than one home. Empty = first home with an active contract."
+    },
+    {
+      "name": "timezone",
+      "type": "string",
+      "label": "Time zone",
+      "advanced": true,
+      "default": "Europe/Amsterdam",
+      "help": "IANA zone used for Tibber's day boundaries (EnergyZero always uses Europe/Amsterdam)."
+    }
+  ],
+  "render": {
+    "dither": "none",
+    "needs_network": true
+  },
+  "fragments": [
+    { "id": "full", "label": "Price card", "w": 300, "h": 180, "icon": "ph-lightning" },
+    { "id": "summary", "label": "Now / low / high", "w": 180, "h": 80, "icon": "ph-currency-eur" },
+    { "id": "chart", "label": "Price chart", "w": 280, "h": 120, "icon": "ph-chart-line" }
+  ]
+}

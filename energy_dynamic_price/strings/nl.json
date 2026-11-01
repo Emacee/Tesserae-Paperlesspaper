@@ -1,0 +1,12 @@
+{
+  "title": "Stroomprijs",
+  "today": "Vandaag",
+  "tomorrow": "Morgen",
+  "now": "nu",
+  "now_upper": "NU",
+  "lowest": "Laagste",
+  "highest": "Hoogste",
+  "average": "Gemiddeld",
+  "tomorrow_pending": "Prijzen morgen vanaf ~13:00",
+  "no_data": "Geen prijzen beschikbaar."
+}

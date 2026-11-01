@@ -1,0 +1,12 @@
+{
+  "title": "Electricity price",
+  "today": "Today",
+  "tomorrow": "Tomorrow",
+  "now": "now",
+  "now_upper": "NOW",
+  "lowest": "Lowest",
+  "highest": "Highest",
+  "average": "Average",
+  "tomorrow_pending": "Tomorrow's prices from ~13:00",
+  "no_data": "No prices available."
+}

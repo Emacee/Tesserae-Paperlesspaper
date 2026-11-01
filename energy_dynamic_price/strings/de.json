@@ -1,0 +1,12 @@
+{
+  "title": "Strompreis",
+  "today": "Heute",
+  "tomorrow": "Morgen",
+  "now": "jetzt",
+  "now_upper": "JETZT",
+  "lowest": "Niedrigster",
+  "highest": "Höchster",
+  "average": "Durchschnitt",
+  "tomorrow_pending": "Preise für morgen ab ~13:00",
+  "no_data": "Keine Preise verfügbar."
+}
