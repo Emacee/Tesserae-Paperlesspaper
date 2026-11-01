@@ -18,6 +18,8 @@ import contextlib
 import importlib.util
 import json
 import logging
+import os
+import re
 import sys
 import threading
 import time
@@ -25,7 +27,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from flask import Blueprint, abort, current_app, flash, redirect, render_template, request, url_for
+from flask import Blueprint, abort, current_app, flash, jsonify, redirect, render_template, request, url_for
 
 _HERE = Path(__file__).resolve().parent
 PLUGIN_ID = "paperlesspaper_core"
@@ -164,8 +166,101 @@ def _watch(app: Any) -> None:
         time.sleep(WATCH_S)
 
 
+# ----------------------------------------------------------------------
+# Home Assistant without a token to paste: inside the Home Assistant app,
+# Supervisor hands the container a token for its own API proxy
+# (``homeassistant_api: true`` in config.yaml). Home Assistant Core (the
+# plugin every HA widget reads through) is pointed at it on every start,
+# unless it was set to another Home Assistant by hand.
+# ----------------------------------------------------------------------
+SUPERVISOR_CORE = "http://supervisor/core"
+
+
+def _ha_fields(app: Any) -> list[dict[str, Any]]:
+    reg = app.config.get("PLUGIN_REGISTRY")
+    plugin = reg.get("ha_core") if reg is not None else None
+    manifest = getattr(plugin, "manifest", None) or {}
+    return [f for f in manifest.get("settings") or [] if isinstance(f, dict) and f.get("name")]
+
+
+def configure_ha(app: Any, env: dict[str, str] | None = None) -> str:
+    """Point Home Assistant Core at Supervisor's proxy with the app's own
+    token. Returns what was done: "set", "kept" (a URL of the user's own),
+    "skipped" (not inside the Home Assistant app, or no ha_core)."""
+    env = dict(os.environ) if env is None else env
+    token = str(env.get("SUPERVISOR_TOKEN") or "").strip()
+    store = app.config.get("SETTINGS_STORE")
+    fields = _ha_fields(app)
+    if not (env.get("TESSERAE_HA_INGRESS") and token) or store is None or not fields:
+        return "skipped"
+    try:
+        current = store.get_for_runtime("plugins", "ha_core", fields) or {}
+    except Exception:  # noqa: BLE001
+        current = {}
+    url = str(current.get("base_url") or "").strip().rstrip("/")
+    if url and url != SUPERVISOR_CORE:
+        return "kept"
+    store.update_for_namespace(
+        "plugins", "ha_core", {"base_url": SUPERVISOR_CORE, "token": token, "verify_tls": True}, fields
+    )
+    return "set"
+
+
+DEVICE_ID = re.compile(r"^[a-z][a-z0-9_-]{1,31}$")
+
+
+def setup_device(app: Any, body: dict[str, Any]) -> tuple[int, dict[str, Any]]:
+    """Create a device of the paperlesspaper kind, as Settings > Devices >
+    Add device does, with its orientation and (optionally) its paper."""
+    from app import device_service, renderer_loader
+
+    device_id = str(body.get("id") or "").strip()
+    if not DEVICE_ID.match(device_id):
+        return 400, {"error": "id: 2-32 chars, a lowercase letter first, then letters, digits, _ or -"}
+    orientation = "portrait" if str(body.get("orientation") or "") == "portrait" else "landscape"
+    devices = app.config["DEVICE_REGISTRY"]
+    store = app.config["SETTINGS_STORE"]
+    existing = devices.get(device_id) if hasattr(devices, "get") else None
+    if existing is None:
+        result = device_service.create_instance(
+            devices=devices,
+            renderers=app.config["RENDERER_REGISTRY"],
+            data_root=app.config["DEVICE_DATA_ROOT"],
+            instance_id=device_id,
+            kind_id="paperlesspaper",
+            name=str(body.get("name") or device_id),
+            orientation=orientation,
+        )
+        if not result.ok or result.device is None:
+            return 400, {"error": result.error or "the device could not be added"}
+        device = result.device
+        created = True
+    else:
+        device = existing
+        created = False
+    values = {"orientation": orientation}
+    if body.get("paper_id"):
+        values["paper_id"] = str(body["paper_id"]).strip()
+    try:
+        from app.settings._shared import config_fields_from_schema
+
+        schema_fields = [f for f in config_fields_from_schema(device.config_schema) if f["name"] in values]
+    except Exception:  # noqa: BLE001 - an older Tesserae: the fields as the schema has them
+        schema_fields = [{"name": k, **v} for k, v in (device.config_schema or {}).items() if k in values and isinstance(v, dict)]
+    problem = device_service.save_device_config(store, devices, device, values, schema_fields) if schema_fields else None
+    if created:
+        device_service.device_added(store, device)
+        with contextlib.suppress(Exception):
+            renderer_loader.seed_device_settings_from_base(app.config["RENDERER_REGISTRY"], store)
+        with contextlib.suppress(Exception):
+            app.config["REBUILD_TRANSPORT"]()
+    return 200, {"id": device.id, "created": created, "orientation": orientation, "config_problem": problem}
+
+
 def _start(state: Any) -> None:
     app = state.app
+    with contextlib.suppress(Exception):
+        logger.info("paperlesspaper: Home Assistant Core %s", configure_ha(app))
     if app.config.get("PAPERLESSPAPER_WATCH"):
         attach(app)
         return
@@ -388,6 +483,29 @@ def blueprint() -> Any:
         sent, msg = up.send(device, force=True)
         flash(f"{device} now uploads to this paper. {msg}", "success" if sent else "warn")
         return back()
+
+    @bp.post("/setup/device")
+    def setup_device_route() -> Any:
+        """JSON: {"id", "name", "orientation", "paper_id"?}: the device, made or updated."""
+        app = current_app._get_current_object()  # type: ignore[attr-defined]
+        body = request.get_json(silent=True) or {}
+        code, out = setup_device(app, body if isinstance(body, dict) else {})
+        return jsonify(out), code
+
+    @bp.get("/setup/status")
+    def setup_status() -> Any:
+        """JSON: is Home Assistant reachable, is a paperlesspaper key set, which papers there are."""
+        app = current_app._get_current_object()  # type: ignore[attr-defined]
+        ha = configure_ha(app)
+        reg = app.config.get("PLUGIN_REGISTRY")
+        core = getattr(reg.get("ha_core"), "server_module", None) if reg is not None else None
+        reachable = False
+        with contextlib.suppress(Exception):
+            reachable = bool(core and core.is_configured() and core.get_states())
+        st = settings_of(app.config.get("SETTINGS_STORE"))
+        has_key = bool(str(st.get("api_key") or "").strip())
+        frames, error = frames_overview(client_for(app, PAGE_TIMEOUT_S)) if has_key else ([], "")
+        return jsonify({"home_assistant": ha, "home_assistant_reachable": reachable, "api_key": has_key, "frames": frames, "error": error})
 
     @bp.post("/send")
     def send() -> Any:

@@ -20,7 +20,7 @@ ports:
   "8765/tcp": null
 ports_description:
   "8765/tcp": Tesserae API for panels that fetch their frames (not needed for paperlesspaper)
-homeassistant_api: false
+homeassistant_api: true
 hassio_api: true
 host_network: false
 map:
