@@ -11,6 +11,10 @@ under its version number.
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-11-01
+
+Built on Tesserae 0.480.0, from commit `b82a2b4`.
+
 ### Added
 - The app connects Home Assistant Core to your Home Assistant by itself,
   through Supervisor: no URL or long-lived token to paste before the Home
@@ -116,7 +120,8 @@ Built on Tesserae 0.480.0, from commit `ad7e2ba`.
 - Energy, Dynamic Price: EPEX and Tibber electricity prices for today and
   tomorrow.
 
-[Unreleased]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/37edbac...master
+[Unreleased]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/b82a2b4...master
+[0.2.1]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/37edbac...b82a2b4
 [0.2.0]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/e786d19...37edbac
 [0.1.2]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/6c5e271...e786d19
 [0.1.1]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/ad7e2ba...6c5e271
