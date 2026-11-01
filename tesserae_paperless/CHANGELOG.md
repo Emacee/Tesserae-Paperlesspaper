@@ -11,6 +11,14 @@ under its version number.
 
 ## [Unreleased]
 
+### Added
+- The app connects Home Assistant Core to your Home Assistant by itself,
+  through Supervisor: no URL or long-lived token to paste before the Home
+  Assistant widgets work. A Home Assistant URL you set yourself is kept.
+- paperlesspaper: the frame's device can be added (and its paper and
+  orientation set) from the paperlesspaper page's setup endpoint, so a
+  dashboard can be set up for you in one go.
+
 ## [0.2.0] - 2026-11-01
 
 Built on Tesserae 0.480.0, from commit `37edbac`.

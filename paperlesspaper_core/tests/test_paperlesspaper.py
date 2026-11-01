@@ -410,3 +410,4 @@ def test_the_key_is_set_on_the_page(app: Any, calls: list[Any]) -> None:
     calls.answers.append(b"[]")  # type: ignore[attr-defined]
     page = app.test_client().get("/plugins/paperlesspaper_core/").get_data(as_text=True)
     assert "Add your API key" not in page and "Replace key" in page
+
