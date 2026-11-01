@@ -1,7 +1,7 @@
 {
   "tesserae_compat": "1.x",
   "name": "Overhead: Map",
-  "version": "0.11.3.1",
+  "version": "0.11.3+fork.1",
   "kind": "widget",
   "tesserae_min": "0.463.0",
   "description": "The aircraft near a place on a map: each one's track over the last half hour, coloured by its height or its speed, with a numbered badge where it is now, and below the map a line for each with its picture (painted or a silhouette), registration, type, height and distance. Up to six; more within reach are counted under the list. The map is OpenStreetMap, quietened for e-paper.",

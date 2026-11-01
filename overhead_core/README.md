@@ -1,6 +1,6 @@
 # Overhead
 
-> **This is a fork** of [dmellok/tesserae-widget-overhead](https://github.com/dmellok/tesserae-widget-overhead) v0.11.3, version 0.11.3.1. It adds **Below**, a height ceiling beside the radius (only aircraft at or under it are shown, for a page of low flyers and helicopters), and recognises many more helicopter types, plus any aircraft whose ADS-B emitter category is A7 (rotorcraft). Everything else is as upstream.
+> **This is a fork** of [dmellok/tesserae-widget-overhead](https://github.com/dmellok/tesserae-widget-overhead) v0.11.3, version 0.11.3+fork.1. It adds **Below**, a height ceiling beside the radius (only aircraft at or under it are shown, for a page of low flyers and helicopters), and recognises many more helicopter types, plus any aircraft whose ADS-B emitter category is A7 (rotorcraft). Everything else is as upstream.
 
 Five Tesserae widgets for the aircraft overhead right now, installed together as one bundle:
 
