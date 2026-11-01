@@ -7,5 +7,5 @@ build_from:
 args:
   # The commit (or tag) of this repository the image is built from: move it,
   # and bump `version` in config.yaml, so Home Assistant offers the update.
-  WIDGETS_REF: e786d197eaa68bb06e2e943de10a14837fecbfe3
+  WIDGETS_REF: 37edbacd1bcc52a2c936e2f4f9e07060781fb77f
   WIDGETS_REPO: Emacee/Tesserae-Paperlesspaper
