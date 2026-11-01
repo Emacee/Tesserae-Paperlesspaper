@@ -49,7 +49,7 @@ While a dashboard is being edited nothing is painted: the editor's previews hold
 
 Needs Tesserae 0.463 or later: the paintings are kept, queued, budgeted and
 listed by the server's own Artwork support (`app.artwork`), and the paintings
-page is the one Tesserae renders at Plugins › Overhead.
+page is the one Tesserae renders at Settings › Widgets › Overhead › Open admin.
 
 
 From the Tesserae catalog as the Overhead bundle, or by hand: copy the five folders (`overhead_core`, `overhead_photo`, `overhead_plate`, `overhead_cluster`, `overhead_scene`) into your plugins folder together (the tests and tools live inside `overhead_core`, so the tarball's top level holds nothing but plugin folders); the four widgets load their shared code from `overhead_core` by path.

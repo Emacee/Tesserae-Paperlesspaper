@@ -1,0 +1,32 @@
+{
+  "tesserae_compat": "1.x",
+  "tesserae_min": "0.463.0",
+  "name": "paperlesspaper",
+  "version": "0.1.0",
+  "kind": "data",
+  "description": "Send Tesserae pages to paperlesspaper frames on their own firmware, and manage the frames from Tesserae. Each new frame of a device of the paperlesspaper kind is uploaded to its paper in the paperlesspaper cloud, which dithers it; the frame shows it at its next wake-up. The plugin page lists your frames and their papers (Tesserae's beside paperlesspaper's own integrations), switches which paper a frame shows, and uploads on demand.",
+  "icon": "ph-frame-corners",
+  "supports": {
+    "sizes": []
+  },
+  "requires": [
+    "network:api.paperlesspaper.de"
+  ],
+  "settings": [
+    {
+      "name": "api_key",
+      "type": "string",
+      "label": "paperlesspaper API key",
+      "secret": true,
+      "default": "",
+      "help": "Create one at https://web.paperlesspaper.de/account. It is only sent to the paperlesspaper API, in the x-api-key header."
+    },
+    {
+      "name": "api_base",
+      "type": "string",
+      "label": "API address",
+      "default": "https://api.paperlesspaper.de/v1",
+      "help": "Leave as it is, unless you run paperlesspaper's server yourself."
+    }
+  ]
+}

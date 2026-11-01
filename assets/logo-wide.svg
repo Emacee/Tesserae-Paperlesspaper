@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1250 500" width="1250" height="500">
+  <title>Tesserae Paperlesspaper</title>
+  <g transform="translate(0 0)">
+    <rect x="36.00" y="40.00" width="440.00" height="440.00" rx="25.00" fill="#000" opacity="0.18"/>
+    <rect x="30.00" y="30.00" width="440.00" height="440.00" rx="25.00" fill="#2A2C30"/>
+    <rect x="36.75" y="36.75" width="426.50" height="426.50" rx="20.00" fill="none" stroke="#45484E" stroke-width="4.00"/>
+    <rect x="67.50" y="67.50" width="365.00" height="365.00" rx="6.00" fill="#F4F1EA"/>
+    <rect x="67.50" y="67.50" width="365.00" height="9.00" fill="#000" opacity="0.08"/>
+    <rect x="120.22" y="119.52" width="57.75" height="57.75" rx="4.62" fill="#2E56B3" transform="rotate(-1.2 149.09 148.39)"/>
+    <rect x="187.00" y="120.01" width="57.75" height="57.75" rx="4.62" fill="#D8C42C" transform="rotate(0.8 215.88 148.88)"/>
+    <rect x="255.11" y="120.15" width="57.75" height="57.75" rx="4.62" fill="#D8C42C" transform="rotate(-0.6 283.99 149.02)"/>
+    <rect x="322.17" y="119.59" width="57.75" height="57.75" rx="4.62" fill="#E8ECEA" stroke="#C9CFCC" stroke-width="1.68" transform="rotate(1.1 351.05 148.47)"/>
+    <rect x="120.22" y="187.07" width="57.75" height="57.75" rx="4.62" fill="#2E56B3" transform="rotate(-1.2 149.09 215.94)"/>
+    <rect x="187.00" y="187.56" width="57.75" height="57.75" rx="4.62" fill="#D8C42C" transform="rotate(0.8 215.88 216.44)"/>
+    <rect x="255.11" y="187.70" width="57.75" height="57.75" rx="4.62" fill="#E8ECEA" stroke="#C9CFCC" stroke-width="1.68" transform="rotate(-0.6 283.99 216.57)"/>
+    <rect x="322.17" y="187.14" width="57.75" height="57.75" rx="4.62" fill="#A8322B" transform="rotate(1.1 351.05 216.01)"/>
+    <rect x="120.22" y="254.62" width="57.75" height="57.75" rx="4.62" fill="#3F7D4B" transform="rotate(-1.2 149.09 283.50)"/>
+    <rect x="187.00" y="255.11" width="57.75" height="57.75" rx="4.62" fill="#2E56B3" transform="rotate(0.8 215.88 283.99)"/>
+    <rect x="255.11" y="255.25" width="57.75" height="57.75" rx="4.62" fill="#A8322B" transform="rotate(-0.6 283.99 284.12)"/>
+    <rect x="322.17" y="254.69" width="57.75" height="57.75" rx="4.62" fill="#A8322B" transform="rotate(1.1 351.05 283.56)"/>
+    <rect x="120.22" y="322.17" width="57.75" height="57.75" rx="4.62" fill="#3F7D4B" transform="rotate(-1.2 149.09 351.05)"/>
+    <rect x="187.00" y="322.66" width="57.75" height="57.75" rx="4.62" fill="#3F7D4B" transform="rotate(0.8 215.88 351.53)"/>
+    <rect x="255.11" y="322.80" width="57.75" height="57.75" rx="4.62" fill="#1F2226" transform="rotate(-0.6 283.99 351.68)"/>
+    <rect x="322.17" y="322.24" width="57.75" height="57.75" rx="4.62" fill="#A8322B" transform="rotate(1.1 351.05 351.12)"/>
+  </g>
+  <g font-family="'Archivo Narrow', 'Helvetica Neue', Arial, sans-serif" fill="#2A2C30">
+    <text x="530" y="235" font-size="150" font-weight="700" letter-spacing="-2">Tesserae</text>
+    <text x="536" y="345" font-size="86" font-weight="400" fill="#5B6068" letter-spacing="1">paperlesspaper</text>
+    <rect x="536" y="378" width="54" height="14" rx="3" fill="#A8322B"/>
+    <rect x="598" y="378" width="54" height="14" rx="3" fill="#D8C42C"/>
+    <rect x="660" y="378" width="54" height="14" rx="3" fill="#3F7D4B"/>
+    <rect x="722" y="378" width="54" height="14" rx="3" fill="#2E56B3"/>
+  </g>
+</svg>

@@ -145,6 +145,11 @@ export default function render(shadow, ctx) {
     .ep-range .hi { color: var(--accent-1); }
     .ep-range .sep { opacity: 0.5; }
     .ep-range i { font-size: 0.85em; }
+    /* Narrow (portrait) cells: keep the title readable by dropping the
+       "40 NU ·" part of the chip; the legend shows the current price. */
+    @container (max-width: 560px) {
+      .ep-range .now, .ep-range .now + .sep { display: none; }
+    }
     @container (max-width: 280px) {
       .ep-legend { display: none; }
       .ep-range { display: none; }
@@ -166,15 +171,22 @@ export default function render(shadow, ctx) {
   // md keeps the legend to one row (low + high); lg adds now, average and
   // the 'tomorrow from ~13:00' hint.
   const wide = cellWidth > 900;
+  // Narrow cells drop "now" from the title chip, so the legend carries it.
+  const narrow = cellWidth <= 560;
+  // Narrow *and* short (e.g. half of a 480x800 portrait frame): low / high
+  // already sit in the chip and on the curve, so the legend keeps only
+  // "now" and the chart gets the height.
+  const cellH = shadow.host?.clientHeight || ctx?.cell?.h || 400;
+  const compactLegend = narrow && cellH < 450;
   const pendingNote = data.range !== "today" && !data.has_tomorrow
     ? `<span class="ep-key ep-note"><i class="ph-bold ph-clock"></i>${escapeHtml(t("tomorrow_pending", "Tomorrow's prices from ~13:00"))}</span>`
     : "";
   const legend = showLegend
     ? `
       <div class="ep-legend">
-        ${lo ? `<span class="ep-key"><span class="dot dot--lo"></span>${escapeHtml(t("lowest", "Lowest"))} <b>${escapeHtml(fmt(lo.p))}</b> ${escapeHtml(unit)} <span class="muted">${escapeHtml(when(lo))}</span></span>` : ""}
-        ${hi ? `<span class="ep-key"><span class="dot dot--hi"></span>${escapeHtml(t("highest", "Highest"))} <b>${escapeHtml(fmt(hi.p))}</b> ${escapeHtml(unit)} <span class="muted">${escapeHtml(when(hi))}</span></span>` : ""}
-        ${wide && now ? `<span class="ep-key"><span class="ring"></span><span class="muted">${escapeHtml(t("now", "now"))} ${escapeHtml(fmt(now.p))} ${escapeHtml(unit)} · ${escapeHtml(now.from)}–${escapeHtml(now.till)}</span></span>` : ""}
+        ${lo && !compactLegend ? `<span class="ep-key"><span class="dot dot--lo"></span>${escapeHtml(t("lowest", "Lowest"))} <b>${escapeHtml(fmt(lo.p))}</b> ${escapeHtml(unit)} <span class="muted">${escapeHtml(when(lo))}</span></span>` : ""}
+        ${hi && !compactLegend ? `<span class="ep-key"><span class="dot dot--hi"></span>${escapeHtml(t("highest", "Highest"))} <b>${escapeHtml(fmt(hi.p))}</b> ${escapeHtml(unit)} <span class="muted">${escapeHtml(when(hi))}</span></span>` : ""}
+        ${(wide || narrow) && now ? `<span class="ep-key"><span class="ring"></span><span class="muted">${escapeHtml(t("now", "now"))} ${escapeHtml(fmt(now.p))} ${escapeHtml(unit)} · ${escapeHtml(now.from)}–${escapeHtml(now.till)}</span></span>` : ""}
         ${wide && data.avg != null ? `<span class="ep-key"><span class="muted">${escapeHtml(t("average", "Average"))} ${escapeHtml(fmt(data.avg))} ${escapeHtml(unit)}</span></span>` : ""}
         ${wide ? pendingNote : ""}
       </div>`
@@ -294,9 +306,15 @@ export default function render(shadow, ctx) {
   });
 
   // ---- axis -----------------------------------------------------------
-  const cqBase = Math.max(8, Math.min(28, Math.round(cellWidth / 60)));
-  const tickFontSize = Math.max(10, Math.min(20, cqBase));
-  const markFont = Math.max(11, Math.round(tickFontSize * 1.25));
+  // Canvas text follows the widget's own type scale, so axis labels match
+  // the HTML text at any aspect ratio (width-only sizing made them tiny in
+  // tall portrait cells). Mirrors --w-font-base = clamp(14px, 7cqmin, 28px)
+  // from the cell's virtual (post-zoom) size; computed here rather than
+  // read from .w because the shadow-root stylesheet may still be loading.
+  const cellHeight = shadow.host?.clientHeight || ctx?.cell?.h || 400;
+  const baseFont = Math.min(28, Math.max(14, 0.07 * Math.min(cellWidth, cellHeight)));
+  const tickFontSize = Math.max(10, Math.min(22, Math.round(baseFont * 0.72)));
+  const markFont = Math.max(11, Math.min(26, Math.round(baseFont * 0.85)));
   const small = cellWidth <= 280;
 
   const labelAt = (i) => (i < n ? slots[i].t : addMinutes(slots[n - 1].t, minutes));
@@ -308,6 +326,11 @@ export default function render(shadow, ctx) {
   }
 
   // ---- overlay plugin: day split, min / max, now ------------------------
+  // Reserved bands above the plot: day captions on top, then room for the
+  // max label, so neither clips nor collides on short cells.
+  const capBand = days.length > 1 && !small ? tickFontSize + 8 : 0;
+  const markBand = markFont + 10;
+
   const overlay = {
     id: "ep-overlay",
     afterDatasetsDraw(chart) {
@@ -327,7 +350,7 @@ export default function render(shadow, ctx) {
             c.lineWidth = 1.5;
             c.setLineDash([]);
             c.beginPath();
-            c.moveTo(xi, area.top);
+            c.moveTo(xi, area.top - markBand);
             c.lineTo(xi, area.bottom);
             c.stroke();
           }
@@ -336,7 +359,7 @@ export default function render(shadow, ctx) {
             c.font = `700 ${tickFontSize}px ${family}`;
             c.textBaseline = "top";
             c.textAlign = "left";
-            c.fillText(dayLabel(days[d].key), xi + 6, area.top + 2);
+            c.fillText(dayLabel(days[d].key), xi + 6, area.top - markBand - capBand);
           }
         }
       }
@@ -412,7 +435,7 @@ export default function render(shadow, ctx) {
       responsive: true,
       maintainAspectRatio: false,
       parsing: true,
-      layout: { padding: { left: 4, right: 4 } },
+      layout: { padding: { left: 4, right: 4, top: capBand + markBand } },
       scales: {
         x: {
           type: "linear",
@@ -435,8 +458,8 @@ export default function render(shadow, ctx) {
           display: false,
           // Head-room for the max label (+ day captions) on top and the
           // min label underneath.
-          suggestedMin: pMin - span * (small ? 0.3 : 0.35),
-          suggestedMax: pMax + span * (small ? 0.3 : 0.4),
+          suggestedMin: pMin - span * (small ? 0.3 : cellHeight < 450 ? 0.55 : 0.35),
+          suggestedMax: pMax + span * 0.08,
           grid: { display: false },
           border: { display: false },
         },
