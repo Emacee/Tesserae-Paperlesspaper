@@ -49,6 +49,8 @@ SIGHT_NAME = lambda r: " · ".join(
 WIDGETS = ("photo", "plate", "cluster", "scene")
 SOURCES = ("adsb_lol", "receiver")
 RADII = ("5", "10", "15", "25", "35", "50", "80")
+# a ceiling on the height shown, in feet: "" is none; low-flying aircraft and helicopters alone below it
+CEILINGS = ("", "500", "1000", "1500", "2000", "3000", "5000", "10000")
 ORDERS = ("nearest", "lowest", "highest", "largest", "fastest")
 PICTURES = ("photos", "paintings")
 PANELS = ("colour", "gray16", "gray4", "mono")
@@ -543,6 +545,7 @@ def fetch(
 
     source = _choice(options.get("source"), SOURCES)
     radius = float(_choice(options.get("radius_km"), RADII, "25"))
+    ceiling = int(_choice(options.get("max_alt_ft"), CEILINGS, "") or 0)
     order = _choice(options.get("order"), ORDERS)
     count = _int(options.get("count"), 8, 1, MAX_COUNT)
     if widget in ("photo", "plate", "scene"):
@@ -624,7 +627,7 @@ def fetch(
         "widget": widget,
         "state": "ok",
         "title": title,
-        "area": f"within {radius:g} km",
+        "area": f"within {radius:g} km" + (f", below {ceiling:,} ft" if ceiling else ""),
         "period": "in the air now",
         "date": now.strftime("%a %-d %b")
         if sys.platform != "win32"
@@ -697,6 +700,9 @@ def fetch(
     ) or list(KINDS)
     if len(kinds) < len(KINDS):
         rows = [r for r in rows if r["cls"] in kinds]
+    if ceiling:
+        # the height ceiling: only what flies at or below it (one on the ground is at 0 ft)
+        rows = [r for r in rows if r["ground"] or r["alt"] <= ceiling]
     if order == "lowest":
         rows.sort(key=lambda r: (r["ground"], r["alt"], r["km"]))
     elif order == "highest":
@@ -718,6 +724,7 @@ def fetch(
     empty_hint = (
         "Nothing within reach right now. A wider radius, aircraft on the ground"
         + (" or more kinds of aircraft" if len(kinds) < len(KINDS) else "")
+        + (" or a higher ceiling" if ceiling else "")
         + " would show more."
     )
     # the unidentified contact, now and then; or alone, when an empty sky is to show one

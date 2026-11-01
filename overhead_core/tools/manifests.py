@@ -19,7 +19,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "overhead_core" / "lib"))
-VERSION = "0.11.3"
+VERSION = "0.11.3.1"
 
 import importlib.util as _ilu
 _spec = _ilu.spec_from_file_location("_tesserae_plugins.overhead_core.paint", ROOT / "overhead_core" / "lib" / "paint.py")
@@ -80,6 +80,7 @@ def where_options():
         {"name": "receiver_url", "type": "string", "label": "Receiver address", "default": "", "help": "For example http://pi.local:8080; the widget asks for /data/aircraft.json.", "show_if": {"source": "receiver"}},
         {"name": "location", "type": "location_search", "label": "Place", "default": "", "help": "The point the distances and bearings are from. Falls back to the app's location."},
         sel("radius_km", "Within", "25", [(v, f"{v} km") for v in ("5", "10", "15", "25", "35", "50", "80")]),
+        sel("max_alt_ft", "Below", "", [('', 'No ceiling'), ('500', '500 ft (150 m)'), ('1000', '1,000 ft (300 m)'), ('1500', '1,500 ft (450 m)'), ('2000', '2,000 ft (600 m)'), ('3000', '3,000 ft (900 m)'), ('5000', '5,000 ft (1,500 m)'), ('10000', '10,000 ft (3,000 m)')], help='Only aircraft at or below this height (barometric, in feet) are shown; the rest are left out before the count is taken. With a small radius, 1,000 or 1,500 ft leaves the helicopters, light aircraft and whatever is landing or taking off close by; airliners at cruise never show. Aircraft on the ground count as 0 ft and follow Include aircraft on the ground.'),
     ]
 
 

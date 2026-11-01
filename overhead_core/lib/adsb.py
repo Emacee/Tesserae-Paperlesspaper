@@ -146,6 +146,31 @@ TYPES: dict[str, tuple[str, str, float]] = {
     "AS50": ("Airbus H125", "heli", 10.7), "AS55": ("Eurocopter AS355", "heli", 10.7), "B06": ("Bell 206", "heli", 10.2),
     "B407": ("Bell 407", "heli", 10.7), "B412": ("Bell 412", "heli", 14.0), "B429": ("Bell 429", "heli", 11.0),
     "S76": ("Sikorsky S-76", "heli", 13.4), "S92": ("Sikorsky S-92", "heli", 17.2), "H60": ("Sikorsky Black Hawk", "heli", 16.4),
+    # more helicopters, as they fly over Europe: police, air ambulance, coastguard, offshore, military, private
+    "A169": ("AgustaWestland AW169", "heli", 12.1), "A189": ("AgustaWestland AW189", "heli", 14.6),
+    "A119": ("AgustaWestland AW119 Koala", "heli", 10.8), "A149": ("AgustaWestland AW149", "heli", 14.6),
+    "A129": ("Agusta A129 Mangusta", "heli", 11.9), "EH10": ("AgustaWestland AW101", "heli", 18.6),
+    "EC20": ("Airbus H120 Colibri", "heli", 10.0), "EC25": ("Airbus H225 Super Puma", "heli", 16.2),
+    "EC55": ("Airbus H155", "heli", 12.6), "EC75": ("Airbus H175", "heli", 14.8), "H160": ("Airbus H160", "heli", 13.4),
+    "EC40": ("Airbus H140", "heli", 11.6), "EC65": ("Airbus Tiger", "heli", 13.0),
+    "AS32": ("Eurocopter AS332 Super Puma", "heli", 15.6), "AS65": ("Eurocopter AS365 Dauphin", "heli", 11.9),
+    "AS3B": ("Eurocopter AS532 Cougar", "heli", 15.6), "SA3": ("Aérospatiale Alouette III", "heli", 11.0),
+    "ALO2": ("Aérospatiale Alouette II", "heli", 10.2), "ALO3": ("Aérospatiale Alouette III", "heli", 11.0),
+    "GAZL": ("Aérospatiale Gazelle", "heli", 10.5), "PUMA": ("Aérospatiale Puma", "heli", 15.0),
+    "BK17": ("MBB/Kawasaki BK 117", "heli", 11.0), "B105": ("MBB Bo 105", "heli", 9.8),
+    "NH90": ("NHIndustries NH90", "heli", 16.3), "H47": ("Boeing CH-47 Chinook", "heli", 18.3),
+    "CH47": ("Boeing CH-47 Chinook", "heli", 18.3), "H64": ("Boeing AH-64 Apache", "heli", 14.6),
+    "AH64": ("Boeing AH-64 Apache", "heli", 14.6), "LYNX": ("Westland Lynx", "heli", 12.8),
+    "B505": ("Bell 505 Jet Ranger X", "heli", 11.3), "B427": ("Bell 427", "heli", 11.3), "B430": ("Bell 430", "heli", 12.8),
+    "B47G": ("Bell 47", "heli", 11.3), "B212": ("Bell 212", "heli", 14.6), "B205": ("Bell UH-1 Huey", "heli", 14.6),
+    "UH1": ("Bell UH-1 Huey", "heli", 14.6), "B525": ("Bell 525 Relentless", "heli", 16.6),
+    "S61": ("Sikorsky S-61", "heli", 18.9), "S64": ("Sikorsky S-64 Skycrane", "heli", 21.9), "H53": ("Sikorsky CH-53", "heli", 22.0),
+    "MD52": ("MD Helicopters MD 520N", "heli", 8.3), "MD60": ("MD Helicopters MD 600N", "heli", 8.4),
+    "EXPL": ("MD Helicopters MD Explorer", "heli", 10.3), "H500": ("Hughes 500", "heli", 8.1), "H269": ("Hughes 269", "heli", 7.7),
+    "S300": ("Schweizer 300", "heli", 8.2), "G2CA": ("Guimbal Cabri G2", "heli", 7.2), "CABR": ("Guimbal Cabri G2", "heli", 7.2),
+    "MI8": ("Mil Mi-8", "heli", 21.3), "MI17": ("Mil Mi-17", "heli", 21.3), "MI24": ("Mil Mi-24", "heli", 17.3),
+    "K226": ("Kamov Ka-226", "heli", 13.0), "EN28": ("Enstrom F-28", "heli", 9.8), "EN48": ("Enstrom 480", "heli", 9.8),
+    "GYRO": ("Gyroplane", "heli", 8.4),
     "C130": ("Lockheed C-130 Hercules", "prop", 40.4), "C17": ("Boeing C-17 Globemaster", "wide", 51.7), "K35R": ("Boeing KC-135", "jet", 39.9),
     "P8": ("Boeing P-8 Poseidon", "jet", 37.6), "E7": ("Boeing E-7 Wedgetail", "jet", 34.3), "A400": ("Airbus A400M", "prop", 42.4),
     "C30J": ("Lockheed C-130J", "prop", 40.4), "F18": ("F/A-18 Hornet", "jet", 12.3), "F35": ("F-35 Lightning II", "jet", 10.7),
@@ -160,6 +185,12 @@ def gear_of(cls: str, code: str) -> str:
     """'type' where the undercarriage is part of the shape (a light aircraft, a helicopter,
     a fixed-gear type) and is drawn as the type has it; 'up' for the rest."""
     return "type" if cls in ("light", "heli") or (code or "").upper() in FIXED_GEAR else "up"
+# a helicopter the table above does not name: said so by the ADS-B emitter category (A7, a
+# rotorcraft), by the words of its type, or by a type-code prefix only rotorcraft use
+HELI_WORDS = ("HELI", "COPTER", "ROTOR", "GYRO", "AUTOGIRO", "AUTOGYRO")
+# prefixes only rotorcraft use (Robinson, Eurocopter/Airbus, Aérospatiale, MD): not "B4" or "A1",
+# which would also catch the BAe 146 (B46x) and the An-124 (A124)
+HELI_PREFIXES = ("R2", "R4", "R6", "EC", "AS3", "AS5", "AS6", "MD5", "MD6", "EH1")
 CLASS_SPAN = {"wide": 60.0, "jet": 35.0, "biz": 18.0, "prop": 24.0, "light": 11.0, "heli": 11.0}
 
 
@@ -172,7 +203,7 @@ def type_of(code: str, desc: str = "", category: str = "") -> tuple[str, str, fl
     name = words.title().replace("Airbus Industrie", "Airbus") if words else (code or "Aircraft")
     cls = "jet"
     cat = (category or "").upper()
-    if cat in ("A7",) or "HELI" in words.upper() or code.startswith(("R4", "R2", "EC", "AS", "B4", "A10", "A13")):
+    if cat in ("A7",) or any(w in words.upper() for w in HELI_WORDS) or code.startswith(HELI_PREFIXES):
         cls = "heli"
     elif cat in ("A1",) or code.startswith(("C1", "P2", "DA", "SR")):
         cls = "light"

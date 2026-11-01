@@ -337,7 +337,7 @@ def test_manifests_and_client_files():
             assert m["render"]["warm_ahead_s"] == 150, (
                 "asks to be run ahead of a scheduled send"
             )
-        assert m["version"] == "0.11.3" and m["tesserae_compat"] == "1.x"
+        assert m["version"] == "0.11.3.1" and m["tesserae_compat"] == "1.x"
         if wid != "overhead_core":
             assert (ROOT / wid / "client.js").exists() and m["kind"] == "widget"
             names = [o["name"] for o in m["cell_options"]]
@@ -359,17 +359,18 @@ def test_manifests_and_client_files():
 
 RELEASED = "v0.7.1"  # the saved cells to keep working: no option, choice value or default may change
 UP_FRONT = {
-    "overhead_photo": ["source", "location", "radius_km", "strip", "paper"],
-    "overhead_plate": ["source", "location", "radius_km", "pictures", "look"],
+    "overhead_photo": ["source", "location", "radius_km", "max_alt_ft", "strip", "paper"],
+    "overhead_plate": ["source", "location", "radius_km", "max_alt_ft", "pictures", "look"],
     "overhead_cluster": [
         "source",
         "location",
         "radius_km",
+        "max_alt_ft",
         "count",
         "pictures",
         "paper",
     ],
-    "overhead_scene": ["source", "location", "radius_km", "pictures", "paper"],
+    "overhead_scene": ["source", "location", "radius_km", "max_alt_ft", "pictures", "paper"],
 }
 ADVANCED = [
     "include_ground",
@@ -2115,6 +2116,36 @@ def test_kinds_of_aircraft(tmp_path, offline):
         {**MELBOURNE, "kinds": ["heli"], "count": "8"}, SETTINGS, ctx=_ctx(tmp_path)
     )
     assert r["state"] == "empty" and "more kinds of aircraft" in r["hint"]
+
+
+def test_height_ceiling(tmp_path, offline):
+    """Below a ceiling: only what flies at or under it, so a page shows the low flyers alone."""
+    r = cluster.fetch({**MELBOURNE, "count": "8"}, SETTINGS, ctx=_ctx(tmp_path))
+    assert len(r["aircraft"]) == 4 and "below" not in r["area"]
+    r = cluster.fetch(
+        {**MELBOURNE, "max_alt_ft": "2000", "count": "8"}, SETTINGS, ctx=_ctx(tmp_path)
+    )
+    assert [a["cs"] for a in r["aircraft"]] == ["QLK1997", "VH-NPS"]
+    assert r["area"] == "within 25 km, below 2,000 ft"
+    r = cluster.fetch(
+        {**MELBOURNE, "max_alt_ft": "1000", "kinds": ["heli"], "count": "8"},
+        SETTINGS,
+        ctx=_ctx(tmp_path),
+    )
+    assert r["state"] == "empty" and "a higher ceiling" in r["hint"]
+    r = cluster.fetch(
+        {**MELBOURNE, "max_alt_ft": "nonsense", "count": "8"}, SETTINGS, ctx=_ctx(tmp_path)
+    )
+    assert len(r["aircraft"]) == 4, "an unknown ceiling is no ceiling"
+
+
+def test_helicopters_are_recognised():
+    for code in ("EC35", "A169", "AS65", "NH90", "H47", "B505", "G2CA", "R44", "EC99", "AS350"):
+        assert A.type_of(code)[1] == "heli", code
+    assert A.type_of("XXXX", "", "A7")[1] == "heli", "the rotorcraft emitter category"
+    assert A.type_of("ZZ9", "Some Gyrocopter")[1] == "heli"
+    for code in ("B461", "A124", "A10", "B738"):
+        assert A.type_of(code)[1] != "heli", code
 
 
 def test_a_refused_name_is_asked_again_by_its_shape(tmp_path, offline, monkeypatch):
