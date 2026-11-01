@@ -8,10 +8,22 @@
   <p class="page-blurb">Your paperlesspaper frames on their own firmware. Tesserae renders a page for a device of the <b>paperlesspaper</b> kind and uploads each new frame to that device's paper; the frame shows it at its next wake-up, or straight away when you press its button or shake it. Below, switch which paper a frame shows: the Tesserae paper, or one of paperlesspaper's own integrations.</p>
 </div>
 
+{% macro key_form(label) %}
+<form method="post" action="{{ url_for('paperlesspaper_core_admin.key') }}" class="pp-key" autocomplete="off">
+  <label class="pp-key-label" for="pp-api-key">paperlesspaper API key</label>
+  <div class="pp-key-row">
+    <input id="pp-api-key" type="password" name="api_key" required spellcheck="false" placeholder="Paste your key">
+    {{ button(label, icon='key') }}
+  </div>
+</form>
+{% endmacro %}
+
 {% if not has_key %}
 <section class="card">
   {{ card_head('Add your API key', icon_name='key', level=2) }}
-  <p>Create a key at <a href="https://web.paperlesspaper.de/account" target="_blank" rel="noopener">web.paperlesspaper.de/account</a> and paste it under <a href="{{ url_for('plugins.plugins_index') }}">Plugins &rsaquo; paperlesspaper &rsaquo; Settings</a>.</p>
+  <p>Create a key at <a href="https://web.paperlesspaper.de/account" target="_blank" rel="noopener">web.paperlesspaper.de/account</a> and paste it here. It is stored encrypted and only sent to the paperlesspaper API.</p>
+  {{ key_form('Save key') }}
+  <p class="field-help">Also under <a href="{{ settings_url }}">Settings &rsaquo; Widgets &rsaquo; paperlesspaper</a>, with the API address.</p>
 </section>
 {% endif %}
 
@@ -90,6 +102,16 @@
 </section>
 {% endif %}
 
+{% if has_key %}
+<section class="card">
+  <details>
+    <summary>API key</summary>
+    <p class="field-help">A key is set. Paste a new one to replace it, or change the API address under <a href="{{ settings_url }}">Settings &rsaquo; Widgets &rsaquo; paperlesspaper</a>.</p>
+    {{ key_form('Replace key') }}
+  </details>
+</section>
+{% endif %}
+
 <style>
   .pp-table { width: 100%; border-collapse: collapse; }
   .pp-table th, .pp-table td { text-align: left; padding: .45rem .5rem; border-bottom: 1px solid var(--border, rgba(0,0,0,.12)); vertical-align: top; }
@@ -101,5 +123,9 @@
   .pp-bad { color: var(--danger, #b33); }
   .pp-frame + .pp-frame { margin-top: 1.5rem; }
   .muted { opacity: .65; }
+  .pp-key { margin: .75rem 0; }
+  .pp-key-label { display: block; font-weight: 600; margin-bottom: .35rem; }
+  .pp-key-row { display: flex; gap: .5rem; flex-wrap: wrap; }
+  .pp-key-row input { flex: 1 1 14rem; min-width: 0; }
 </style>
 {% endblock %}

@@ -20,7 +20,7 @@
       "type": "string",
       "label": "Paper",
       "default": "",
-      "help": "The id of the paperlesspaper paper (screen) this device's frames are uploaded to: the last part of the paper's address in the paperlesspaper web app, or pick it on Plugins > paperlesspaper. Use an image paper of its own, so the frame's other papers are left alone."
+      "help": "The id of the paperlesspaper paper (screen) this device's frames are uploaded to: the last part of the paper's address in the paperlesspaper web app, or pick it on the paperlesspaper page (Settings > Widgets > paperlesspaper > Open admin). Use an image paper of its own, so the frame's other papers are left alone."
     },
     "orientation": {
       "type": "select",
