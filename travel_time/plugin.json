@@ -1,0 +1,219 @@
+{
+  "tesserae_compat": "1.x",
+  "name": "Travel time",
+  "version": "0.1.0",
+  "kind": "widget",
+  "description": "Travel time to work in the morning and home in the afternoon, for up to three people, from travel-time sensors in Home Assistant (Waze Travel Time, Google Maps Travel Time). A delay against what is normal for that weekday and time shows as +x min. Hidden at the weekend if you like. Requires the Home Assistant Core plugin.",
+  "icon": "ph-car",
+  "category": "home-assistant",
+  "locales": [
+    "en",
+    "nl",
+    "de"
+  ],
+  "supports": {
+    "sizes": [
+      "xs",
+      "sm",
+      "md",
+      "lg"
+    ]
+  },
+  "cell_options": [
+    {
+      "name": "person_1_name",
+      "type": "string",
+      "label": "Person 1: name",
+      "default": "",
+      "help": "Shown on the page. Blank uses the sensor's name."
+    },
+    {
+      "name": "person_1_to_work",
+      "type": "select",
+      "label": "Person 1: to work",
+      "default": "",
+      "choices_from": "travel_sensor",
+      "help": "A travel-time sensor in Home Assistant (Waze Travel Time, Google Maps Travel Time, or any sensor in minutes) from home to work."
+    },
+    {
+      "name": "person_1_to_home",
+      "type": "select",
+      "label": "Person 1: home",
+      "default": "",
+      "choices_from": "travel_sensor",
+      "help": "The same, from work to home."
+    },
+    {
+      "name": "person_2_name",
+      "type": "string",
+      "label": "Person 2: name",
+      "default": ""
+    },
+    {
+      "name": "person_2_to_work",
+      "type": "select",
+      "label": "Person 2: to work",
+      "default": "",
+      "choices_from": "travel_sensor"
+    },
+    {
+      "name": "person_2_to_home",
+      "type": "select",
+      "label": "Person 2: home",
+      "default": "",
+      "choices_from": "travel_sensor"
+    },
+    {
+      "name": "person_3_name",
+      "type": "string",
+      "label": "Person 3: name",
+      "default": ""
+    },
+    {
+      "name": "person_3_to_work",
+      "type": "select",
+      "label": "Person 3: to work",
+      "default": "",
+      "choices_from": "travel_sensor"
+    },
+    {
+      "name": "person_3_to_home",
+      "type": "select",
+      "label": "Person 3: home",
+      "default": "",
+      "choices_from": "travel_sensor"
+    },
+    {
+      "name": "switch_hour",
+      "type": "select",
+      "label": "Home from",
+      "default": "14",
+      "choices": [
+        {
+          "value": "10",
+          "label": "10:00"
+        },
+        {
+          "value": "11",
+          "label": "11:00"
+        },
+        {
+          "value": "12",
+          "label": "12:00"
+        },
+        {
+          "value": "13",
+          "label": "13:00"
+        },
+        {
+          "value": "14",
+          "label": "14:00"
+        },
+        {
+          "value": "15",
+          "label": "15:00"
+        },
+        {
+          "value": "16",
+          "label": "16:00"
+        },
+        {
+          "value": "17",
+          "label": "17:00"
+        },
+        {
+          "value": "18",
+          "label": "18:00"
+        }
+      ],
+      "help": "Before this hour the page shows the way to work, from it the way home."
+    },
+    {
+      "name": "weekend",
+      "type": "select",
+      "label": "At the weekend",
+      "default": "hide",
+      "choices": [
+        {
+          "value": "hide",
+          "label": "Hide"
+        },
+        {
+          "value": "show",
+          "label": "Show"
+        }
+      ],
+      "help": "Hidden, the cell stays empty on Saturday and Sunday. For a page that gives the room to something else at the weekend, schedule a weekend page of its own."
+    },
+    {
+      "name": "delay_min",
+      "type": "select",
+      "label": "Show a delay from",
+      "default": "2",
+      "choices": [
+        {
+          "value": "1",
+          "label": "+1 min"
+        },
+        {
+          "value": "2",
+          "label": "+2 min"
+        },
+        {
+          "value": "3",
+          "label": "+3 min"
+        },
+        {
+          "value": "5",
+          "label": "+5 min"
+        },
+        {
+          "value": "10",
+          "label": "+10 min"
+        }
+      ],
+      "help": "How much longer than normal before the page says so."
+    },
+    {
+      "name": "baseline_weeks",
+      "type": "select",
+      "label": "Normal is the median of the last",
+      "default": "6",
+      "advanced": true,
+      "choices": [
+        {
+          "value": "4",
+          "label": "4 weeks"
+        },
+        {
+          "value": "6",
+          "label": "6 weeks"
+        },
+        {
+          "value": "8",
+          "label": "8 weeks"
+        }
+      ],
+      "help": "Normal is the median of the same sensor on the same weekday at the same time of day, from Home Assistant's history (the recorder keeps 10 days by default: raise purge_keep_days, or the long-term statistics fill in). Until there is enough history the delay is left out."
+    },
+    {
+      "name": "show_route",
+      "type": "boolean",
+      "label": "Roads",
+      "default": true,
+      "help": "The road numbers of the route (A2 · A12), when the sensor gives them."
+    },
+    {
+      "name": "title",
+      "type": "string",
+      "label": "Title",
+      "default": "",
+      "advanced": true,
+      "help": "Blank: 'Travel time to work' or 'Travel time home' in the display language."
+    }
+  ],
+  "render": {
+    "dither": "none",
+    "needs_network": true
+  }
+}

@@ -64,8 +64,10 @@ An unchanged page is never uploaded twice.
 | The Home Assistant app: Tesserae with these widgets and the paperlesspaper bridge | [`tesserae_paperless/`](tesserae_paperless/) |
 | **paperlesspaper Core**: uploads every render to the frame's paper and manages your frames (which paper is shown, battery, last wake-up) | [`paperlesspaper_core/`](paperlesspaper_core/) |
 | Device kind *paperlesspaper frame (stock firmware)*: 1600 × 1200 Spectra 6, push | [`devices/paperlesspaper/`](devices/paperlesspaper/) |
-| **Overhead** (fork): aircraft and helicopters above a place, with a radius and a height ceiling | [`overhead_core/`](overhead_core/) + `overhead_cluster/`, `overhead_photo/`, `overhead_plate/`, `overhead_scene/` |
+| **Overhead** (fork): aircraft and helicopters above a place, with a radius and a height ceiling, and a map of their tracks | [`overhead_core/`](overhead_core/) + `overhead_cluster/`, `overhead_photo/`, `overhead_plate/`, `overhead_scene/`, `overhead_map/` |
 | **Energy, Dynamic Price**: EPEX and Tibber electricity prices for today and tomorrow | [`energy_dynamic_price/`](energy_dynamic_price/) |
+| **Travel time**: to work in the morning, home in the afternoon, with the delay against normal, from Waze (or other) sensors in Home Assistant | [`travel_time/`](travel_time/) |
+| **Weather, Today**: today's weather as a column, hour by hour, for a narrow portrait cell | [`weather_today/`](weather_today/) |
 
 Each widget folder is a self-contained Tesserae plugin (`plugin.json` +
 `server.py`, and `client.js` for widgets).
@@ -91,6 +93,13 @@ A fork of the official Overhead bundle (v0.11.3, AGPL-3.0-or-later) with:
   feet) reach the page; the rest are left out before the count is taken.
   Choices: no ceiling, 500, 1,000, 1,500, 2,000, 3,000, 5,000 or 10,000 ft.
   The page header then reads, for example, *within 10 km, below 1,500 ft*.
+- **Overhead: Map**, a fifth widget: the aircraft on an OpenStreetMap map
+  of the place, each with its track over the last 10, 30 or 60 minutes,
+  coloured by height or by speed (green, ochre, red: the energy chart's
+  colours), a numbered badge in its own colour where it is now, and a line
+  for each under the map. Up to six; the rest are counted. The tracks come
+  from the watch on the place, which now keeps each aircraft's positions
+  for two hours. Map tiles are kept on disk for a month.
 - **Better helicopter recognition**: about 50 more helicopter types (police
   H135/EC35, air ambulance H145/EC45, coastguard AW189, AS365 Dauphin, NH90,
   Chinook, Apache, Alouette III, Cabri G2, MD 500/600, …), and a type not in
@@ -111,11 +120,27 @@ Only low flyers and helicopters, for example:
 | Order (More options) | Lowest first |
 
 **Install**: included in the Home Assistant app above. On its own: copy the
-five folders `overhead_core`, `overhead_photo`, `overhead_plate`,
-`overhead_cluster` and `overhead_scene` together into Tesserae's plugins
+six folders `overhead_core`, `overhead_photo`, `overhead_plate`,
+`overhead_cluster`, `overhead_scene` and `overhead_map` together into Tesserae's plugins
 folder, in place of the catalog's Overhead bundle (the same widget ids, so
 existing cells keep working). The version is `0.11.3.1`: a catalog update to
 0.11.4 or later would overwrite the fork.
+
+## Example: a paperlesspaper L page (1200 × 1600, portrait)
+
+Overhead, travel time, electricity prices and today's weather on one
+portrait page. Set the device's panel to portrait (1200 by 1600), then:
+
+| Cell | Widget | Settings |
+|---|---|---|
+| Left, top (about 860 × 880) | **Overhead: Map** | Within 10 km, Below 1,500 ft, Colour of the tracks: height or speed |
+| Left, middle (about 860 × 240) | **Travel time** | Per person a name and the two sensors; Home from 14:00; At the weekend: Hide |
+| Left, bottom (about 860 × 420) | **Energy, Dynamic Price** | Today, plus tomorrow when available |
+| Right, full height (about 290 × 1570) | **Weather, Today** | Your place; Hours from 07:00 |
+
+A cell cannot give its room away, so at the weekend the Travel time cell is
+just empty. For a weekend page with a taller map, make a second page
+without that cell and schedule it for Saturday and Sunday.
 
 ## Changelog
 

@@ -1,0 +1,102 @@
+{
+  "tesserae_compat": "1.x",
+  "name": "Weather, Today",
+  "version": "0.1.0",
+  "kind": "widget",
+  "description": "Today's weather as a column for a narrow (portrait) cell: the weather now with the day's high, low and rain, and below it every hour of the rest of the day with its icon, temperature and a bar for the rain. Hours gone by stay, faded. Open-Meteo, no key.",
+  "icon": "ph-cloud-sun",
+  "category": "weather",
+  "locales": [
+    "en",
+    "nl",
+    "de"
+  ],
+  "supports": {
+    "sizes": [
+      "xs",
+      "sm",
+      "md",
+      "lg"
+    ]
+  },
+  "requires": [
+    "network:api.open-meteo.com"
+  ],
+  "cell_options": [
+    {
+      "name": "location",
+      "type": "location_search",
+      "label": "Place",
+      "default": "",
+      "help": "Search a town, or paste 'lat, lon'."
+    },
+    {
+      "name": "label",
+      "type": "string",
+      "label": "Place name",
+      "default": "",
+      "help": "Auto-filled from the place; shown under the date when set."
+    },
+    {
+      "name": "from_hour",
+      "type": "select",
+      "label": "Hours from",
+      "default": "7",
+      "choices": [
+        {
+          "value": "0",
+          "label": "00:00"
+        },
+        {
+          "value": "5",
+          "label": "05:00"
+        },
+        {
+          "value": "6",
+          "label": "06:00"
+        },
+        {
+          "value": "7",
+          "label": "07:00"
+        },
+        {
+          "value": "8",
+          "label": "08:00"
+        },
+        {
+          "value": "9",
+          "label": "09:00"
+        },
+        {
+          "value": "10",
+          "label": "10:00"
+        },
+        {
+          "value": "12",
+          "label": "12:00"
+        }
+      ],
+      "help": "The first hour in the list. Hours gone by stay, faded; when the list does not fit the cell, the earliest of those go first."
+    },
+    {
+      "name": "units",
+      "type": "select",
+      "label": "Units",
+      "default": "metric",
+      "choices": [
+        {
+          "value": "metric",
+          "label": "Metric (°C, mm)"
+        },
+        {
+          "value": "imperial",
+          "label": "Imperial (°F)"
+        }
+      ]
+    }
+  ],
+  "render": {
+    "dither": "none",
+    "needs_network": true
+  }
+}

@@ -169,6 +169,10 @@
         {
           "value": "sky",
           "label": "A soft sky wash"
+        },
+        {
+          "value": "page",
+          "label": "The page's own: no paper of its own, the dashboard's background"
         }
       ]
     },

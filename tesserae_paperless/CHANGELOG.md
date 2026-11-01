@@ -11,6 +11,28 @@ under its version number.
 
 ## [Unreleased]
 
+### Added
+- **Overhead: Map**: the aircraft near your place on an OpenStreetMap map,
+  quietened for e-paper. Each one's track over the last 10, 30 or 60
+  minutes is coloured by its height or its speed (your choice), in the
+  same green, ochre and red as the energy price chart; a numbered badge in
+  a colour of its own marks where it is now and points the way it flies.
+  Under the map a line for each: picture, registration, type, height,
+  distance. Up to six (fewer when fewer are within reach), and the rest are
+  counted. Home, the radius ring and a legend on the map.
+- **Travel time**: travel time to work until 14:00 (or the hour you pick)
+  and home after it, for up to three people, from travel-time sensors in
+  Home Assistant (Waze Travel Time, Google Maps Travel Time). The sensors
+  are picked from a list in the cell's options, so none of them is in the
+  widget. When it takes longer than is normal for that weekday and time
+  (the median of the sensor's own history), the page says **+x min**.
+  Hidden at the weekend unless you want it.
+- **Weather, Today**: today's weather as a column for a narrow portrait
+  cell: the weather now, the day's high, low and rain, and below it every
+  hour with its icon, temperature and a rain bar. Open-Meteo, no key.
+- Overhead: a **Paper** choice "The page's own", so a widget has no paper of
+  its own and sits on the dashboard's background (the default for the map).
+
 ## [0.1.1] - 2026-11-01
 
 Built on Tesserae 0.480.0, from commit `6c5e271`.

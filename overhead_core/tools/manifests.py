@@ -1,4 +1,4 @@
-"""Write the four widgets' plugin.json from one description, so the shared
+"""Write the five widgets' plugin.json from one description, so the shared
 options never drift apart. Run after editing: python tools/manifests.py"""
 
 from __future__ import annotations
@@ -127,9 +127,9 @@ def painting_options(many: bool):
     return [adv(o) for o in out]
 
 
-def paper_options(**kw):
+def paper_options(default="cream", **kw):
     return [
-        sel("paper", "Paper", "cream", [("cream", "Cream"), ("white", "White"), ("aged", "Aged"), ("blueprint", "Blueprint: pale ink on blue"), ("sky", "A soft sky wash")], **kw),
+        sel("paper", "Paper", default, [("cream", "Cream"), ("white", "White"), ("aged", "Aged"), ("blueprint", "Blueprint: pale ink on blue"), ("sky", "A soft sky wash"), ("page", "The page's own: no paper of its own, the dashboard's background")], **kw),
     ]
 
 
@@ -175,6 +175,18 @@ WIDGETS = {
             {"name": "scale", "type": "slider", "label": "Scale", "default": 100, "min": 40, "max": 100, "step": 5, "unit": "%", "help": "How far the painted cluster runs out to the margins. 100% fills the page; less packs it into the middle with more paper round it.", "show_if": {"pictures": "paintings"}},
             sel("packing", "Packing", "balanced", [("balanced", "Balanced: grown to fill the page"), ("spiral", "Spiral: out from the middle (Fugleramme)"), ("voids", "Voids: the emptiest paper first (Fugleramme)")], show_if={"pictures": "paintings"}, help="How the painted cluster is packed. Balanced packs from the middle and then grows each aircraft into the room left. Spiral and Voids are Fugleramme's packers: Spiral sets each aircraft, largest first, on the first free spot out from the middle, for a round cluster; Voids sets each on the emptiest paper it fits, so the page fills to the corners."),
         ]] + page_options(["type", "route", "altitude", "distance"]),
+    },
+    "overhead_map": {
+        "name": "Overhead: Map",
+        "icon": "ph-map-trifold",
+        "description": "The aircraft near a place on a map: each one's track over the last half hour, coloured by its height or its speed, with a numbered badge where it is now, and below the map a line for each with its picture (painted or a silhouette), registration, type, height and distance. Up to six; more within reach are counted under the list. The map is OpenStreetMap, quietened for e-paper.",
+        "options": lambda: where_options() + [
+            {"name": "count", "type": "number", "label": "How many", "default": 6, "help": "1 to 6: fewer show when fewer are within reach, and the rest are counted under the list."},
+            sel("track_colour", "Colour of the tracks", "altitude", [("altitude", "Height: green low, through ochre, to red high"), ("speed", "Ground speed: green slow, through ochre, to red fast")], help="The same colours as the energy price chart. Height runs from the ground to the ceiling under Below (5,000 ft without one); speed from 0 to 200 knots. The badges stay in a colour of their own, one per aircraft."),
+            sel("track_minutes", "Track of the last", "30", [("10", "10 minutes"), ("30", "30 minutes"), ("60", "Hour")], help="The tracks come from a watch on the place, asked every minute (every thirty seconds with a receiver of your own) while a page asks for it and for three hours after; a page's first render has only where each aircraft is now."),
+            adv(sel("map_style", "Map", "grey", [("grey", "Quiet: mostly grey, for e-paper"), ("colour", "In OpenStreetMap's own colours")])),
+            adv({"name": "show_radius", "type": "boolean", "label": "Radius ring", "default": True, "help": "A dashed ring at the distance under Within, round the place."}),
+        ] + picture_options(False, True) + paper_options("page") + traffic_options() + painting_options(True) + page_options(["type", "altitude", "distance"]),
     },
     "overhead_scene": {
         "name": "Overhead: Scene",

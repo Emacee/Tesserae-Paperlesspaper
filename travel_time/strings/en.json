@@ -1,0 +1,9 @@
+{
+  "to_work": "Travel time to work",
+  "to_home": "Travel time home",
+  "normal": "normal",
+  "min": "min",
+  "no_people": "Pick the travel-time sensors in the cell's options.",
+  "weekend": "Weekend",
+  "unavailable": "no value"
+}

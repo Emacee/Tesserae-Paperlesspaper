@@ -1,0 +1,1367 @@
+{
+  "tesserae_compat": "1.x",
+  "name": "Overhead: Map",
+  "version": "0.11.3.1",
+  "kind": "widget",
+  "tesserae_min": "0.463.0",
+  "description": "The aircraft near a place on a map: each one's track over the last half hour, coloured by its height or its speed, with a numbered badge where it is now, and below the map a line for each with its picture (painted or a silhouette), registration, type, height and distance. Up to six; more within reach are counted under the list. The map is OpenStreetMap, quietened for e-paper.",
+  "icon": "ph-map-trifold",
+  "supports": {
+    "sizes": [
+      "sm",
+      "md",
+      "lg"
+    ]
+  },
+  "requires": [
+    "network:*",
+    "settings:plugin/overhead_core",
+    "plugin:overhead_core"
+  ],
+  "render": {
+    "needs_network": true,
+    "warm_ahead_s": 150
+  },
+  "design": {
+    "palette": "extended"
+  },
+  "cell_options": [
+    {
+      "name": "source",
+      "type": "select",
+      "label": "Positions from",
+      "default": "adsb_lol",
+      "choices": [
+        {
+          "value": "adsb_lol",
+          "label": "The community feeds (adsb.lol, adsb.fi; no key)"
+        },
+        {
+          "value": "receiver",
+          "label": "A receiver of your own"
+        }
+      ],
+      "help": "adsb.lol aggregates thousands of receivers and needs nothing from you; when it is slow or down the widget asks adsb.fi instead. A receiver of your own (readsb, dump1090, tar1090) answers at /data/aircraft.json and sees what it sees."
+    },
+    {
+      "name": "receiver_url",
+      "type": "string",
+      "label": "Receiver address",
+      "default": "",
+      "help": "For example http://pi.local:8080; the widget asks for /data/aircraft.json.",
+      "show_if": {
+        "source": "receiver"
+      }
+    },
+    {
+      "name": "location",
+      "type": "location_search",
+      "label": "Place",
+      "default": "",
+      "help": "The point the distances and bearings are from. Falls back to the app's location."
+    },
+    {
+      "name": "radius_km",
+      "type": "select",
+      "label": "Within",
+      "default": "25",
+      "choices": [
+        {
+          "value": "5",
+          "label": "5 km"
+        },
+        {
+          "value": "10",
+          "label": "10 km"
+        },
+        {
+          "value": "15",
+          "label": "15 km"
+        },
+        {
+          "value": "25",
+          "label": "25 km"
+        },
+        {
+          "value": "35",
+          "label": "35 km"
+        },
+        {
+          "value": "50",
+          "label": "50 km"
+        },
+        {
+          "value": "80",
+          "label": "80 km"
+        }
+      ]
+    },
+    {
+      "name": "max_alt_ft",
+      "type": "select",
+      "label": "Below",
+      "default": "",
+      "choices": [
+        {
+          "value": "",
+          "label": "No ceiling"
+        },
+        {
+          "value": "500",
+          "label": "500 ft (150 m)"
+        },
+        {
+          "value": "1000",
+          "label": "1,000 ft (300 m)"
+        },
+        {
+          "value": "1500",
+          "label": "1,500 ft (450 m)"
+        },
+        {
+          "value": "2000",
+          "label": "2,000 ft (600 m)"
+        },
+        {
+          "value": "3000",
+          "label": "3,000 ft (900 m)"
+        },
+        {
+          "value": "5000",
+          "label": "5,000 ft (1,500 m)"
+        },
+        {
+          "value": "10000",
+          "label": "10,000 ft (3,000 m)"
+        }
+      ],
+      "help": "Only aircraft at or below this height (barometric, in feet) are shown; the rest are left out before the count is taken. With a small radius, 1,000 or 1,500 ft leaves the helicopters, light aircraft and whatever is landing or taking off close by; airliners at cruise never show. Aircraft on the ground count as 0 ft and follow Include aircraft on the ground."
+    },
+    {
+      "name": "count",
+      "type": "number",
+      "label": "How many",
+      "default": 6,
+      "help": "1 to 6: fewer show when fewer are within reach, and the rest are counted under the list."
+    },
+    {
+      "name": "track_colour",
+      "type": "select",
+      "label": "Colour of the tracks",
+      "default": "altitude",
+      "choices": [
+        {
+          "value": "altitude",
+          "label": "Height: green low, through ochre, to red high"
+        },
+        {
+          "value": "speed",
+          "label": "Ground speed: green slow, through ochre, to red fast"
+        }
+      ],
+      "help": "The same colours as the energy price chart. Height runs from the ground to the ceiling under Below (5,000 ft without one); speed from 0 to 200 knots. The badges stay in a colour of their own, one per aircraft."
+    },
+    {
+      "name": "track_minutes",
+      "type": "select",
+      "label": "Track of the last",
+      "default": "30",
+      "choices": [
+        {
+          "value": "10",
+          "label": "10 minutes"
+        },
+        {
+          "value": "30",
+          "label": "30 minutes"
+        },
+        {
+          "value": "60",
+          "label": "Hour"
+        }
+      ],
+      "help": "The tracks come from a watch on the place, asked every minute (every thirty seconds with a receiver of your own) while a page asks for it and for three hours after; a page's first render has only where each aircraft is now."
+    },
+    {
+      "name": "map_style",
+      "type": "select",
+      "label": "Map",
+      "default": "grey",
+      "choices": [
+        {
+          "value": "grey",
+          "label": "Quiet: mostly grey, for e-paper"
+        },
+        {
+          "value": "colour",
+          "label": "In OpenStreetMap's own colours"
+        }
+      ],
+      "advanced": true
+    },
+    {
+      "name": "show_radius",
+      "type": "boolean",
+      "label": "Radius ring",
+      "default": true,
+      "help": "A dashed ring at the distance under Within, round the place.",
+      "advanced": true
+    },
+    {
+      "name": "pictures",
+      "type": "select",
+      "label": "Pictures",
+      "default": "photos",
+      "choices": [
+        {
+          "value": "photos",
+          "label": "Photographs of the airframe (planespotters.net)"
+        },
+        {
+          "value": "paintings",
+          "label": "AI paintings, each from its own photograph"
+        }
+      ],
+      "help": "Photographs cost nothing. AI paintings paint each airframe once, from its photograph, in the style below, at about US$0.04 a painting (or once per type and airline: One painting for, under the advanced options); needs a fal.ai key in the Overhead Core settings."
+    },
+    {
+      "name": "style",
+      "type": "select",
+      "label": "Style",
+      "default": "poster",
+      "choices": [
+        {
+          "value": "poster",
+          "label": "Vintage airline poster",
+          "image": "/plugins/overhead_core/static/styles/poster.jpg",
+          "image_large": "/plugins/overhead_core/static/styles/large/poster.jpg"
+        },
+        {
+          "value": "engraving",
+          "label": "Black-ink engraving",
+          "image": "/plugins/overhead_core/static/styles/engraving.jpg",
+          "image_large": "/plugins/overhead_core/static/styles/large/engraving.jpg"
+        },
+        {
+          "value": "technical",
+          "label": "Technical ink drawing",
+          "image": "/plugins/overhead_core/static/styles/technical.jpg",
+          "image_large": "/plugins/overhead_core/static/styles/large/technical.jpg"
+        },
+        {
+          "value": "watercolour",
+          "label": "Loose watercolour",
+          "image": "/plugins/overhead_core/static/styles/watercolour.jpg",
+          "image_large": "/plugins/overhead_core/static/styles/large/watercolour.jpg"
+        },
+        {
+          "value": "linocut",
+          "label": "Linocut",
+          "image": "/plugins/overhead_core/static/styles/linocut.jpg",
+          "image_large": "/plugins/overhead_core/static/styles/large/linocut.jpg"
+        },
+        {
+          "value": "deco",
+          "label": "Art Deco travel poster",
+          "image": "/plugins/overhead_core/static/styles/deco.jpg",
+          "image_large": "/plugins/overhead_core/static/styles/large/deco.jpg"
+        },
+        {
+          "value": "blueprint",
+          "label": "Blueprint",
+          "image": "/plugins/overhead_core/static/styles/blueprint.jpg",
+          "image_large": "/plugins/overhead_core/static/styles/large/blueprint.jpg"
+        },
+        {
+          "value": "cutaway",
+          "label": "Magazine cutaway",
+          "image": "/plugins/overhead_core/static/styles/cutaway.jpg",
+          "image_large": "/plugins/overhead_core/static/styles/large/cutaway.jpg"
+        },
+        {
+          "value": "stamp",
+          "label": "Postage stamp",
+          "image": "/plugins/overhead_core/static/styles/stamp.jpg",
+          "image_large": "/plugins/overhead_core/static/styles/large/stamp.jpg"
+        },
+        {
+          "value": "tattoo",
+          "label": "Tattoo flash",
+          "image": "/plugins/overhead_core/static/styles/tattoo.jpg",
+          "image_large": "/plugins/overhead_core/static/styles/large/tattoo.jpg"
+        },
+        {
+          "value": "riso",
+          "label": "Risograph",
+          "image": "/plugins/overhead_core/static/styles/riso.jpg",
+          "image_large": "/plugins/overhead_core/static/styles/large/riso.jpg"
+        },
+        {
+          "value": "pixel",
+          "label": "Pixel art",
+          "image": "/plugins/overhead_core/static/styles/pixel.jpg",
+          "image_large": "/plugins/overhead_core/static/styles/large/pixel.jpg"
+        },
+        {
+          "value": "lowpoly",
+          "label": "Low-poly render",
+          "image": "/plugins/overhead_core/static/styles/lowpoly.jpg",
+          "image_large": "/plugins/overhead_core/static/styles/large/lowpoly.jpg"
+        },
+        {
+          "value": "toybrick",
+          "label": "Toy bricks",
+          "image": "/plugins/overhead_core/static/styles/toybrick.jpg",
+          "image_large": "/plugins/overhead_core/static/styles/large/toybrick.jpg"
+        },
+        {
+          "value": "charcoal",
+          "label": "Charcoal",
+          "image": "/plugins/overhead_core/static/styles/charcoal.jpg",
+          "image_large": "/plugins/overhead_core/static/styles/large/charcoal.jpg"
+        },
+        {
+          "value": "stained_glass",
+          "label": "Stained glass",
+          "image": "/plugins/overhead_core/static/styles/stained_glass.jpg",
+          "image_large": "/plugins/overhead_core/static/styles/large/stained_glass.jpg"
+        },
+        {
+          "value": "gilt",
+          "label": "Illuminated manuscript",
+          "image": "/plugins/overhead_core/static/styles/gilt.jpg",
+          "image_large": "/plugins/overhead_core/static/styles/large/gilt.jpg"
+        },
+        {
+          "value": "pulp",
+          "label": "Pulp cover",
+          "image": "/plugins/overhead_core/static/styles/pulp.jpg",
+          "image_large": "/plugins/overhead_core/static/styles/large/pulp.jpg"
+        },
+        {
+          "value": "synthwave",
+          "label": "Synthwave",
+          "image": "/plugins/overhead_core/static/styles/synthwave.jpg",
+          "image_large": "/plugins/overhead_core/static/styles/large/synthwave.jpg"
+        },
+        {
+          "value": "chalk",
+          "label": "Chalkboard",
+          "image": "/plugins/overhead_core/static/styles/chalk.jpg",
+          "image_large": "/plugins/overhead_core/static/styles/large/chalk.jpg"
+        },
+        {
+          "value": "builder",
+          "label": "Build my own"
+        },
+        {
+          "value": "custom",
+          "label": "Your own prompt"
+        }
+      ],
+      "show_if": {
+        "pictures": "paintings"
+      }
+    },
+    {
+      "name": "custom_style",
+      "type": "textarea",
+      "label": "Your own prompt",
+      "default": "",
+      "show_if": {
+        "pictures": "paintings",
+        "style": "custom"
+      },
+      "presets": [
+        {
+          "label": "Gouache poster",
+          "value": "a vintage airline poster in gouache: flat confident shapes, a warm limited palette, crisp edges"
+        },
+        {
+          "label": "Cutaway",
+          "value": "a 1950s magazine cutaway illustration: the fuselage opened to show seats and cargo, labelled in small neat capitals"
+        },
+        {
+          "label": "Chalk pastel",
+          "value": "a chalk pastel drawing on grey paper, soft and smudgy, with the sun catching the fuselage"
+        },
+        {
+          "label": "Aviation art",
+          "value": "a traditional oil painting in the manner of classic aviation art: dramatic light, polished metal, confident brushwork"
+        },
+        {
+          "label": "Comic ink",
+          "value": "a comic-book ink drawing with bold outlines, hatched shadows and flat halftone colour"
+        },
+        {
+          "label": "Neon line",
+          "value": "a single-weight neon line drawing on white: one continuous glowing line describing the aircraft"
+        }
+      ],
+      "help": "The medium and the look; the widget adds the aircraft, its photograph and the paper. Pick an example above to start from."
+    },
+    {
+      "name": "build_medium",
+      "type": "select",
+      "label": "Medium",
+      "default": "gouache",
+      "choices": [
+        {
+          "value": "gouache",
+          "label": "Gouache"
+        },
+        {
+          "value": "watercolour",
+          "label": "Watercolour"
+        },
+        {
+          "value": "oil",
+          "label": "Oil paint"
+        },
+        {
+          "value": "pastel",
+          "label": "Soft pastel"
+        },
+        {
+          "value": "coloured_pencil",
+          "label": "Coloured pencil"
+        },
+        {
+          "value": "pencil",
+          "label": "Graphite pencil"
+        },
+        {
+          "value": "ink",
+          "label": "Pen and ink"
+        },
+        {
+          "value": "engraving",
+          "label": "Engraving"
+        },
+        {
+          "value": "lithograph",
+          "label": "Lithograph"
+        },
+        {
+          "value": "woodblock",
+          "label": "Woodblock"
+        },
+        {
+          "value": "linocut",
+          "label": "Linocut"
+        },
+        {
+          "value": "screenprint",
+          "label": "Screen print"
+        },
+        {
+          "value": "vector",
+          "label": "Flat vector"
+        },
+        {
+          "value": "airbrush",
+          "label": "Airbrush"
+        },
+        {
+          "value": "papercut",
+          "label": "Paper cut"
+        }
+      ],
+      "show_if": {
+        "pictures": "paintings",
+        "style": "builder"
+      }
+    },
+    {
+      "name": "build_period",
+      "type": "select",
+      "label": "Period or school",
+      "default": "",
+      "choices": [
+        {
+          "value": "",
+          "label": "None in particular"
+        },
+        {
+          "value": "1930s",
+          "label": "1930s travel poster"
+        },
+        {
+          "value": "1950s",
+          "label": "1950s airline brochure"
+        },
+        {
+          "value": "1960s",
+          "label": "1960s jet-age"
+        },
+        {
+          "value": "victorian",
+          "label": "Victorian technical plate"
+        },
+        {
+          "value": "bauhaus",
+          "label": "Bauhaus"
+        },
+        {
+          "value": "ukiyoe",
+          "label": "Ukiyo-e"
+        },
+        {
+          "value": "deco",
+          "label": "Art Deco"
+        },
+        {
+          "value": "retrofuture",
+          "label": "Retro-futurism"
+        }
+      ],
+      "show_if": {
+        "pictures": "paintings",
+        "style": "builder"
+      }
+    },
+    {
+      "name": "build_palette",
+      "type": "select",
+      "label": "Palette",
+      "default": "",
+      "choices": [
+        {
+          "value": "",
+          "label": "As the livery is"
+        },
+        {
+          "value": "limited",
+          "label": "A few warm tones"
+        },
+        {
+          "value": "muted",
+          "label": "Muted"
+        },
+        {
+          "value": "vivid",
+          "label": "Vivid"
+        },
+        {
+          "value": "duotone",
+          "label": "Two inks"
+        },
+        {
+          "value": "mono",
+          "label": "Black and white"
+        },
+        {
+          "value": "sepia",
+          "label": "Sepia"
+        }
+      ],
+      "show_if": {
+        "pictures": "paintings",
+        "style": "builder"
+      }
+    },
+    {
+      "name": "build_line",
+      "type": "select",
+      "label": "Line",
+      "default": "",
+      "choices": [
+        {
+          "value": "",
+          "label": "As the medium has it"
+        },
+        {
+          "value": "fine",
+          "label": "Fine"
+        },
+        {
+          "value": "bold",
+          "label": "Bold"
+        },
+        {
+          "value": "none",
+          "label": "No outlines"
+        },
+        {
+          "value": "sketchy",
+          "label": "Sketchy"
+        }
+      ],
+      "show_if": {
+        "pictures": "paintings",
+        "style": "builder"
+      }
+    },
+    {
+      "name": "build_texture",
+      "type": "select",
+      "label": "Texture",
+      "default": "",
+      "choices": [
+        {
+          "value": "",
+          "label": "As the medium has it"
+        },
+        {
+          "value": "paper",
+          "label": "Paper grain"
+        },
+        {
+          "value": "print",
+          "label": "Print texture"
+        },
+        {
+          "value": "smooth",
+          "label": "Smooth"
+        },
+        {
+          "value": "halftone",
+          "label": "Halftone"
+        }
+      ],
+      "show_if": {
+        "pictures": "paintings",
+        "style": "builder"
+      }
+    },
+    {
+      "name": "build_mood",
+      "type": "select",
+      "label": "Mood",
+      "default": "",
+      "choices": [
+        {
+          "value": "",
+          "label": "Plain"
+        },
+        {
+          "value": "heroic",
+          "label": "Heroic"
+        },
+        {
+          "value": "calm",
+          "label": "Calm"
+        },
+        {
+          "value": "nostalgic",
+          "label": "Nostalgic"
+        },
+        {
+          "value": "technical",
+          "label": "Precise"
+        }
+      ],
+      "show_if": {
+        "pictures": "paintings",
+        "style": "builder"
+      }
+    },
+    {
+      "name": "build_extra",
+      "type": "string",
+      "label": "Your own words",
+      "default": "",
+      "show_if": {
+        "pictures": "paintings",
+        "style": "builder"
+      },
+      "help": "Added to the style: for example, with a little gold leaf on the tail."
+    },
+    {
+      "name": "paper",
+      "type": "select",
+      "label": "Paper",
+      "default": "page",
+      "choices": [
+        {
+          "value": "cream",
+          "label": "Cream"
+        },
+        {
+          "value": "white",
+          "label": "White"
+        },
+        {
+          "value": "aged",
+          "label": "Aged"
+        },
+        {
+          "value": "blueprint",
+          "label": "Blueprint: pale ink on blue"
+        },
+        {
+          "value": "sky",
+          "label": "A soft sky wash"
+        },
+        {
+          "value": "page",
+          "label": "The page's own: no paper of its own, the dashboard's background"
+        }
+      ]
+    },
+    {
+      "name": "include_ground",
+      "type": "boolean",
+      "label": "Include aircraft on the ground",
+      "default": false,
+      "advanced": true
+    },
+    {
+      "name": "kinds",
+      "type": "multiselect",
+      "label": "Kinds of aircraft",
+      "default": [
+        "wide",
+        "jet",
+        "biz",
+        "prop",
+        "light",
+        "heli"
+      ],
+      "help": "The kinds the page shows; the rest are left out before the count is taken, so a page near a busy airfield is not all light aircraft and helicopters. Each aircraft's kind comes from its type code; one the widget does not know counts as a jet.",
+      "choices": [
+        {
+          "value": "wide",
+          "label": "Wide-body airliners"
+        },
+        {
+          "value": "jet",
+          "label": "Narrow-body jets"
+        },
+        {
+          "value": "biz",
+          "label": "Business jets"
+        },
+        {
+          "value": "prop",
+          "label": "Turboprops"
+        },
+        {
+          "value": "light",
+          "label": "Light aircraft, gliders and balloons"
+        },
+        {
+          "value": "heli",
+          "label": "Helicopters"
+        }
+      ],
+      "advanced": true
+    },
+    {
+      "name": "order",
+      "type": "select",
+      "label": "Order",
+      "default": "nearest",
+      "choices": [
+        {
+          "value": "nearest",
+          "label": "Nearest first"
+        },
+        {
+          "value": "lowest",
+          "label": "Lowest first"
+        },
+        {
+          "value": "highest",
+          "label": "Highest first"
+        },
+        {
+          "value": "largest",
+          "label": "Largest first"
+        },
+        {
+          "value": "fastest",
+          "label": "Fastest first"
+        }
+      ],
+      "advanced": true
+    },
+    {
+      "name": "period",
+      "type": "select",
+      "label": "Show",
+      "default": "now",
+      "choices": [
+        {
+          "value": "now",
+          "label": "What is within reach now"
+        },
+        {
+          "value": "since",
+          "label": "Everything that passed since the last render"
+        }
+      ],
+      "help": "Since the last render keeps a watch on the place between renders (the community feeds every minute, a receiver every thirty seconds) and shows every aircraft seen since the page was last drawn for a panel, each at its closest approach with the time, so a page drawn every hour is the hour's traffic rather than one moment of it. The order and the count apply to what was seen. The editor's previews show the same window without moving it on; the watch stops three hours after a page last asked, and a first render shows the last hour.",
+      "advanced": true
+    },
+    {
+      "name": "subject",
+      "type": "select",
+      "label": "One painting for",
+      "default": "airframe",
+      "choices": [
+        {
+          "value": "airframe",
+          "label": "Each airframe, from its own photograph"
+        },
+        {
+          "value": "fleet",
+          "label": "Each type in each airline's livery: the first airframe seen stands for the rest"
+        }
+      ],
+      "show_if": {
+        "pictures": "paintings"
+      },
+      "help": "Each airframe paints every aircraft that passes once, from its own photograph, so a busy place paints a great many. Each type in each airline's livery paints one A320 in Jetstar's colours, from the photograph of the first one seen with the registration left off, and shows it for every Jetstar A320 after it: a few dozen paintings for a place rather than thousands, at the cost of the odd winglet or special livery. An airframe without a photograph is painted from its type, as below. An airframe kept on its own on the paintings page (a special livery) gets its own painting all the same, and the page counts an airframe as painted when its fleet's painting is.",
+      "advanced": true
+    },
+    {
+      "name": "fidelity",
+      "type": "select",
+      "label": "Faithfulness",
+      "default": "photo",
+      "choices": [
+        {
+          "value": "photo",
+          "label": "As photographed: the same angle, every mark of the livery"
+        },
+        {
+          "value": "free",
+          "label": "Drawn afresh: the model's own composition, the view below"
+        }
+      ],
+      "show_if": {
+        "pictures": "paintings"
+      },
+      "help": "As photographed translates the airframe's photograph into the medium and keeps its angle, livery, lettering and registration exactly. Drawn afresh lets the model compose the aircraft anew in the style, in the view chosen below; liveries drift more.",
+      "advanced": true
+    },
+    {
+      "name": "view",
+      "type": "select",
+      "label": "View",
+      "default": "side",
+      "choices": [
+        {
+          "value": "side",
+          "label": "From the side, a little below"
+        },
+        {
+          "value": "livery",
+          "label": "Side-on: a pure profile, as a livery drawing"
+        },
+        {
+          "value": "quarter",
+          "label": "From the front quarter"
+        },
+        {
+          "value": "above",
+          "label": "From above, banking"
+        }
+      ],
+      "show_if": {
+        "pictures": "paintings",
+        "fidelity": "free"
+      },
+      "advanced": true
+    },
+    {
+      "name": "model",
+      "type": "select",
+      "label": "Model",
+      "default": "nano_banana",
+      "choices": [
+        {
+          "value": "nano_banana",
+          "label": "Nano Banana (about US$0.04)"
+        },
+        {
+          "value": "nano_banana_pro",
+          "label": "Nano Banana Pro (about US$0.15)"
+        },
+        {
+          "value": "flux_kontext",
+          "label": "FLUX.1 Kontext Pro (about US$0.04)"
+        },
+        {
+          "value": "gpt_image",
+          "label": "GPT Image 2 (about US$0.05)"
+        },
+        {
+          "value": "seedream",
+          "label": "Seedream 4 (about US$0.03)"
+        }
+      ],
+      "show_if": {
+        "pictures": "paintings"
+      },
+      "help": "All on fal.ai, all painting from the photograph. Nano Banana is faithful and cheap; on Nano Banana, pixel art, stained glass, low-poly, paper craft, toy bricks and risograph are painted with GPT Image 2 (about US$0.05), as Nano Banana keeps them close to the photograph. Nano Banana Pro follows every style further.",
+      "advanced": true
+    },
+    {
+      "name": "no_photo",
+      "type": "select",
+      "label": "Without a photograph of the airframe",
+      "default": "type",
+      "choices": [
+        {
+          "value": "type",
+          "label": "Paint it from a photograph of its type"
+        },
+        {
+          "value": "silhouette",
+          "label": "Show a silhouette"
+        }
+      ],
+      "show_if": {
+        "pictures": "paintings"
+      },
+      "help": "planespotters.net has no photograph of many light aircraft and helicopters. Painted from its type, such an airframe is painted from the lead picture of its type's Wikipedia article (Wikimedia Commons, credited on the page) in the operator's colours or plain white, with no registration; with no picture of the type, from its type's name alone. One painting serves every airframe of a type and operator, so a private Robinson R44 is painted once.",
+      "advanced": true
+    },
+    {
+      "name": "ufo",
+      "type": "slider",
+      "label": "Chance of a UFO",
+      "default": 0,
+      "min": 0,
+      "max": 100,
+      "step": 5,
+      "unit": "%",
+      "show_if": {
+        "pictures": "paintings"
+      },
+      "help": "Each hour, this chance that an unidentified contact joins the page, painted small in the page's style, with no transponder and a made-up height and bearing. For fun. Each craft in a style is one painting against the daily limit.",
+      "advanced": true
+    },
+    {
+      "name": "visitors",
+      "type": "multiselect",
+      "label": "Who visits",
+      "default": [
+        "saucer",
+        "triangle",
+        "cigar",
+        "orb",
+        "tictac",
+        "adamski"
+      ],
+      "show_if": {
+        "pictures": "paintings"
+      },
+      "help": "Tick the craft the roll, or an empty sky, may bring. Most are painted from a reference picture (Wikimedia Commons and NASA, credited on the page). A craft from film and television is named to the painter along with its shape; if a model refuses the name, it is asked again by the shape alone. A picture of your own for any craft goes in the Overhead Core settings. With nothing ticked, the classic UFOs.",
+      "choices": [
+        {
+          "value": "saucer",
+          "label": "UFO: Flying saucer"
+        },
+        {
+          "value": "triangle",
+          "label": "UFO: Black triangle"
+        },
+        {
+          "value": "cigar",
+          "label": "UFO: Cigar craft"
+        },
+        {
+          "value": "orb",
+          "label": "UFO: Glowing orb"
+        },
+        {
+          "value": "tictac",
+          "label": "UFO: Tic-tac craft"
+        },
+        {
+          "value": "adamski",
+          "label": "UFO: Adamski saucer"
+        },
+        {
+          "value": "enterprise",
+          "label": "Film: Enterprise"
+        },
+        {
+          "value": "falcon",
+          "label": "Film: Millennium Falcon"
+        },
+        {
+          "value": "xwing",
+          "label": "Film: X-wing"
+        },
+        {
+          "value": "tie",
+          "label": "Film: TIE fighter"
+        },
+        {
+          "value": "destroyer",
+          "label": "Film: Star Destroyer"
+        },
+        {
+          "value": "nostromo",
+          "label": "Film: Nostromo"
+        },
+        {
+          "value": "serenity",
+          "label": "Film: Serenity"
+        },
+        {
+          "value": "discovery",
+          "label": "Film: Discovery One"
+        },
+        {
+          "value": "eagle",
+          "label": "Film: Eagle Transporter"
+        },
+        {
+          "value": "tb2",
+          "label": "Film: Thunderbird 2"
+        },
+        {
+          "value": "birdofprey",
+          "label": "Film: Bird-of-Prey"
+        },
+        {
+          "value": "rocinante",
+          "label": "Film: Rocinante"
+        },
+        {
+          "value": "viper",
+          "label": "Film: Colonial Viper"
+        },
+        {
+          "value": "tardis",
+          "label": "Film: Police box"
+        },
+        {
+          "value": "heartofgold",
+          "label": "Film: Heart of Gold"
+        },
+        {
+          "value": "shuttle",
+          "label": "Real: Space Shuttle"
+        },
+        {
+          "value": "apollo_csm",
+          "label": "Real: Apollo command module"
+        },
+        {
+          "value": "lunar_module",
+          "label": "Real: Lunar module"
+        },
+        {
+          "value": "sputnik",
+          "label": "Real: Sputnik"
+        },
+        {
+          "value": "starship",
+          "label": "Real: Starship"
+        },
+        {
+          "value": "vostok",
+          "label": "Real: Vostok"
+        },
+        {
+          "value": "voyager",
+          "label": "Real: Voyager probe"
+        },
+        {
+          "value": "iss",
+          "label": "Real: Space station"
+        },
+        {
+          "value": "zeppelin",
+          "label": "Real: Zeppelin"
+        }
+      ],
+      "advanced": true
+    },
+    {
+      "name": "empty_sky",
+      "type": "select",
+      "label": "When nothing is overhead",
+      "default": "message",
+      "choices": [
+        {
+          "value": "message",
+          "label": "The page says so"
+        },
+        {
+          "value": "ufo",
+          "label": "An unidentified contact alone, a different craft each hour"
+        }
+      ],
+      "show_if": {
+        "pictures": "paintings"
+      },
+      "help": "With nothing within reach, the page can show an unidentified contact in place of the empty sky: one of the craft ticked under Who visits (the classic UFOs with nothing ticked), a different one each hour, painted small in the page's style. Each craft in a style is one painting against the daily limit.",
+      "advanced": true
+    },
+    {
+      "name": "unpainted",
+      "type": "select",
+      "label": "Until an aircraft is painted",
+      "default": "silhouette",
+      "choices": [
+        {
+          "value": "silhouette",
+          "label": "Show a silhouette"
+        },
+        {
+          "value": "photo",
+          "label": "Show its photograph"
+        },
+        {
+          "value": "skip",
+          "label": "Only painted aircraft: leave the rest off the page"
+        }
+      ],
+      "show_if": {
+        "pictures": "paintings"
+      },
+      "help": "Only painted aircraft shows a page of paintings alone; it says so while the first are being painted.",
+      "advanced": true
+    },
+    {
+      "name": "when_spent",
+      "type": "select",
+      "label": "When the day's budget is spent",
+      "default": "keep",
+      "choices": [
+        {
+          "value": "keep",
+          "label": "Keep showing what is overhead"
+        },
+        {
+          "value": "random",
+          "label": "Fill the gaps with paintings already kept, at random"
+        },
+        {
+          "value": "rare",
+          "label": "Fill the gaps with the rarest ones seen"
+        }
+      ],
+      "show_if": {
+        "pictures": "paintings"
+      },
+      "help": "Once to-day's painting budget is spent, the aircraft that could not be painted give way to paintings this widget already kept in the same style: a different handful each hour, or the ones seen fewest times first. Their labels say when each was last seen. Nothing is spent on them.",
+      "advanced": true
+    },
+    {
+      "name": "labels",
+      "type": "multiselect",
+      "label": "Label lines",
+      "default": [
+        "type",
+        "altitude",
+        "distance"
+      ],
+      "help": "In this order, under or beside each aircraft.",
+      "choices": [
+        {
+          "value": "airline",
+          "label": "Airline"
+        },
+        {
+          "value": "type",
+          "label": "Type"
+        },
+        {
+          "value": "reg",
+          "label": "Registration"
+        },
+        {
+          "value": "route",
+          "label": "Route"
+        },
+        {
+          "value": "altitude",
+          "label": "Altitude and trend"
+        },
+        {
+          "value": "distance",
+          "label": "Distance and bearing"
+        },
+        {
+          "value": "speed",
+          "label": "Ground speed"
+        },
+        {
+          "value": "heading",
+          "label": "Heading"
+        },
+        {
+          "value": "seen",
+          "label": "When it was within reach"
+        }
+      ],
+      "advanced": true
+    },
+    {
+      "name": "logos",
+      "type": "select",
+      "label": "Airline logos",
+      "default": "off",
+      "choices": [
+        {
+          "value": "off",
+          "label": "Off: the airline's name"
+        },
+        {
+          "value": "on",
+          "label": "On: fetched from the web"
+        }
+      ],
+      "help": "The airlines' own marks, fetched at render time from the service chosen in the Overhead Core settings and kept on your server; nothing ships with the widget. They are the airlines' trademarks: keep this off on anything you publish.",
+      "advanced": true
+    },
+    {
+      "name": "title",
+      "type": "string",
+      "label": "Title",
+      "default": "",
+      "help": "Blank uses the place.",
+      "advanced": true
+    },
+    {
+      "name": "header",
+      "type": "select",
+      "label": "Title line",
+      "default": "top",
+      "choices": [
+        {
+          "value": "top",
+          "label": "Above the page"
+        },
+        {
+          "value": "bottom",
+          "label": "Below the page"
+        },
+        {
+          "value": "hidden",
+          "label": "Hidden"
+        }
+      ],
+      "advanced": true
+    },
+    {
+      "name": "footer",
+      "type": "select",
+      "label": "Foot of the page",
+      "default": "show",
+      "choices": [
+        {
+          "value": "show",
+          "label": "Status and credits"
+        },
+        {
+          "value": "credits",
+          "label": "Credits only"
+        },
+        {
+          "value": "hide",
+          "label": "Nothing"
+        }
+      ],
+      "advanced": true
+    },
+    {
+      "name": "panel",
+      "type": "select",
+      "label": "Panel",
+      "default": "colour",
+      "choices": [
+        {
+          "value": "colour",
+          "label": "Colour"
+        },
+        {
+          "value": "gray16",
+          "label": "16 greys"
+        },
+        {
+          "value": "gray4",
+          "label": "4 greys"
+        },
+        {
+          "value": "mono",
+          "label": "Black and white"
+        }
+      ],
+      "help": "What the panel can show. Pictures are converted and contrast-stretched to match.",
+      "advanced": true
+    },
+    {
+      "name": "text_size",
+      "type": "select",
+      "label": "Text size",
+      "default": "100",
+      "choices": [
+        {
+          "value": "60",
+          "label": "60%"
+        },
+        {
+          "value": "80",
+          "label": "80%"
+        },
+        {
+          "value": "100",
+          "label": "100%"
+        },
+        {
+          "value": "125",
+          "label": "125%"
+        },
+        {
+          "value": "150",
+          "label": "150%"
+        }
+      ],
+      "advanced": true
+    },
+    {
+      "name": "font",
+      "type": "select",
+      "label": "Typeface",
+      "default": "fell",
+      "choices": [
+        {
+          "value": "fell",
+          "label": "IM Fell English: the old plate"
+        },
+        {
+          "value": "archivo",
+          "label": "Archivo Narrow: clean and plain"
+        },
+        {
+          "value": "georgia",
+          "label": "Georgia: a modern serif"
+        },
+        {
+          "value": "page",
+          "label": "The dashboard's own font"
+        }
+      ],
+      "help": "The face the page is set in. The dashboard's own font follows the page's font picker.",
+      "advanced": true
+    }
+  ],
+  "data_schema": {
+    "fields": [
+      {
+        "name": "title",
+        "type": "str",
+        "label": "Title"
+      },
+      {
+        "name": "airborne",
+        "type": "num",
+        "label": "Aircraft airborne within reach"
+      },
+      {
+        "name": "aircraft",
+        "type": "arr",
+        "label": "Aircraft shown"
+      }
+    ]
+  }
+}
