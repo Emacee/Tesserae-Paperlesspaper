@@ -114,8 +114,9 @@ Only low flyers and helicopters, for example:
 five folders `overhead_core`, `overhead_photo`, `overhead_plate`,
 `overhead_cluster` and `overhead_scene` together into Tesserae's plugins
 folder, in place of the catalog's Overhead bundle (the same widget ids, so
-existing cells keep working). The version is `0.11.3.1`: a catalog update to
-0.11.4 or later would overwrite the fork.
+existing cells keep working). The version is `0.11.3+fork.1` (Tesserae only accepts
+three numbers with an optional `-`/`+` suffix): a catalog update to 0.11.4 or
+later would overwrite the fork.
 
 ## Changelog
 

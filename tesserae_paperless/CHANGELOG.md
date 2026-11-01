@@ -11,6 +11,11 @@ under its version number.
 
 ## [Unreleased]
 
+### Fixed
+- Overhead: the five Overhead widgets load again. Their version is now
+  `0.11.3+fork.1`; Tesserae refused `0.11.3.1`, so Photo, Plate, Cluster and
+  Scene were missing from the widget picker.
+
 ## [0.1.1] - 2026-11-01
 
 Built on Tesserae 0.480.0, from commit `6c5e271`.
