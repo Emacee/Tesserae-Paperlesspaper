@@ -4,7 +4,8 @@
 This app is the official Tesserae image with three things added from
 [Tesserae-Paperlesspaper](https://github.com/Emacee/Tesserae-Paperlesspaper):
 
-- **paperlesspaper Core** (Plugins › paperlesspaper): uploads each new frame
+- **paperlesspaper Core** (Settings › Widgets › paperlesspaper › Open
+  admin): uploads each new frame
   of a paperlesspaper device to its paper in the paperlesspaper cloud, and
   manages your frames: which paper each shows (the Tesserae one, or one of
   paperlesspaper's own integrations), battery, last wake-up, Upload now.
@@ -23,7 +24,8 @@ paperlesspaper cloud, and sleeps. Tesserae puts the image there.
    **Tesserae + paperlesspaper** and start it. Open it from the sidebar.
 2. **API key.** Create one at
    [web.paperlesspaper.de/account](https://web.paperlesspaper.de/account).
-   In Tesserae: Plugins › paperlesspaper › Settings, paste it.
+   In Tesserae: Settings › Widgets › paperlesspaper › **Open admin**,
+   paste it under **Add your API key** and press **Save key**.
 3. **An image paper for Tesserae.** In the paperlesspaper app, add an image
    paper to your frame (any picture will do; Tesserae replaces it). Keep
    your integrations (XKCD, calendar, …) as their own papers.
@@ -31,7 +33,8 @@ paperlesspaper cloud, and sleeps. Tesserae puts the image there.
    **paperlesspaper frame (stock firmware)**. For a portrait frame, set the
    device's panel to portrait (1200 × 1600) and the device's orientation to
    portrait.
-5. **Link.** Plugins › paperlesspaper lists your frames and their papers.
+5. **Link.** The paperlesspaper page (Settings › Widgets › paperlesspaper ›
+   Open admin) lists your frames and their papers.
    Press **Link** on the Tesserae image paper (with your new device chosen):
    the device uploads to it from now on, and the current frame goes up at
    once. Press **Show** on that paper so the frame displays it.

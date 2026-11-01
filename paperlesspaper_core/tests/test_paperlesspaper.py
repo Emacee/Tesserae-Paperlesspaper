@@ -283,6 +283,10 @@ class Store:
     def get_for_runtime(self, ns: str, pid: str, fields: Any) -> dict[str, Any]:
         return {"api_key": self.key, "api_base": "https://api.example/v1"}
 
+    def update_for_namespace(self, ns: str, pid: str, values: dict[str, Any], fields: Any) -> None:
+        self.saved = (ns, pid, values, [f["name"] for f in fields])
+        self.key = values["api_key"]
+
     def get_section(self, name: str) -> dict[str, Any]:
         return self.devices if name == "devices" else {}
 
@@ -328,6 +332,10 @@ def app(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Any:
 
     @a.get("/plugins/", endpoint="plugins.plugins_index")
     def _index() -> str:
+        return ""
+
+    @a.get("/settings/<area>", endpoint="auth.settings_area")
+    def _settings(area: str) -> str:
         return ""
 
     a.config["server"] = server
@@ -382,3 +390,23 @@ def test_page_without_a_key(app: Any, calls: list[Any]) -> None:
     app.config["SETTINGS_STORE"].key = ""
     page = app.test_client().get("/plugins/paperlesspaper_core/").get_data(as_text=True)
     assert "Add your API key" in page and not calls
+
+
+def test_the_key_is_set_on_the_page(app: Any, calls: list[Any]) -> None:
+    store = app.config["SETTINGS_STORE"]
+    store.key = ""
+    page = app.test_client().get("/plugins/paperlesspaper_core/").get_data(as_text=True)
+    assert 'action="/plugins/paperlesspaper_core/key"' in page and 'name="api_key"' in page
+    assert 'href="/settings/plugins#plugin-paperlesspaper_core"' in page, "links Tesserae's own settings card"
+    assert 'href="/plugins/"' not in page, "not the widget list, whose Open admin leads back here"
+
+    r = app.test_client().post("/plugins/paperlesspaper_core/key", data={"api_key": "  "})
+    assert r.status_code == 302 and store.key == ""
+
+    r = app.test_client().post("/plugins/paperlesspaper_core/key", data={"api_key": " new-key "})
+    assert r.status_code == 302 and r.headers["Location"].endswith("/plugins/paperlesspaper_core/")
+    assert store.saved == ("plugins", "paperlesspaper_core", {"api_key": "new-key"}, ["api_key"]), "only the key"
+
+    calls.answers.append(b"[]")  # type: ignore[attr-defined]
+    page = app.test_client().get("/plugins/paperlesspaper_core/").get_data(as_text=True)
+    assert "Add your API key" not in page and "Replace key" in page

@@ -4,7 +4,8 @@ stock firmware, and manage the frames' papers from Tesserae.
 * An uploader hangs on Tesserae's push pipeline and posts each new frame of a
   ``paperlesspaper`` device (``devices/paperlesspaper``) to that device's
   paper in the paperlesspaper cloud.
-* The plugin page (Plugins > paperlesspaper) lists the frames on the
+* The plugin page (Settings > Widgets > paperlesspaper > Open admin) takes
+  the API key and lists the frames on the
   account, their papers (the Tesserae paper beside paperlesspaper's own
   integrations), which paper each frame shows, its battery and last
   wake-up; it switches the paper a frame shows, links a paper to a Tesserae
@@ -56,15 +57,36 @@ PUB = lib("publisher")
 def settings_of(store: Any) -> dict[str, Any]:
     if store is None:
         return {}
+    with contextlib.suppress(Exception):
+        got = store.get_for_runtime("plugins", PLUGIN_ID, _manifest_settings())
+        return got if isinstance(got, dict) else {}
+    return {}
+
+
+def _manifest_settings() -> list[dict[str, Any]]:
     try:
         manifest = json.loads((_HERE / "plugin.json").read_text(encoding="utf-8"))
     except (OSError, ValueError):
-        manifest = {}
+        return []
     fields = manifest.get("settings", []) if isinstance(manifest, dict) else []
-    with contextlib.suppress(Exception):
-        got = store.get_for_runtime("plugins", PLUGIN_ID, fields)
-        return got if isinstance(got, dict) else {}
-    return {}
+    return [f for f in fields if isinstance(f, dict) and f.get("name")]
+
+
+def settings_url() -> str:
+    """Tesserae's own form for this plugin's settings: Settings > Widgets,
+    the card of this plugin (``/settings/plugins#plugin-<id>``)."""
+    anchor = f"plugin-{PLUGIN_ID}"
+    try:
+        return url_for("auth.settings_area", area="plugins", _anchor=anchor)
+    except Exception:  # noqa: BLE001 - a host without that endpoint
+        return f"{request.script_root}/settings/plugins#{anchor}"
+
+
+def save_api_key(store: Any, key: str) -> None:
+    """Store the key the way Tesserae's settings form does: encrypted, as
+    ``api_key_secret``, the other settings left as they are."""
+    fields = [f for f in _manifest_settings() if f["name"] == "api_key"]
+    store.update_for_namespace("plugins", PLUGIN_ID, {"api_key": key}, fields)
 
 
 def client_for(app: Any, timeout: float = API.TIMEOUT_S) -> Any:
@@ -309,10 +331,26 @@ def blueprint() -> Any:
         return render_template(
             "paperlesspaper_core/index.html",
             has_key=has_key,
+            settings_url=settings_url(),
             tesserae=tesserae,
             frames=frames,
             error=error,
         )
+
+    @bp.post("/key")
+    def key() -> Any:
+        """Save the paperlesspaper API key from the plugin page itself."""
+        value = str(request.form.get("api_key") or "").strip()
+        store = current_app.config.get("SETTINGS_STORE")
+        if not value:
+            flash("Paste an API key first.", "warn")
+            return back()
+        if store is None or not hasattr(store, "update_for_namespace"):
+            flash("Settings are unavailable; set the key under Settings > Widgets > paperlesspaper.", "warn")
+            return back()
+        save_api_key(store, value)
+        flash("API key saved.", "success")
+        return back()
 
     @bp.post("/show")
     def show() -> Any:
