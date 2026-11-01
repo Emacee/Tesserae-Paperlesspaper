@@ -78,6 +78,9 @@ Home Assistant builds the image itself from the official
 plugins and the device kind from this repository at the commit in
 `WIDGETS_REF`. For a new app version, set the new commit SHA (or a tag) there
 and bump `version` in [`tesserae_paperless/config.yaml`](tesserae_paperless/config.yaml).
+Every release gets an entry in the
+[changelog](tesserae_paperless/CHANGELOG.md), which Home Assistant shows on
+the app's Changelog tab.
 
 ## Overhead (fork of `dmellok/tesserae-widget-overhead`)
 
@@ -113,6 +116,10 @@ five folders `overhead_core`, `overhead_photo`, `overhead_plate`,
 folder, in place of the catalog's Overhead bundle (the same widget ids, so
 existing cells keep working). The version is `0.11.3.1`: a catalog update to
 0.11.4 or later would overwrite the fork.
+
+## Changelog
+
+See [`tesserae_paperless/CHANGELOG.md`](tesserae_paperless/CHANGELOG.md).
 
 ## Development
 
