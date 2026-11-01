@@ -42,8 +42,10 @@ Alleen laagvliegers en helikopters, bijvoorbeeld:
 `overhead_plate`, `overhead_cluster` en `overhead_scene` samen naar de
 plugins-map van Tesserae, in plaats van de Overhead-bundel uit de catalogus
 (dezelfde widget-id's, dus bestaande cellen blijven werken). Het
-versienummer is `0.11.3.1`: een catalogus-update naar 0.11.4 of later zou de
-fork weer overschrijven.
+versienummer is `0.11.3+fork.1` (Tesserae eist drie getallen, met eventueel
+een `-`/`+`-achtervoegsel; `0.11.3.1` werd geweigerd en de widgets laadden
+niet). Een catalogus-update naar 0.11.4 of later zou de fork weer
+overschrijven.
 
 Tests (offline, met een checkout van de Tesserae-server ernaast of via
 `TESSERAE_REPO`):
