@@ -11,6 +11,15 @@ under its version number.
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-11-01
+
+Built on Tesserae 0.480.0, from commit `e786d19`.
+
+### Fixed
+- Overhead: the five Overhead widgets load again and are back in the widget
+  picker. Tesserae refused their version `0.11.3.1` and skipped them with
+  "manifest schema [version] does not match"; it is now `0.11.3+fork.1`.
+
 ## [0.1.1] - 2026-11-01
 
 Built on Tesserae 0.480.0, from commit `6c5e271`.
@@ -47,6 +56,7 @@ Built on Tesserae 0.480.0, from commit `ad7e2ba`.
 - Energy, Dynamic Price: EPEX and Tibber electricity prices for today and
   tomorrow.
 
-[Unreleased]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/6c5e271...master
+[Unreleased]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/e786d19...master
+[0.1.2]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/6c5e271...e786d19
 [0.1.1]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/ad7e2ba...6c5e271
 [0.1.0]: https://github.com/Emacee/Tesserae-Paperlesspaper/tree/ad7e2ba26e101fa9fbb8248146d5efc8d31c096e

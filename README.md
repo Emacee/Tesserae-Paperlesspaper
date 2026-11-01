@@ -110,20 +110,13 @@ Only low flyers and helicopters, for example:
 | Kinds of aircraft (More options) | Light aircraft + Helicopters (or just Helicopters) |
 | Order (More options) | Lowest first |
 
-**Installeren**: kopieer de vijf mappen `overhead_core`, `overhead_photo`,
-`overhead_plate`, `overhead_cluster` en `overhead_scene` samen naar de
-plugins-map van Tesserae, in plaats van de Overhead-bundel uit de catalogus
-(dezelfde widget-id's, dus bestaande cellen blijven werken). Het
-versienummer is `0.11.3+fork.1` (Tesserae eist drie getallen, met eventueel
-een `-`/`+`-achtervoegsel; `0.11.3.1` werd geweigerd en de widgets laadden
-niet). Een catalogus-update naar 0.11.4 of later zou de fork weer
-overschrijven.
 **Install**: included in the Home Assistant app above. On its own: copy the
 five folders `overhead_core`, `overhead_photo`, `overhead_plate`,
 `overhead_cluster` and `overhead_scene` together into Tesserae's plugins
 folder, in place of the catalog's Overhead bundle (the same widget ids, so
-existing cells keep working). The version is `0.11.3.1`: a catalog update to
-0.11.4 or later would overwrite the fork.
+existing cells keep working). The version is `0.11.3+fork.1` (Tesserae only accepts
+three numbers with an optional `-`/`+` suffix): a catalog update to 0.11.4 or
+later would overwrite the fork.
 
 ## Changelog
 
