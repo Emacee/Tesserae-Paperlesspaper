@@ -8,5 +8,11 @@
   "highest": "Hoogste",
   "average": "Gemiddeld",
   "tomorrow_pending": "Prijzen morgen vanaf ~13:00",
-  "no_data": "Geen prijzen beschikbaar."
+  "no_data": "Geen prijzen beschikbaar.",
+  "title_battery": "Stroomprijs & thuisbatterij",
+  "battery_soc": "SOC vandaag",
+  "battery_target": "doel",
+  "battery_grid": "netladen",
+  "slot": "Tijdslot",
+  "next": "volgende"
 }

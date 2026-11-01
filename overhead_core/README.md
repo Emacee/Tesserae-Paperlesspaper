@@ -2,7 +2,7 @@
 
 > **This is a fork** of [dmellok/tesserae-widget-overhead](https://github.com/dmellok/tesserae-widget-overhead) v0.11.3, version 0.11.3+fork.1. It adds **Below**, a height ceiling beside the radius (only aircraft at or under it are shown, for a page of low flyers and helicopters), and recognises many more helicopter types, plus any aircraft whose ADS-B emitter category is A7 (rotorcraft). Everything else is as upstream.
 
-Four Tesserae widgets for the aircraft overhead right now, installed together as one bundle:
+Five Tesserae widgets for the aircraft overhead right now, installed together as one bundle:
 
 | widget | the page |
 |---|---|
@@ -10,6 +10,7 @@ Four Tesserae widgets for the aircraft overhead right now, installed together as
 | **Overhead: Plate** | one aircraft painted from its photograph, in a ruled frame, its particulars beside it |
 | **Overhead: Cluster** | everything in the air near you on one page, each painted and cut out, sized by wingspan; or a spotter's log of photograph cards |
 | **Overhead: Scene** | one whole painting across the page: the aircraft on a painted sky, clouds, sunset, night, storm or an ornate plate |
+| **Overhead: Map** | the aircraft on an OpenStreetMap map of the place, each with its track coloured by height or speed, a numbered badge, and a line for each under the map |
 
 **Positions** come from adsb.lol (no key, the community feed), with adsb.fi asked instead when adsb.lol is slow or down, or a receiver of your own (readsb, dump1090 or tar1090: the widget reads `/data/aircraft.json`). Each aircraft gets its type and wingspan from its ICAO code, its operator from its callsign (where several operators share a prefix, as every state's police do with POL, from the airframe's registered owner, else just "Police"), its route from adsbdb, and a photograph of the actual airframe from planespotters.net (by its registration, or by its ICAO address where a receiver's aircraft.json has no registration, as dump1090-fa and readsb without a database), credited to the photographer.
 

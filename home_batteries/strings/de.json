@@ -1,0 +1,15 @@
+{
+  "home_battery": "Hausbatterie",
+  "car": "Auto",
+  "charging": "Lädt",
+  "discharging": "Entlädt",
+  "idle": "Ruht",
+  "target": "Ziel",
+  "plugged": "angesteckt",
+  "car_charging": "lädt",
+  "unplugged": "nicht angesteckt",
+  "mode_export_first": "Export First",
+  "mode_zero_ct": "Zero Export to CT",
+  "mode_zero_load": "Zero Export to Load",
+  "no_entities": "Wähle die Batterien in den Zelleinstellungen."
+}

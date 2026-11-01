@@ -40,13 +40,14 @@ P = _sibling("paint")
 W = _sibling("watch")
 SG = _sibling("sightings")
 OWN = _sibling("own")
+MAPS = _sibling("maps")
 # the ledger of passes: one id per airframe (vehicle), the same as the first part of its painting's key
 SIGHT_ID = lambda r: r.get("reg") or r.get("cs") or ""
 SIGHT_NAME = lambda r: " · ".join(
     x for x in (r.get("reg") or r.get("cs") or "", r.get("typ") or "") if x
 )
 
-WIDGETS = ("photo", "plate", "cluster", "scene")
+WIDGETS = ("photo", "plate", "cluster", "scene", "map")
 SOURCES = ("adsb_lol", "receiver")
 RADII = ("5", "10", "15", "25", "35", "50", "80")
 # a ceiling on the height shown, in feet: "" is none; low-flying aircraft and helicopters alone below it
@@ -54,7 +55,7 @@ CEILINGS = ("", "500", "1000", "1500", "2000", "3000", "5000", "10000")
 ORDERS = ("nearest", "lowest", "highest", "largest", "fastest")
 PICTURES = ("photos", "paintings")
 PANELS = ("colour", "gray16", "gray4", "mono")
-PAPERS = ("cream", "white", "aged", "blueprint", "sky")
+PAPERS = ("cream", "white", "aged", "blueprint", "sky", "page")
 LABELS = (
     "airline",
     "type",
@@ -84,6 +85,13 @@ KINDS = ("wide", "jet", "biz", "prop", "light", "heli")
 SPENT = ("keep", "random", "rare")
 MAX_COUNT = 12
 POOL = 6  # the nearest few a single page chooses a painted aircraft from
+MAP_MAX = 6  # the map numbers its aircraft with a badge each: six stay apart on e-paper
+TRACK_MINUTES = ("10", "30", "60")
+TRACK_COLOURS = ("altitude", "speed")
+MAP_STYLES = ("grey", "colour")
+MAP_LAYOUTS = ("map", "row")  # the map with a list under it, or one row of the nearest three without it
+ROW_MAX = 3
+LANGS = ("auto", "nl", "en", "de")
 PICTURE_PX = 700
 HERO_PX = 1400
 PHOTO_PX = 1600
@@ -327,6 +335,86 @@ def about_of(r: dict[str, Any]) -> str:
 # ----------------------------------------------------------------------
 # Held paintings, settling previews, the dashboards' records
 # ----------------------------------------------------------------------
+WATCH_ID = lambda r: str(r.get("hex") or r.get("reg") or r.get("cs") or "")  # noqa: E731
+
+
+def watch_of(
+    options: dict[str, Any],
+    source: str,
+    place: tuple[Any, ...],
+    radius: float,
+    data_dir: Path,
+    ua: str,
+) -> Any:
+    """The watch on the place, started or kept: one per place, feed and radius,
+    shared by every cell that watches it."""
+    receiver_url = str(options.get("receiver_url") or "")
+    lat, lon = place[0], place[1]
+    key = f"overhead|{source}|{receiver_url}|{lat:.3f}|{lon:.3f}|{radius:g}"
+
+    def poll() -> list[dict[str, Any]]:
+        got, _err, _feed = A.nearby(
+            source, receiver_url, lat, lon, radius, data_dir, ua
+        )
+        SG.ledger(data_dir).note(got, SIGHT_ID, SIGHT_NAME)
+        return got
+
+    return W.watch_for(
+        key,
+        poll,
+        WATCH_RECEIVER_S if source == "receiver" else WATCH_FEED_S,
+        data_dir,
+        WATCH_ID,
+    )
+
+
+def tracks(
+    w: Any, shown: list[dict[str, Any]], now: datetime, minutes: int
+) -> None:
+    """Each aircraft's track over the last ``minutes``, oldest first, as
+    [lat, lon, alt_ft, gs_kt], ending where it is now."""
+    t0 = now.timestamp() - minutes * 60
+    for r in shown:
+        pts = [p[1:] for p in w.trail(WATCH_ID(r), t0)] if w is not None else []
+        here = [r.get("lat"), r.get("lon"), int(r.get("alt") or 0), int(r.get("gs") or 0)]
+        if isinstance(here[0], (int, float)) and isinstance(here[1], (int, float)):
+            if not pts or (pts[-1][0], pts[-1][1]) != (here[0], here[1]):
+                pts.append(here)
+        r["track"] = [[round(float(a), 5), round(float(b), 5), int(c), int(d)] for a, b, c, d in pts]
+
+
+def map_of(
+    shown: list[dict[str, Any]],
+    place: tuple[Any, ...],
+    radius: float,
+    ctx: dict[str, Any],
+    data_dir: Path,
+    ua: str,
+    style: str,
+    more: bool,
+) -> dict[str, Any] | None:
+    """The map under the tracks: zoomed so the place and every aircraft fit,
+    or the whole radius when nothing is up."""
+    cell_w = int(ctx.get("cell_w") or 860)
+    cell_h = int(ctx.get("cell_h") or 880)
+    w, h = MAPS.map_box(cell_w, cell_h, len(shown), more=more)
+    home = (float(place[0]), float(place[1]))
+    pts = [home] + [(r["lat"], r["lon"]) for r in shown if isinstance(r.get("lat"), (int, float))]
+    if len(pts) > 1:
+        z = MAPS.fit_zoom(pts, w, h, pad=0.8)
+        lats, lons = [p[0] for p in pts], [p[1] for p in pts]
+        center = ((min(lats) + max(lats)) / 2, (min(lons) + max(lons)) / 2)
+    else:
+        dlat = radius / 111.2
+        z = MAPS.fit_zoom([(home[0] - dlat, home[1]), (home[0] + dlat, home[1])], w, h, pad=0.95)
+        center = home
+    try:
+        return MAPS.render(center, z, w, h, data_dir, ua, style)
+    except Exception:  # noqa: BLE001 - the tracks are drawn on paper then
+        logger.exception("overhead: the map could not be drawn")
+        return None
+
+
 def watched(
     options: dict[str, Any],
     source: str,
@@ -344,24 +432,7 @@ def watched(
     started or kept, what this render saw is noted on it, and the aircraft in
     the window come back at their closest approach, with when that was and
     whether they are still within reach."""
-    receiver_url = str(options.get("receiver_url") or "")
-    lat, lon = place[0], place[1]
-    key = f"overhead|{source}|{receiver_url}|{lat:.3f}|{lon:.3f}|{radius:g}"
-
-    def poll() -> list[dict[str, Any]]:
-        got, _err, _feed = A.nearby(
-            source, receiver_url, lat, lon, radius, data_dir, ua
-        )
-        SG.ledger(data_dir).note(got, SIGHT_ID, SIGHT_NAME)
-        return got
-
-    w = W.watch_for(
-        key,
-        poll,
-        WATCH_RECEIVER_S if source == "receiver" else WATCH_FEED_S,
-        data_dir,
-        lambda r: str(r.get("hex") or r.get("reg") or r.get("cs") or ""),
-    )
+    w = watch_of(options, source, place, radius, data_dir, ua)
     ts = now.timestamp()
     w.note(rows, ts)
     t0 = W.window(data_dir, subject_id(options), ts, advance=not preview)
@@ -548,6 +619,13 @@ def fetch(
     ceiling = int(_choice(options.get("max_alt_ft"), CEILINGS, "") or 0)
     order = _choice(options.get("order"), ORDERS)
     count = _int(options.get("count"), 8, 1, MAX_COUNT)
+    layout = "map"
+    if widget == "map":
+        count = _int(options.get("count"), MAP_MAX, 1, MAP_MAX)
+        layout = _choice(options.get("layout"), MAP_LAYOUTS)
+        if layout == "row":
+            # one row: the nearest three, whatever the order says
+            count, order = min(count, ROW_MAX), "nearest"
     if widget in ("photo", "plate", "scene"):
         count = 1 + (_int(options.get("strip"), 5, 0, 8) if widget == "photo" else 0)
     include_ground = str(options.get("include_ground") or "").lower() in (
@@ -560,7 +638,7 @@ def fetch(
         _choice(options.get("pictures"), PICTURES) if widget != "photo" else "photos"
     )
     panel = _choice(options.get("panel"), PANELS)
-    paper = _choice(options.get("paper"), PAPERS)
+    paper = _choice(options.get("paper"), PAPERS, "page" if widget == "map" else "")
     labels = (
         [
             x
@@ -604,7 +682,7 @@ def fetch(
     # model still shows; a new one is made with the model the style needs
     paint_model = P.model_for(style, model)
     backdrop = _choice(options.get("backdrop"), tuple(P.BACKDROPS))
-    if widget == "cluster":
+    if widget in ("cluster", "map"):
         backdrop = "none"
     if widget == "scene" and backdrop == "none":
         backdrop = "sky"
@@ -655,7 +733,7 @@ def fetch(
         "backdrop": backdrop,
         "photo_fit": _choice(options.get("photo_fit"), ("cover", "contain")),
         "font_css": N.font_css(("im_fell", "im_fell_sc", "archivo_narrow")),
-        "font": _choice(options.get("font"), FONTS),
+        "font": _choice(options.get("font"), FONTS, "page" if widget == "map" else ""),
         "scale": _int(options.get("scale"), 100, 40, 100),
         "packing": _choice(options.get("packing"), PACKINGS),
     }
@@ -689,6 +767,7 @@ def fetch(
         rows = watched(
             options, source, place, radius, data_dir, ua, rows, now, preview, base, tz
         )
+    rows_all = list(rows)
     airborne = [r for r in rows if not r["ground"]]
     base["airborne"] = len(airborne)
     if not include_ground:
@@ -719,6 +798,7 @@ def fetch(
     only_painted = pictures == "paintings" and unpainted == "skip"
     # only painted aircraft: a single page looks among the nearest few for one already painted,
     # and keeps painting them, so a page has one most of the time
+    eligible = rows
     pool = rows[: max(count, POOL) if only_painted else count]
     shown = pool
     empty_hint = (
@@ -738,11 +818,23 @@ def fetch(
             options.get("visitors"),
         )
         if pictures == "paintings"
-        and widget != "photo"
+        and widget not in ("photo", "map")
         and (not sky_empty or _choice(options.get("empty_sky"), EMPTY_SKY) == "ufo")
         else None
     )
     if not shown and not ufo:
+        if widget == "map" and layout == "row":
+            base.update(layout="row", radius_km=radius, ceiling_ft=ceiling, lang=_choice(options.get("language"), LANGS))
+        elif widget == "map":
+            # an empty sky on the map: the place and its radius, nothing on them
+            base.update(
+                home=[float(place[0]), float(place[1])],
+                radius_km=radius,
+                show_radius=str(options.get("show_radius", True)).lower() not in ("false", "0", "off", "no"),
+                map=map_of([], place, radius, ctx, data_dir, ua, _choice(options.get("map_style"), MAP_STYLES), False),
+            )
+            if not err:
+                watch_of(options, source, place, radius, data_dir, ua).note(rows_all, now.timestamp())
         return {**base, "state": "empty", "hint": empty_hint}
     if ufo:
         shown = shown + [ufo] if widget == "cluster" else shown[:1] + [ufo]
@@ -1041,8 +1133,9 @@ def fetch(
         r["pic"] = pic
         r.pop("deferred", None)
         r.pop("type_photo", None)
-        r.pop("lat", None)
-        r.pop("lon", None)
+        if widget != "map":
+            r.pop("lat", None)
+            r.pop("lon", None)
     if widget != "cluster" or sky_empty:
         contact = next((r for r in shown if r.get("ufo")), None)
         shown = [r for r in shown if not r.get("ufo")]
@@ -1095,6 +1188,36 @@ def fetch(
         ]  # an unpainted contact is no contact
     base["aircraft"] = shown
     base["shown"] = len(shown)
+    if widget == "map" and layout == "row":
+        base.update(
+            layout="row",
+            more=max(0, len(eligible) - len(shown)),
+            radius_km=radius,
+            ceiling_ft=ceiling,
+            lang=_choice(options.get("language"), LANGS),
+        )
+    elif widget == "map":
+        # the tracks come from the watch on the place, kept whatever the page shows
+        w_ = watch_of(options, source, place, radius, data_dir, ua) if not err else None
+        if w_ is not None and period != "since":
+            w_.note(rows_all, now.timestamp())
+        minutes = int(_choice(options.get("track_minutes"), TRACK_MINUTES, "30"))
+        tracks(w_, shown, now, minutes)
+        more = max(0, len(eligible) - len(shown))
+        base.update(
+            more=more,
+            home=[float(place[0]), float(place[1])],
+            radius_km=radius,
+            ceiling_ft=ceiling,
+            track_colour=_choice(options.get("track_colour"), TRACK_COLOURS),
+            track_minutes=minutes,
+            show_radius=str(options.get("show_radius", True)).lower() not in ("false", "0", "off", "no"),
+            map=map_of(shown, place, radius, ctx, data_dir, ua, _choice(options.get("map_style"), MAP_STYLES), more > 0),
+            layout="map",
+            lang=_choice(options.get("language"), LANGS),
+        )
+        if base["map"] and base["map"].get("credit"):
+            credits.insert(0, base["map"]["credit"])
 
     notices, status = [], []
     if pictures == "paintings":

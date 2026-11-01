@@ -50,6 +50,9 @@ SEEN_S = 48 * 3600  # a sighting is remembered this long
 SEEN_MAX = 3000
 MIN_WINDOW_S = 10 * 60  # renders closer together than this share one window
 FIRST_WINDOW_S = 3600  # a page's first render: the last hour
+TRAIL_S = 2 * 3600  # each object's positions are kept this long, for a map's track
+TRAIL_MAX = 240  # and never more than this many points
+TRAIL_MIN_M = 60  # a point closer than this to the last one is not kept
 # what a later sighting may fill in on the record kept at the closest approach
 STATIC = (
     "name",
@@ -160,8 +163,11 @@ class Watch:
                         "km": km,
                         "at": now,
                         "row": dict(r),
+                        "trail": [],
                     }
+                    add_point(self.seen[rid], r, now)
                     continue
+                add_point(e, r, now)
                 e["last"] = now
                 e["n"] = int(e.get("n") or 0) + 1
                 if km <= float(e.get("km") or 0):
@@ -178,6 +184,13 @@ class Watch:
                 ]:
                     self.seen.pop(rid, None)
             self._dirty = True
+
+    def trail(self, rid: str, t0: float) -> list[list[float]]:
+        """The positions of one object since ``t0``, oldest first, each
+        [t, lat, lon, alt_ft, gs_kt]."""
+        with self.lock:
+            e = self.seen.get(rid) or {}
+            return [list(p) for p in (e.get("trail") or []) if p[0] >= t0]
 
     def since(self, t0: float, now: float | None = None) -> list[dict[str, Any]]:
         """Everything seen since ``t0``, each as the row it had when closest,
@@ -211,6 +224,29 @@ class Watch:
                 self.path,
                 json.dumps({"at": time.time(), "key": self.key, "seen": keep}).encode(),
             )
+
+
+def add_point(e: dict[str, Any], r: dict[str, Any], now: float) -> None:
+    """A row's position on the object's trail: kept when it has moved, the
+    old end trimmed to TRAIL_S and TRAIL_MAX."""
+    lat, lon = r.get("lat"), r.get("lon")
+    if not isinstance(lat, (int, float)) or not isinstance(lon, (int, float)):
+        return
+    trail = e.setdefault("trail", [])
+    point = [round(now, 1), round(float(lat), 5), round(float(lon), 5), int(r.get("alt") or 0), int(r.get("gs") or 0)]
+    if trail:
+        last = trail[-1]
+        if now <= last[0]:
+            return
+        dy = (point[1] - last[1]) * 111_195
+        dx = (point[2] - last[2]) * 111_195 * 0.62  # cos(52°): close enough to tell "moved" from "still"
+        if dx * dx + dy * dy < TRAIL_MIN_M * TRAIL_MIN_M:
+            last[0], last[3], last[4] = point[0], point[3], point[4]
+            return
+    trail.append(point)
+    cutoff = now - TRAIL_S
+    while trail and (trail[0][0] < cutoff or len(trail) > TRAIL_MAX):
+        trail.pop(0)
 
 
 _WATCHES: dict[str, Watch] = {}

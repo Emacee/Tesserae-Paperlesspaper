@@ -317,7 +317,131 @@ def build_view(raw: dict[str, Any], options: dict[str, Any], now: datetime) -> d
         "max": _mark(i_max),
         "avg": round(sum(prices[stat_from:]) / len(prices[stat_from:]), 2),
         "updated": _fmt_hhmm(now_l),
+        "start": window[0][0].isoformat(),
     }
+
+
+# ----------------------------------------------------------------------
+# The home battery over the prices: a Deye's time-of-use targets and its
+# state of charge today (Home batteries' deye.py, through Home Assistant)
+# ----------------------------------------------------------------------
+_HERE = Path(__file__).resolve().parent
+
+
+def _deye() -> Any:
+    import importlib.util
+    import sys
+
+    name = "_tesserae_plugins.home_batteries.deye"
+    if name in sys.modules:
+        return sys.modules[name]
+    path = _HERE.parent / "home_batteries" / "deye.py"
+    spec = importlib.util.spec_from_file_location(name, path)
+    if spec is None or spec.loader is None or not path.exists():
+        return None
+    mod = importlib.util.module_from_spec(spec)
+    sys.modules[name] = mod
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def _core() -> Any:
+    with contextlib.suppress(Exception):
+        from flask import current_app
+
+        plugin = current_app.config["PLUGIN_REGISTRY"].get("ha_core")
+        return plugin.server_module if plugin is not None else None
+    return None
+
+
+def choices(name: str) -> list[dict[str, str]]:
+    core, deye = _core(), _deye()
+    if name != "solarman_device" or core is None or deye is None:
+        return []
+    try:
+        return [{"value": "", "label": "—"}] + deye.device_choices(core.get_states())
+    except Exception:  # noqa: BLE001
+        return [{"value": "", "label": "Home Assistant unreachable, check URL + token"}]
+
+
+def _downsample(points: list[list[float]], step: float) -> list[list[float]]:
+    out: list[list[float]] = []
+    for p in points:
+        if not out or p[0] - out[-1][0] >= step:
+            out.append(p)
+        else:
+            out[-1] = p
+    return out
+
+
+def battery_overlay(
+    view: dict[str, Any], options: dict[str, Any], now: datetime, core: Any = None
+) -> dict[str, Any] | None:
+    """The overlay in the chart's own units: x in slots from the window's
+    first, SOC in %. Segments for every time-of-use slot that touches the
+    window (the program repeats each day), the current one, the next, and
+    the SOC so far today."""
+    core = core if core is not None else _core()
+    deye = _deye()
+    prefix = str(options.get("battery_device") or "").strip()
+    if core is None or deye is None or not prefix:
+        return None
+    start = datetime.fromisoformat(view["start"])
+    tz = start.tzinfo
+    local = now.astimezone(tz)
+    slot = timedelta(minutes=int(view.get("minutes") or 15))
+    n = len(view.get("slots") or [])
+    try:
+        min_soc = float(options.get("grid_min_soc", 10))
+    except (TypeError, ValueError):
+        min_soc = 10.0
+    try:
+        states = {str(s.get("entity_id")): s for s in core.get_states() if isinstance(s, dict)}
+    except Exception:  # noqa: BLE001 - the chart without the battery
+        return None
+    b = deye.read(states, prefix, local, min_soc)
+    x_of = lambda dt: (dt - start) / slot  # noqa: E731
+    day0 = start.replace(hour=0, minute=0, second=0, microsecond=0)
+    segs = []
+    for d in (-1, 0, 1, 2):
+        base = day0 + timedelta(days=d)
+        for sl in b["slots"]:
+            end = sl["end"] if sl["end"] > sl["start"] else sl["end"] + 1440
+            x0 = x_of(base + timedelta(minutes=sl["start"]))
+            x1 = x_of(base + timedelta(minutes=end))
+            if x1 <= 0 or x0 >= n:
+                continue
+            segs.append({"x0": round(max(0.0, x0), 3), "x1": round(min(float(n), x1), 3), "target": sl["target"], "grid": sl["grid"], "n": sl["n"]})
+    segs.sort(key=lambda g: g["x0"])
+    nx = x_of(local)
+    current = next((g for g in segs if g["x0"] <= nx < g["x1"]), None)
+    out: dict[str, Any] = {
+        "soc": b["soc"],
+        "now_x": round(nx, 3),
+        "segments": segs,
+        "current": current,
+    }
+    if b["current"]:
+        out["slot"] = {"from": deye.hhmm(b["current"]["start"]), "till": deye.hhmm(b["current"]["end"]), "target": b["current"]["target"], "grid": b["current"]["grid"]}
+    if b["next"]:
+        out["next"] = {"from": deye.hhmm(b["next"]["start"]), "target": b["next"]["target"]}
+    if str(options.get("battery_history", True)).lower() not in ("false", "0", "off", "no"):
+        hours = max(1, int((local - day0).total_seconds() // 3600) + 1)
+        pts: list[list[float]] = []
+        with contextlib.suppress(Exception):
+            for smp in core.history(f"sensor.{prefix}_battery", hours=min(hours, 48), timeout=5):
+                v = smp.get("state")
+                t = smp.get("last_changed") or smp.get("last_updated")
+                try:
+                    dt = datetime.fromisoformat(str(t).replace("Z", "+00:00"))
+                    pts.append([round(x_of(dt), 3), round(float(v), 1)])
+                except (TypeError, ValueError):
+                    continue
+        pts = [p for p in pts if 0 <= p[0] <= nx]
+        if b["soc"] is not None:
+            pts.append([round(nx, 3), float(b["soc"])])
+        out["history"] = _downsample(pts, 5 / (slot.total_seconds() / 60))
+    return out
 
 
 # ----------------------------------------------------------------------
@@ -325,7 +449,7 @@ def build_view(raw: dict[str, Any], options: dict[str, Any], now: datetime) -> d
 # ----------------------------------------------------------------------
 
 
-def fetch(
+def _fetch(
     options: dict[str, Any],
     settings: dict[str, Any],
     *,
@@ -374,6 +498,35 @@ def fetch(
                     old.unlink()
 
     view = build_view(raw, options, now)
+    if options.get("battery_device") and "error" not in view:
+        view["battery"] = battery_overlay(view, options, now)
     view["title"] = title
     view["source"] = source
     return view
+
+
+# ----------------------------------------------------------------------
+# The widget's own language (a cell option), whatever the dashboard's
+# ----------------------------------------------------------------------
+LANGUAGES = ("nl", "en", "de")
+
+
+def strings_for(options: dict[str, Any]) -> tuple[str, dict[str, str]]:
+    """(language, its strings) when the cell names a language, else ("", {}):
+    the page then keeps the dashboard's own."""
+    lang = str(options.get("language") or "auto")
+    if lang not in LANGUAGES:
+        return "", {}
+    try:
+        got = json.loads((Path(__file__).resolve().parent / "strings" / f"{lang}.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return lang, {}
+    return lang, got if isinstance(got, dict) else {}
+
+
+def fetch(options: dict[str, Any], settings: dict[str, Any], *, ctx: dict[str, Any], **kw: Any) -> dict[str, Any]:
+    data = _fetch(options, settings, ctx=ctx, **kw)
+    lang, strings = strings_for(options)
+    if lang and isinstance(data, dict):
+        data["lang"], data["strings"] = lang, strings
+    return data

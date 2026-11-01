@@ -1,0 +1,9 @@
+{
+  "to_work": "Fahrzeit zur Arbeit",
+  "to_home": "Fahrzeit nach Hause",
+  "normal": "normal",
+  "min": "Min.",
+  "no_people": "Wähle die Fahrzeit-Sensoren in den Zelleinstellungen.",
+  "weekend": "Wochenende",
+  "unavailable": "kein Wert"
+}

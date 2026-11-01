@@ -1,0 +1,15 @@
+{
+  "cond_clear": "Klar",
+  "cond_mostly_clear": "Überwiegend klar",
+  "cond_partly_cloudy": "Teils bewölkt",
+  "cond_cloudy": "Bewölkt",
+  "cond_fog": "Nebel",
+  "cond_drizzle": "Nieselregen",
+  "cond_rain": "Regen",
+  "cond_heavy_rain": "Starkregen",
+  "cond_showers": "Schauer, zeitweise sonnig",
+  "cond_snow": "Schnee",
+  "cond_storm": "Gewitter",
+  "mm": "mm",
+  "no_data": "Keine Vorhersage verfügbar."
+}

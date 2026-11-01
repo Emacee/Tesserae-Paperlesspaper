@@ -6,9 +6,18 @@
   "description": "Dynamic (EPEX day-ahead) electricity prices for today, plus tomorrow once published (~13:00). Stepped price curve in 15-minute or hourly slots with the lowest and highest price marked and a subtle 'now' marker. Data from EnergyZero (no key) or your Tibber account.",
   "icon": "ph-lightning",
   "category": "finance",
-  "locales": ["en", "nl", "de"],
+  "locales": [
+    "en",
+    "nl",
+    "de"
+  ],
   "supports": {
-    "sizes": ["xs", "sm", "md", "lg"]
+    "sizes": [
+      "xs",
+      "sm",
+      "md",
+      "lg"
+    ]
   },
   "requires": [
     "network:public.api.energyzero.nl",
@@ -22,8 +31,14 @@
       "label": "Price source",
       "default": "energyzero",
       "choices": [
-        { "value": "energyzero", "label": "EnergyZero, EPEX NL (no key)" },
-        { "value": "tibber", "label": "Tibber (API token in widget settings)" }
+        {
+          "value": "energyzero",
+          "label": "EnergyZero, EPEX NL (no key)"
+        },
+        {
+          "value": "tibber",
+          "label": "Tibber (API token in widget settings)"
+        }
       ],
       "help": "EnergyZero publishes the Dutch EPEX day-ahead prices for free. Tibber shows your own contract price, exactly as in the Tibber app; add your token under Settings → Widgets → Energy, Dynamic Price."
     },
@@ -32,12 +47,26 @@
       "type": "select",
       "label": "Price",
       "default": "all_in_with_vat",
-      "show_if": { "source": "energyzero" },
+      "show_if": {
+        "source": "energyzero"
+      },
       "choices": [
-        { "value": "all_in_with_vat", "label": "All-in incl. VAT (what you pay)" },
-        { "value": "all_in", "label": "All-in excl. VAT" },
-        { "value": "base_with_vat", "label": "Market price incl. VAT" },
-        { "value": "base", "label": "Market price (EPEX)" }
+        {
+          "value": "all_in_with_vat",
+          "label": "All-in incl. VAT (what you pay)"
+        },
+        {
+          "value": "all_in",
+          "label": "All-in excl. VAT"
+        },
+        {
+          "value": "base_with_vat",
+          "label": "Market price incl. VAT"
+        },
+        {
+          "value": "base",
+          "label": "Market price (EPEX)"
+        }
       ],
       "help": "All-in = EPEX market price + energy tax + purchasing fee."
     },
@@ -47,9 +76,18 @@
       "label": "Show",
       "default": "auto",
       "choices": [
-        { "value": "auto", "label": "Today, plus tomorrow when available" },
-        { "value": "ahead", "label": "From now on (rest of today + tomorrow)" },
-        { "value": "today", "label": "Today only" }
+        {
+          "value": "auto",
+          "label": "Today, plus tomorrow when available"
+        },
+        {
+          "value": "ahead",
+          "label": "From now on (rest of today + tomorrow)"
+        },
+        {
+          "value": "today",
+          "label": "Today only"
+        }
       ]
     },
     {
@@ -58,8 +96,14 @@
       "label": "Interval",
       "default": "15",
       "choices": [
-        { "value": "15", "label": "15 minutes" },
-        { "value": "60", "label": "60 minutes" }
+        {
+          "value": "15",
+          "label": "15 minutes"
+        },
+        {
+          "value": "60",
+          "label": "60 minutes"
+        }
       ]
     },
     {
@@ -76,8 +120,14 @@
       "default": "upcoming",
       "advanced": true,
       "choices": [
-        { "value": "upcoming", "label": "From now on" },
-        { "value": "window", "label": "Whole chart, including the past" }
+        {
+          "value": "upcoming",
+          "label": "From now on"
+        },
+        {
+          "value": "window",
+          "label": "Whole chart, including the past"
+        }
       ]
     },
     {
@@ -87,9 +137,89 @@
       "default": "0",
       "advanced": true,
       "choices": [
-        { "value": "0", "label": "42 ct" },
-        { "value": "1", "label": "42.3 ct" }
+        {
+          "value": "0",
+          "label": "42 ct"
+        },
+        {
+          "value": "1",
+          "label": "42.3 ct"
+        }
       ]
+    },
+    {
+      "name": "battery_device",
+      "type": "select",
+      "label": "Home battery",
+      "default": "",
+      "choices_from": "solarman_device",
+      "secret": true,
+      "mask": false,
+      "help": "A Deye inverter from the Solarman integration: its time-of-use targets as a dashed blue line over the prices (on an axis of their own, 0–100% on the right), slots that charge from the grid drawn heavy with a pylon, the current slot outlined, and the battery's state of charge today as a pale blue line. Needs the Home Assistant Core plugin and the Home batteries widget installed beside this one. Kept as a secret."
+    },
+    {
+      "name": "battery_history",
+      "type": "boolean",
+      "label": "Home battery: today's state of charge",
+      "default": true,
+      "show_if": {
+        "battery_device": {
+          "not": ""
+        }
+      },
+      "advanced": true,
+      "help": "The pale blue line of the battery's state of charge from midnight to now, from Home Assistant's history."
+    },
+    {
+      "name": "grid_min_soc",
+      "type": "select",
+      "label": "Home battery: grid charging counts from",
+      "default": "10",
+      "advanced": true,
+      "choices": [
+        {
+          "value": "0",
+          "label": "a target above 0%"
+        },
+        {
+          "value": "5",
+          "label": "a target above 5%"
+        },
+        {
+          "value": "10",
+          "label": "a target above 10%"
+        },
+        {
+          "value": "20",
+          "label": "a target above 20%"
+        }
+      ],
+      "help": "A slot set to charge from the grid with a target this low charges nothing; it is drawn as a plain slot."
+    },
+    {
+      "name": "language",
+      "type": "select",
+      "label": "Language",
+      "default": "auto",
+      "choices": [
+        {
+          "value": "auto",
+          "label": "The dashboard's language"
+        },
+        {
+          "value": "nl",
+          "label": "Nederlands"
+        },
+        {
+          "value": "en",
+          "label": "English"
+        },
+        {
+          "value": "de",
+          "label": "Deutsch"
+        }
+      ],
+      "help": "The widget's words in this language, whatever the dashboard's. Set the same on every widget of a page for one language throughout."
     }
   ],
   "settings": [
@@ -121,8 +251,26 @@
     "needs_network": true
   },
   "fragments": [
-    { "id": "full", "label": "Price card", "w": 300, "h": 180, "icon": "ph-lightning" },
-    { "id": "summary", "label": "Now / low / high", "w": 180, "h": 80, "icon": "ph-currency-eur" },
-    { "id": "chart", "label": "Price chart", "w": 280, "h": 120, "icon": "ph-chart-line" }
+    {
+      "id": "full",
+      "label": "Price card",
+      "w": 300,
+      "h": 180,
+      "icon": "ph-lightning"
+    },
+    {
+      "id": "summary",
+      "label": "Now / low / high",
+      "w": 180,
+      "h": 80,
+      "icon": "ph-currency-eur"
+    },
+    {
+      "id": "chart",
+      "label": "Price chart",
+      "w": 280,
+      "h": 120,
+      "icon": "ph-chart-line"
+    }
   ]
 }

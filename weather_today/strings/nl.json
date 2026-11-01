@@ -1,0 +1,15 @@
+{
+  "cond_clear": "Helder",
+  "cond_mostly_clear": "Overwegend helder",
+  "cond_partly_cloudy": "Half bewolkt",
+  "cond_cloudy": "Bewolkt",
+  "cond_fog": "Mist",
+  "cond_drizzle": "Motregen",
+  "cond_rain": "Regen",
+  "cond_heavy_rain": "Zware regen",
+  "cond_showers": "Buien, af en toe zon",
+  "cond_snow": "Sneeuw",
+  "cond_storm": "Onweer",
+  "mm": "mm",
+  "no_data": "Geen verwachting beschikbaar."
+}
