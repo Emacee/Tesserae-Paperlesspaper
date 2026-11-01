@@ -1,0 +1,11 @@
+# Supervisor builds this app on the Home Assistant host from the official
+# Tesserae image, adding this repository's widgets, the paperlesspaper plugin
+# and the paperlesspaper device kind (see Dockerfile).
+build_from:
+  aarch64: ghcr.io/dmellok/tesserae:0.480.0
+  amd64: ghcr.io/dmellok/tesserae:0.480.0
+args:
+  # The tag of this repository the image is built from: bump it together with
+  # `version` in config.yaml, so Home Assistant offers the update.
+  WIDGETS_REF: v0.1.0
+  WIDGETS_REPO: Emacee/Tesserae-Paperlesspaper

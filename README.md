@@ -1,12 +1,44 @@
-# Tesserae widgets
+# Tesserae Paperlesspaper
 
-Eigen widgets voor [Tesserae](https://docs.tesserae.ink). Elke map is een
-op zichzelf staande widget (`plugin.json` + `client.js` + `server.py`).
+Eigen widgets voor [Tesserae](https://docs.tesserae.ink), plus een Home
+Assistant-app die Tesserae draait en de pagina's naar een
+[paperlesspaper](https://paperlesspaper.de)-frame stuurt, op de standaard
+firmware van het frame (niets flashen).
 
-| Widget | Map |
+| Onderdeel | Map |
 |---|---|
-| Energy, Dynamic Price: EPEX- en Tibber-stroomprijzen voor vandaag en morgen | [`energy_dynamic_price/`](energy_dynamic_price/) |
+| Home Assistant-app: Tesserae met deze widgets en de paperlesspaper-brug | [`tesserae_paperless/`](tesserae_paperless/) ([DOCS](tesserae_paperless/DOCS.md)) |
+| paperlesspaper Core: uploadt elke render naar het paper van het frame en beheert de frames (welk paper, batterij, laatste wake) | [`paperlesspaper_core/`](paperlesspaper_core/) |
+| Device-type *paperlesspaper frame (stock firmware)*, 1600×1200 Spectra 6, push | [`devices/paperlesspaper/`](devices/paperlesspaper/) |
 | Overhead (fork): vliegtuigen en helikopters boven een plek, met straal én hoogteplafond | [`overhead_core/`](overhead_core/) + `overhead_cluster/`, `overhead_photo/`, `overhead_plate/`, `overhead_scene/` |
+| Energy, Dynamic Price: EPEX- en Tibber-stroomprijzen voor vandaag en morgen | [`energy_dynamic_price/`](energy_dynamic_price/) |
+
+Widgetmappen zijn op zichzelf staande Tesserae-plugins (`plugin.json` +
+`server.py`, widgets ook `client.js`).
+
+## Home Assistant-app
+
+Settings › Apps › App store › ⋮ › Repositories:
+`https://github.com/Emacee/Tesserae-Paperlesspaper`, installeer
+**Tesserae + paperlesspaper**. De stappen staan in
+[`tesserae_paperless/DOCS.md`](tesserae_paperless/DOCS.md).
+
+Hoe het werkt: Home Assistant bouwt het image zelf, vanaf het officiële
+`ghcr.io/dmellok/tesserae` (versie in
+[`tesserae_paperless/build.yaml`](tesserae_paperless/build.yaml)), en zet de
+plugins en het device-type uit deze repo erin, van de tag `WIDGETS_REF`. Voor
+een nieuwe versie van de app: tag deze repo (`v0.1.1`, …), zet die tag in
+`build.yaml` en dezelfde versie in `config.yaml`.
+
+Het frame wordt wakker op de update-periodes uit de paperlesspaper-app en
+haalt dan het plaatje op dat Tesserae naar zijn paper heeft geüpload; een
+upload maakt het frame niet wakker (de knop of schudden wel).
+
+Tests (offline):
+
+```sh
+python -m pytest paperlesspaper_core/tests -q
+```
 
 ## Overhead (fork van `dmellok/tesserae-widget-overhead`)
 
@@ -38,10 +70,11 @@ Alleen laagvliegers en helikopters, bijvoorbeeld:
 | Kinds of aircraft (More options) | Light aircraft + Helicopters (of alleen Helicopters) |
 | Order (More options) | Lowest first |
 
-**Installeren**: kopieer de vijf mappen `overhead_core`, `overhead_photo`,
-`overhead_plate`, `overhead_cluster` en `overhead_scene` samen naar de
-plugins-map van Tesserae, in plaats van de Overhead-bundel uit de catalogus
-(dezelfde widget-id's, dus bestaande cellen blijven werken). Het
+**Installeren**: zit in de Home Assistant-app hierboven. Los: kopieer de vijf
+mappen `overhead_core`, `overhead_photo`, `overhead_plate`, `overhead_cluster`
+en `overhead_scene` samen naar de plugins-map van Tesserae, in plaats van de
+Overhead-bundel uit de catalogus (dezelfde widget-id's, dus bestaande cellen
+blijven werken). Het
 versienummer is `0.11.3.1`: een catalogus-update naar 0.11.4 of later zou de
 fork weer overschrijven.
 

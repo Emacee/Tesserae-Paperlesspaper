@@ -1,0 +1,105 @@
+{% extends "_base.html" %}
+{% from "_components.html" import card_head, button %}
+{% block title %}paperlesspaper, Tesserae{% endblock %}
+
+{% block main %}
+<div class="page-head">
+  <h1><i class="ph-bold ph-frame-corners" aria-hidden="true"></i> paperlesspaper</h1>
+  <p class="page-blurb">Your paperlesspaper frames on their own firmware. Tesserae renders a page for a device of the <b>paperlesspaper</b> kind and uploads each new frame to that device's paper; the frame shows it at its next wake-up, or straight away when you press its button or shake it. Below, switch which paper a frame shows: the Tesserae paper, or one of paperlesspaper's own integrations.</p>
+</div>
+
+{% if not has_key %}
+<section class="card">
+  {{ card_head('Add your API key', icon_name='key', level=2) }}
+  <p>Create a key at <a href="https://web.paperlesspaper.de/account" target="_blank" rel="noopener">web.paperlesspaper.de/account</a> and paste it under <a href="{{ url_for('plugins.plugins_index') }}">Plugins &rsaquo; paperlesspaper &rsaquo; Settings</a>.</p>
+</section>
+{% endif %}
+
+<section class="card">
+  {{ card_head('Tesserae devices', icon_name='devices', level=2, blurb='Devices of the paperlesspaper kind, and the paper each uploads to. Add one under Settings > Devices > Add device, kind "paperlesspaper frame (stock firmware)", and give it a page.') }}
+  {% if tesserae %}
+  <table class="table pp-table">
+    <thead><tr><th>Device</th><th>Paper</th><th>Last upload</th><th></th></tr></thead>
+    <tbody>
+    {% for t in tesserae %}
+      <tr>
+        <td><b>{{ t.name }}</b><br><code>{{ t.id }}</code></td>
+        <td>{% if t.paper %}{{ t.paper_name or 'paper' }}<br><code>{{ t.paper }}</code>{% else %}<span class="muted">none yet: link one below</span>{% endif %}</td>
+        <td>{% if t.last %}{{ t.last.when }}: {% if t.last.ok %}uploaded{% else %}<span class="pp-bad">{{ t.last.error }}</span>{% endif %}{% else %}<span class="muted">nothing yet</span>{% endif %}</td>
+        <td>
+          <form method="post" action="{{ url_for('paperlesspaper_core_admin.send') }}">
+            <input type="hidden" name="tesserae_device" value="{{ t.id }}">
+            {{ button('Upload now', variant='secondary', icon='upload-simple', disabled=not t.paper) }}
+          </form>
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="muted">No device of the paperlesspaper kind yet.</p>
+  {% endif %}
+</section>
+
+{% if has_key %}
+<section class="card">
+  {{ card_head('Frames on your paperlesspaper account', icon_name='frame-corners', level=2, blurb='Each frame shows one paper. Show switches it from the frame\'s next wake-up. Link makes a Tesserae device upload its frames to that paper: use an image paper of its own for Tesserae, so the integrations keep theirs.') }}
+  {% if error %}<p class="pp-bad">{{ error }}</p>{% endif %}
+  {% for f in frames %}
+  <div class="pp-frame">
+    <h3>{{ f.name }} <span class="muted">{{ f.org }}{% if f.status %} · {{ f.status }}{% endif %}</span></h3>
+    <p class="field-help">
+      {% if f.wake %}Last awake {{ f.wake.at }}{% if f.wake.why %} ({{ f.wake.why }}){% endif %}{% if f.wake.battery %}, battery {{ f.wake.battery }}{% endif %}{% if f.wake.usb %}, on USB{% endif %}{% if f.wake.fw %}, firmware {{ f.wake.fw }}{% endif %}.{% endif %}
+      {% if f.last_update %} Last update {{ f.last_update.at }}: {{ f.last_update.state | replace('_', ' ') }}.{% endif %}
+    </p>
+    {% if f.papers %}
+    <table class="table pp-table">
+      <thead><tr><th>Paper</th><th>Kind</th><th>Image</th><th></th></tr></thead>
+      <tbody>
+      {% for p in f.papers %}
+        <tr{% if p.active %} class="pp-active"{% endif %}>
+          <td><b>{{ p.name }}</b>{% if p.active %} <span class="pp-chip">on the frame</span>{% endif %}<br><code>{{ p.id }}</code></td>
+          <td>{{ p.kind }}</td>
+          <td>{{ p.updated }}</td>
+          <td class="pp-actions">
+            {% if not p.active %}
+            <form method="post" action="{{ url_for('paperlesspaper_core_admin.show') }}">
+              <input type="hidden" name="device" value="{{ f.id }}"><input type="hidden" name="paper" value="{{ p.id }}">
+              {{ button('Show', variant='secondary', icon='monitor') }}
+            </form>
+            {% endif %}
+            {% if tesserae %}
+            <form method="post" action="{{ url_for('paperlesspaper_core_admin.link') }}" class="pp-link">
+              <input type="hidden" name="paper" value="{{ p.id }}">
+              <select name="tesserae_device" aria-label="Tesserae device">{% for t in tesserae %}<option value="{{ t.id }}"{% if t.paper == p.id %} selected{% endif %}>{{ t.name }}</option>{% endfor %}</select>
+              {{ button('Link', variant='secondary', icon='link') }}
+            </form>
+            {% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="muted">No papers on this frame yet: add an image paper in the paperlesspaper app.</p>
+    {% endif %}
+  </div>
+  {% else %}
+  {% if not error %}<p class="muted">No frames on this account.</p>{% endif %}
+  {% endfor %}
+</section>
+{% endif %}
+
+<style>
+  .pp-table { width: 100%; border-collapse: collapse; }
+  .pp-table th, .pp-table td { text-align: left; padding: .45rem .5rem; border-bottom: 1px solid var(--border, rgba(0,0,0,.12)); vertical-align: top; }
+  .pp-table code { font-size: .8em; opacity: .7; }
+  .pp-actions { display: flex; gap: .5rem; flex-wrap: wrap; }
+  .pp-link { display: flex; gap: .35rem; align-items: center; }
+  .pp-active { background: color-mix(in srgb, var(--accent, #3a7) 10%, transparent); }
+  .pp-chip { font-size: .75em; padding: .1rem .45rem; border-radius: 999px; background: var(--accent, #3a7); color: #fff; }
+  .pp-bad { color: var(--danger, #b33); }
+  .pp-frame + .pp-frame { margin-top: 1.5rem; }
+  .muted { opacity: .65; }
+</style>
+{% endblock %}
