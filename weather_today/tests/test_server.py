@@ -57,3 +57,20 @@ def test_icons() -> None:
 
 def test_needs_a_place() -> None:
     assert "error" in S.fetch({}, {}, ctx={"data_dir": "."})
+
+
+def test_old_forecast_when_open_meteo_fails(tmp_path, monkeypatch) -> None:
+    import json, os, time
+    p = tmp_path / "today_52.267_4.970_metric.json"
+    p.write_text(json.dumps(raw()), encoding="utf-8")
+    old = time.time() - 3600
+    os.utime(p, (old, old))
+
+    def boom(url):
+        raise OSError("down")
+
+    monkeypatch.setattr(S, "_get_json", boom)
+    v = S.fetch({"latitude": 52.2674, "longitude": 4.9704}, {}, ctx={"data_dir": str(tmp_path)})
+    assert "error" not in v and v["max"] == 13
+    os.utime(p, (old - 3 * 3600, old - 3 * 3600))
+    assert "error" in S.fetch({"latitude": 52.2674, "longitude": 4.9704}, {}, ctx={"data_dir": str(tmp_path)})
