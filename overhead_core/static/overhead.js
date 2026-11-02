@@ -482,8 +482,20 @@ function scenePage(d) {
   return `${art}${contact}${top}<div class="sc-main${on('main')}">${logo(a, 'sc-logo')}<div class="sc-cs">${esc(a.cs)}</div><div class="sc-typ">${esc(a.typ)}${a.reg ? ` <span>· ${esc(a.reg)}</span>` : ''}</div><div class="sc-r">${lines(a).replace(/<\/span><span/g, '</span> · <span')}</div></div>${foot(d).replace('class="credit"', `class="credit sc-credit${on('credit')}"`)}`;
 }
 
+// Paths this server hands out ("/plugins/...") are rooted at Tesserae's own
+// root. Behind a proxy that serves Tesserae under a prefix (Home Assistant's
+// ingress) that root is not the page's, so they are made relative to where
+// this module itself was loaded from: .../plugins/overhead_core/static/.
+const PLUGINS = new URL('../../', import.meta.url);
+function rooted(v) {
+  if (typeof v === 'string') return v.startsWith('/plugins/') ? new URL(v.slice(9), PLUGINS).href : v;
+  if (Array.isArray(v)) { for (let i = 0; i < v.length; i++) v[i] = rooted(v[i]); return v; }
+  if (v && typeof v === 'object') { for (const k of Object.keys(v)) v[k] = rooted(v[k]); return v; }
+  return v;
+}
+
 export async function render(shadow, ctx, widget) {
-  const d = ctx.data || {};
+  const d = rooted(ctx.data || {});
   const size = ctx.cell?.size || 'md';
   d.cell_w = ctx.cell?.w; d.cell_h = ctx.cell?.h; d.locale = ctx.locale;
   if (widget === 'map' && shadow.host && typeof getComputedStyle !== 'undefined') {

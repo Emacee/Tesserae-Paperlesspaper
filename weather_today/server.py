@@ -19,6 +19,7 @@ from pathlib import Path
 from typing import Any
 
 CACHE_TTL_S = 600
+STALE_OK_S = 3 * 3600  # an older forecast, shown when Open-Meteo does not answer
 HTTP_TIMEOUT_S = 8
 USER_AGENT = "tesserae-widget-weather-today/0.1 (+https://github.com/Emacee/Tesserae-Paperlesspaper)"
 
@@ -70,9 +71,9 @@ def _get_json(url: str) -> dict[str, Any]:
         return json.loads(resp.read().decode("utf-8"))
 
 
-def _cached(path: Path) -> dict[str, Any] | None:
+def _cached(path: Path, max_age_s: float = CACHE_TTL_S) -> dict[str, Any] | None:
     try:
-        if time.time() - path.stat().st_mtime > CACHE_TTL_S:
+        if time.time() - path.stat().st_mtime > max_age_s:
             return None
         got = json.loads(path.read_text(encoding="utf-8"))
         return got if isinstance(got, dict) else None
@@ -173,7 +174,14 @@ def _fetch(options: dict[str, Any], settings: dict[str, Any], *, ctx: dict[str, 
         try:
             raw = _get_json(f"https://api.open-meteo.com/v1/forecast?{q}")
         except Exception as err:  # noqa: BLE001 - the cell says so
-            return {"error": f"Weather unavailable right now ({type(err).__name__}).", "label": label}
+            # Open-Meteo has a hiccup now and then: keep showing today's last
+            # forecast (up to three hours old) rather than an error on the panel.
+            raw = _cached(path, STALE_OK_S)
+            if raw is None:
+                return {"error": f"Weather unavailable right now ({type(err).__name__}).", "label": label}
+            view = build_view(raw, from_hour, units)
+            view["label"] = label
+            return view
         with contextlib.suppress(OSError):
             path.write_text(json.dumps(raw), encoding="utf-8")
     view = build_view(raw, from_hour, units)

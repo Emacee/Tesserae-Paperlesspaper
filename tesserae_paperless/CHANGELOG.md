@@ -11,6 +11,15 @@ under its version number.
 
 ## [Unreleased]
 
+### Fixed
+- Overhead: the Overhead widgets show in Tesserae's previews and editor when
+  you open Tesserae from Home Assistant, instead of "Importing a module
+  script failed". They loaded their code from Tesserae's root, which is not
+  where Home Assistant serves the app.
+- Weather, Today: when Open-Meteo does not answer for a moment, the column
+  keeps today's last forecast (up to three hours old) instead of saying
+  "Weather unavailable right now".
+
 ## [0.2.4] - 2026-11-02
 
 Built on Tesserae 0.480.0, from commit `2824e7c`.
