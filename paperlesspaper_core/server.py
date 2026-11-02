@@ -1,10 +1,10 @@
-"""paperlesspaper Core: send Tesserae pages to paperlesspaper frames on their
+"""paperlesspaper: send Tesserae pages to paperlesspaper frames on their
 stock firmware, and manage the frames' papers from Tesserae.
 
 * An uploader hangs on Tesserae's push pipeline and posts each new frame of a
   ``paperlesspaper`` device (``devices/paperlesspaper``) to that device's
   paper in the paperlesspaper cloud.
-* The plugin page (Settings > Widgets > paperlesspaper > Open admin) takes
+* The plugin page (Widgets › paperlesspaper) takes
   the API key and lists the frames on the
   account, their papers (the Tesserae paper beside paperlesspaper's own
   integrations), which paper each frame shows, its battery and last
@@ -75,7 +75,7 @@ def _manifest_settings() -> list[dict[str, Any]]:
 
 
 def settings_url() -> str:
-    """Tesserae's own form for this plugin's settings: Settings > Widgets,
+    """Tesserae's own form for this plugin's settings: Settings › Widgets,
     the card of this plugin (``/settings/plugins#plugin-<id>``)."""
     anchor = f"plugin-{PLUGIN_ID}"
     try:
@@ -219,7 +219,7 @@ DEVICE_ID = re.compile(r"^[a-z][a-z0-9_-]{1,31}$")
 
 
 def setup_device(app: Any, body: dict[str, Any]) -> tuple[int, dict[str, Any]]:
-    """Create a device of the paperlesspaper kind, as Settings > Devices >
+    """Create a device of the paperlesspaper kind, as Settings › Devices ›
     Add device does, with its orientation and (optionally) its paper."""
     from app import device_service, renderer_loader
 
@@ -455,7 +455,7 @@ def blueprint() -> Any:
             flash("Paste an API key first.", "warn")
             return back()
         if store is None or not hasattr(store, "update_for_namespace"):
-            flash("Settings are unavailable; set the key under Settings > Widgets > paperlesspaper.", "warn")
+            flash("Settings are unavailable; set the key under Settings › Widgets › paperlesspaper.", "warn")
             return back()
         save_api_key(store, value)
         flash("API key saved.", "success")

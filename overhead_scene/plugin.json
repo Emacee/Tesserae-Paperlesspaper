@@ -152,7 +152,7 @@
           "label": "AI paintings, each from its own photograph"
         }
       ],
-      "help": "Photographs cost nothing. AI paintings paint each airframe once, from its photograph, in the style below, at about US$0.04 a painting (or once per type and airline: One painting for, under the advanced options); needs a fal.ai key in the Overhead Core settings."
+      "help": "Photographs cost nothing. AI paintings paint each airframe once, from its photograph, in the style below, at about US$0.04 a painting (or once per type and airline: One painting for, under the advanced options); needs a fal.ai key under Settings › Generative AI (or Settings › Widgets › Overhead Core)."
     },
     {
       "name": "style",
@@ -919,7 +919,7 @@
       "show_if": {
         "pictures": "paintings"
       },
-      "help": "Tick the craft the roll, or an empty sky, may bring. Most are painted from a reference picture (Wikimedia Commons and NASA, credited on the page). A craft from film and television is named to the painter along with its shape; if a model refuses the name, it is asked again by the shape alone. A picture of your own for any craft goes in the Overhead Core settings. With nothing ticked, the classic UFOs.",
+      "help": "Tick the craft the roll, or an empty sky, may bring. Most are painted from a reference picture (Wikimedia Commons and NASA, credited on the page). A craft from film and television is named to the painter along with its shape; if a model refuses the name, it is asked again by the shape alone. A picture of your own for any craft goes under Settings › Widgets › Overhead Core. With nothing ticked, the classic UFOs.",
       "choices": [
         {
           "value": "saucer",
@@ -1155,7 +1155,7 @@
           "label": "On: fetched from the web"
         }
       ],
-      "help": "The airlines' own marks, fetched at render time from the service chosen in the Overhead Core settings and kept on your server; nothing ships with the widget. They are the airlines' trademarks: keep this off on anything you publish.",
+      "help": "The airlines' own marks, fetched at render time from the service chosen under Settings › Widgets › Overhead Core and kept on your server; nothing ships with the widget. They are the airlines' trademarks: keep this off on anything you publish.",
       "advanced": true
     },
     {

@@ -354,7 +354,7 @@
           "label": "On: fetched from the web"
         }
       ],
-      "help": "The airlines' own marks, fetched at render time from the service chosen in the Overhead Core settings and kept on your server; nothing ships with the widget. They are the airlines' trademarks: keep this off on anything you publish.",
+      "help": "The airlines' own marks, fetched at render time from the service chosen under Settings › Widgets › Overhead Core and kept on your server; nothing ships with the widget. They are the airlines' trademarks: keep this off on anything you publish.",
       "advanced": true
     },
     {

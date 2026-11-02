@@ -130,10 +130,10 @@ def blueprint() -> Any:
         fal_key = _fal_key(st)
         cap = P.ART.cap(st)
         if not fal_key:
-            return "Add a fal.ai key in the Overhead Core settings first.", "warn"
+            return "Add a fal.ai key under Settings › Generative AI (or Settings › Widgets › Overhead Core) first.", "warn"
         if cap < P.UNLIMITED and P.ART.budget_used(dd) >= cap:
             return (
-                f"To-day's painting budget of {P.dollars(cap)} is spent. Raise it in the Overhead Core settings.",
+                f"To-day's painting budget of {P.dollars(cap)} is spent. Raise it under Settings › Widgets › Overhead Core.",
                 "warn",
             )
         if P.ART.path(key, dd) is not None:

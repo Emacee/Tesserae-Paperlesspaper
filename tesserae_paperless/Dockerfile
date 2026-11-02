@@ -12,4 +12,10 @@ USER root
 COPY add_widgets.py /tmp/add_widgets.py
 RUN python3 /tmp/add_widgets.py "${WIDGETS_REPO}" "${WIDGETS_REF}" && rm /tmp/add_widgets.py
 
+# Tesserae 0.480's paintings page says a widget's settings are under
+# "Settings › Plugins", a tab it calls "Widgets". Name it as the menu does;
+# a later template without that text is left as it is.
+RUN f=/app/templates/artwork.html; \
+    if [ -f "$f" ]; then sed -i 's/Settings › Plugins › /Settings › Widgets › /' "$f"; fi
+
 LABEL io.hass.type="addon" io.hass.arch="aarch64|amd64"

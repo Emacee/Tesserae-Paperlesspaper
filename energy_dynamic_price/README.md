@@ -58,8 +58,8 @@ half scherm:
 | **Tibber** | API-token | De `total`-prijs van je eigen contract, precies wat de Tibber-app toont. |
 
 Voor Tibber maak je een token aan op <https://developer.tibber.com>
-(Access token). Plak het daarna in Tesserae onder **Settings → Widgets →
-Energy, Dynamic Price → Tibber API token**. Heb je meer dan één huis, vul dan
+(Access token). Plak het daarna in Tesserae onder **Settings › Widgets ›
+Energy, Dynamic Price › Tibber API token**. Heb je meer dan één huis, vul dan
 onder *More options* de `Tibber home ID` in.
 
 ## Opties per cel
@@ -80,7 +80,7 @@ Fragments voor het vrije canvas: `full`, `summary` (nu · laag / hoog) en
 ## Installeren
 
 Zip de map `energy_dynamic_price/` en upload hem in Tesserae via
-**Settings → Widgets → Upload widget**. Of zet de map in `plugins/` van een
+**Widgets › Installed widgets › Upload widget**. Of zet de map in `plugins/` van een
 Tesserae-checkout.
 
 ## Testen

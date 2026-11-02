@@ -37,7 +37,7 @@ This repository puts the two together in **one Home Assistant app**:
 ## How it works
 
 ```
-Tesserae page ──render──▶ paperlesspaper Core ──upload──▶ paperlesspaper cloud ──wake-up──▶ your frame
+Tesserae page ──render──▶ paperlesspaper plugin ──upload──▶ paperlesspaper cloud ──wake-up──▶ your frame
    (in Home Assistant)        (this repo)            (dithers for Spectra 6)       (button or schedule)
 ```
 
@@ -62,7 +62,7 @@ An unchanged page is never uploaded twice.
 | Part | Folder |
 |---|---|
 | The Home Assistant app: Tesserae with these widgets and the paperlesspaper bridge | [`tesserae_paperless/`](tesserae_paperless/) |
-| **paperlesspaper Core**: uploads every render to the frame's paper and manages your frames (which paper is shown, battery, last wake-up) | [`paperlesspaper_core/`](paperlesspaper_core/) |
+| **paperlesspaper** (plugin): uploads every render to the frame's paper and manages your frames (which paper is shown, battery, last wake-up) | [`paperlesspaper_core/`](paperlesspaper_core/) |
 | Device kind *paperlesspaper frame (stock firmware)*: 1600 × 1200 Spectra 6, push | [`devices/paperlesspaper/`](devices/paperlesspaper/) |
 | **Overhead** (fork): aircraft and helicopters above a place, with a radius and a height ceiling, and a map of their tracks | [`overhead_core/`](overhead_core/) + `overhead_cluster/`, `overhead_photo/`, `overhead_plate/`, `overhead_scene/`, `overhead_map/` |
 | **Energy, Dynamic Price**: EPEX and Tibber electricity prices for today and tomorrow | [`energy_dynamic_price/`](energy_dynamic_price/) |

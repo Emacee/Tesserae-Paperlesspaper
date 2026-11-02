@@ -75,7 +75,7 @@ class Client:
         content_type: str = "",
     ) -> Any:
         if not self.key:
-            raise ApiError("No paperlesspaper API key: add one on the paperlesspaper page (Settings > Widgets > paperlesspaper > Open admin).", status=401)
+            raise ApiError("No paperlesspaper API key: add one on the paperlesspaper page (Widgets › paperlesspaper).", status=401)
         url = self.base + path
         if query:
             url += "?" + urllib.parse.urlencode({k: v for k, v in query.items() if v not in (None, "")})

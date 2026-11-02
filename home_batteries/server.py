@@ -52,7 +52,7 @@ def choices(name: str) -> list[dict[str, str]]:
     if core is None:
         return []
     if not core.is_configured():
-        return [{"value": "", "label": "Set HA URL + token in Settings → Widgets → Home Assistant Core"}]
+        return [{"value": "", "label": "Set HA URL + token in Settings › Widgets › Home Assistant Core"}]
     try:
         states = core.get_states()
     except Exception:  # noqa: BLE001
