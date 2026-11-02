@@ -11,6 +11,10 @@ under its version number.
 
 ## [Unreleased]
 
+## [0.2.3] - 2026-11-02
+
+Built on Tesserae 0.480.0, from commit `8832e6b`.
+
 ### Changed
 - Every hint, error and help text now names the place as Tesserae's menu
   does: a widget's page under **Widgets** (Widgets › paperlesspaper,
@@ -142,7 +146,8 @@ Built on Tesserae 0.480.0, from commit `ad7e2ba`.
 - Energy, Dynamic Price: EPEX and Tibber electricity prices for today and
   tomorrow.
 
-[Unreleased]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/8b2f7aa...master
+[Unreleased]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/8832e6b...master
+[0.2.3]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/8b2f7aa...8832e6b
 [0.2.2]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/b82a2b4...8b2f7aa
 [0.2.1]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/37edbac...b82a2b4
 [0.2.0]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/e786d19...37edbac
