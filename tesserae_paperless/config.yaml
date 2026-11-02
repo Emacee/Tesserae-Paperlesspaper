@@ -1,5 +1,5 @@
 name: Tesserae + paperlesspaper
-version: "0.2.3"
+version: "0.2.4"
 slug: tesserae_paperless
 description: "Calm e-ink dashboards from Home Assistant on your paperlesspaper frame. No flashing: stock firmware, Tesserae widgets, one place to run it all."
 url: https://github.com/Emacee/Tesserae-Paperlesspaper
