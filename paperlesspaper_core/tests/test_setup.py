@@ -45,3 +45,27 @@ def test_configure_ha_points_core_at_supervisor() -> None:
     again = Store({"base_url": "http://supervisor/core"})
     assert srv.configure_ha(App(again), env) == "set"  # a new token after an update
     assert srv.configure_ha(App(Store({})), {}) == "skipped"
+
+
+def test_device_values_on_an_older_tesserae() -> None:
+    import importlib.util
+    from pathlib import Path
+
+    spec = importlib.util.spec_from_file_location("pp_server_dev", Path(__file__).resolve().parents[1] / "server.py")
+    srv = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(srv)
+
+    class Old:
+        def __init__(self):
+            self.section = {"pp": {"paper_id": "p1"}}
+
+        def get_section(self, name):
+            return self.section
+
+        def patch_section(self, name, values):
+            self.section.update(values)
+
+    st = Old()
+    srv.save_device_values(st, "pp", {"orientation": "portrait"})
+    assert st.section["pp"] == {"paper_id": "p1", "orientation": "portrait"}
+    assert srv.DEVICE_ID.match("paperlesspaper_l") and not srv.DEVICE_ID.match("L")

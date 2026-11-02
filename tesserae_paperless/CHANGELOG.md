@@ -11,6 +11,13 @@ under its version number.
 
 ## [Unreleased]
 
+### Fixed
+- paperlesspaper: setting up the frame's device from the setup endpoint
+  stored its orientation on Tesserae 0.480 too (it stopped with an error
+  after creating the device).
+- Energy, Dynamic Price: when the home battery cannot be drawn, the widget
+  data now says why instead of leaving it out silently.
+
 ## [0.2.1] - 2026-11-01
 
 Built on Tesserae 0.480.0, from commit `b82a2b4`.
