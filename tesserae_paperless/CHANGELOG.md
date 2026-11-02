@@ -11,6 +11,12 @@ under its version number.
 
 ## [Unreleased]
 
+### Fixed
+- Energy, Dynamic Price: the home battery over the prices now shows.
+  Tesserae refused the widget's call to Home Assistant, as only the price
+  services were declared as hosts it may reach; it may now reach the app's
+  own Home Assistant proxy (`supervisor`) too.
+
 ## [0.2.3] - 2026-11-02
 
 Built on Tesserae 0.480.0, from commit `8832e6b`.

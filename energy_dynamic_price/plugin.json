@@ -22,6 +22,7 @@
   "requires": [
     "network:public.api.energyzero.nl",
     "network:api.tibber.com",
+    "network:supervisor",
     "settings:plugin"
   ],
   "cell_options": [
