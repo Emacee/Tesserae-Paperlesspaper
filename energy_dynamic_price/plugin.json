@@ -40,7 +40,7 @@
           "label": "Tibber (API token in widget settings)"
         }
       ],
-      "help": "EnergyZero publishes the Dutch EPEX day-ahead prices for free. Tibber shows your own contract price, exactly as in the Tibber app; add your token under Settings → Widgets → Energy, Dynamic Price."
+      "help": "EnergyZero publishes the Dutch EPEX day-ahead prices for free. Tibber shows your own contract price, exactly as in the Tibber app; add your token under Settings › Widgets › Energy, Dynamic Price."
     },
     {
       "name": "price_type",

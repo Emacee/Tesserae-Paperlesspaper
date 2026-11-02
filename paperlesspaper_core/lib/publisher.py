@@ -136,7 +136,7 @@ class Uploader:
         cfg = self.config(device_id)
         paper = str(cfg.get("paper_id") or "").strip()
         if not paper:
-            return False, "No paper set for this device: pick one on this page or under Settings > Devices."
+            return False, "No paper set for this device: pick one on this page or under Settings › Devices."
         with self._lock:
             last = self._state.get(device_id) or {}
             if not force and last.get("ok") and last.get("digest") == digest and last.get("paper") == paper:

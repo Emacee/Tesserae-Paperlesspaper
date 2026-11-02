@@ -11,6 +11,17 @@ under its version number.
 
 ## [Unreleased]
 
+### Changed
+- Every hint, error and help text now names the place as Tesserae's menu
+  does: a widget's page under **Widgets** (Widgets › paperlesspaper,
+  Widgets › Overhead Core), its settings under **Settings › Widgets**, and
+  the AI painting key and ceilings under **Settings › Generative AI**. They
+  said "Settings › Plugins", "Open admin", "the Overhead Core settings" and
+  "paperlesspaper Core" before. The Overhead paintings page says
+  Settings › Widgets too.
+- Documentation tab: a table of where things are in Tesserae, and how to
+  set up AI paintings for Overhead.
+
 ## [0.2.2] - 2026-11-02
 
 Built on Tesserae 0.480.0, from commit `8b2f7aa`.

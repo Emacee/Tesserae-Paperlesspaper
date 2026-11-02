@@ -3,7 +3,7 @@
   "name": "paperlesspaper frame (stock firmware)",
   "icon": "frame-corners",
   "version": "0.1.0",
-  "description": "A paperlesspaper e-paper frame on its own firmware: nothing to flash. Tesserae renders the page as a full-colour PNG and the paperlesspaper plugin uploads it to the frame's paper in the paperlesspaper cloud (POST /papers/uploadSingleImage), which dithers it for the Spectra 6 panel. The frame shows it at its next scheduled wake-up, or straight away when you press its button or shake it. Set the paper below, or pick it on the paperlesspaper plugin page. Requires the paperlesspaper Core plugin with an API key.",
+  "description": "A paperlesspaper e-paper frame on its own firmware: nothing to flash. Tesserae renders the page as a full-colour PNG and the paperlesspaper plugin uploads it to the frame's paper in the paperlesspaper cloud (POST /papers/uploadSingleImage), which dithers it for the Spectra 6 panel. The frame shows it at its next scheduled wake-up, or straight away when you press its button or shake it. Set the paper below, or pick it on the paperlesspaper plugin page. Requires the paperlesspaper plugin with an API key.",
   "renderers": ["pi_png"],
   "transport": "push",
   "panel": {
@@ -20,7 +20,7 @@
       "type": "string",
       "label": "Paper",
       "default": "",
-      "help": "The id of the paperlesspaper paper (screen) this device's frames are uploaded to: the last part of the paper's address in the paperlesspaper web app, or pick it on the paperlesspaper page (Settings > Widgets > paperlesspaper > Open admin). Use an image paper of its own, so the frame's other papers are left alone."
+      "help": "The id of the paperlesspaper paper (screen) this device's frames are uploaded to: the last part of the paper's address in the paperlesspaper web app, or pick it on the paperlesspaper page (Widgets › paperlesspaper). Use an image paper of its own, so the frame's other papers are left alone."
     },
     "orientation": {
       "type": "select",

@@ -73,7 +73,7 @@ def choices(name: str) -> list[dict[str, str]]:
     if name != "travel_sensor" or core is None:
         return []
     if not core.is_configured():
-        return [{"value": "", "label": "Set HA URL + token in Settings → Widgets → Home Assistant Core"}]
+        return [{"value": "", "label": "Set HA URL + token in Settings › Widgets › Home Assistant Core"}]
     try:
         states = core.get_states()
     except Exception:  # noqa: BLE001 - the dropdown explains itself instead

@@ -19,7 +19,7 @@
       "label": "fal.ai API key (AI paintings)",
       "secret": true,
       "default": "",
-      "help": "With a key the widgets can paint each aircraft from its own photograph, at about US$0.04 a painting, once per airframe and style. Get one at https://fal.ai/dashboard/keys; it is only sent to fal.run. Without one the widgets show photographs."
+      "help": "With a key the widgets can paint each aircraft from its own photograph, at about US$0.04 a painting, once per airframe and style. Get one at https://fal.ai/dashboard/keys; it is only sent to fal.run. Leave it empty to use the shared key under Settings › Generative AI. Without any key the widgets show photographs."
     },
     {
       "name": "contact",
@@ -37,7 +37,7 @@
       "max": 30,
       "step": 1,
       "unit": "US$",
-      "help": "The most the widgets may spend on new paintings in a day, at the models' listed prices (US$4 is about a hundred Nano Banana paintings). 0 is no limit. Paintings are kept, so an airframe in a style only costs once; after a few weeks most of what passes is already painted."
+      "help": "The most the widgets may spend on new paintings in a day, at the models' listed prices (US$4 is about a hundred Nano Banana paintings). 0 is no limit. The ceilings under Settings › Generative AI apply on top. Paintings are kept, so an airframe in a style only costs once; after a few weeks most of what passes is already painted."
     },
     {
       "name": "gen_per_refresh",
