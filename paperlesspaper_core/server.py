@@ -206,6 +206,51 @@ def configure_ha(app: Any, env: dict[str, str] | None = None) -> str:
     return "set"
 
 
+def _self_info(token: str) -> dict[str, Any]:
+    import urllib.request
+
+    req = urllib.request.Request("http://supervisor/addons/self/info", headers={"Authorization": f"Bearer {token}"})
+    with urllib.request.urlopen(req, timeout=5) as resp:  # noqa: S310 - Supervisor, inside the app
+        got = json.loads(resp.read().decode("utf-8"))
+    return got.get("data") or {} if isinstance(got, dict) else {}
+
+
+def configure_host(env: dict[str, str] | None = None, info: Any = None) -> str:
+    """Where Home Assistant fetches the frames Tesserae announces over MQTT
+    (the Frame and Last render images). Tesserae names the host's LAN
+    address, which only answers when port 8765 is open on the Network tab.
+    While it is closed, name the app's own hostname instead: Home Assistant
+    reaches every app by its hostname on Supervisor's network. Returns
+    "set", "kept" (TESSERAE_HOST_IP given, or the port is open) or
+    "skipped" (not inside the Home Assistant app)."""
+    env = os.environ if env is None else env
+    token = str(env.get("SUPERVISOR_TOKEN") or "").strip()
+    if not (env.get("TESSERAE_HA_INGRESS") and token):
+        return "skipped"
+    if str(env.get("TESSERAE_HOST_IP") or "").strip() and not env.get("PAPERLESSPAPER_HOST_SET"):
+        return "kept"
+    try:
+        data = (info or _self_info)(token)
+    except Exception:  # noqa: BLE001 - the LAN address stays
+        return "skipped"
+    port = str(env.get("TESSERAE_HTTP_PORT") or "8765")
+    if (data.get("network") or {}).get(f"{port}/tcp"):
+        if env.get("PAPERLESSPAPER_HOST_SET"):
+            env.pop("TESSERAE_HOST_IP", None)
+            env.pop("PAPERLESSPAPER_HOST_SET", None)
+        return "kept"
+    host = str(data.get("hostname") or "").strip()
+    if not host:
+        import socket
+
+        host = socket.gethostname()
+    if not host:
+        return "skipped"
+    env["TESSERAE_HOST_IP"] = host
+    env["PAPERLESSPAPER_HOST_SET"] = "1"
+    return "set"
+
+
 def save_device_values(store: Any, device_id: str, values: dict[str, Any]) -> None:
     if hasattr(store, "update_item"):
         store.update_item("devices", device_id, values)
@@ -275,6 +320,8 @@ def _start(state: Any) -> None:
     app = state.app
     with contextlib.suppress(Exception):
         logger.info("paperlesspaper: Home Assistant Core %s", configure_ha(app))
+    with contextlib.suppress(Exception):
+        logger.info("paperlesspaper: frame address for Home Assistant %s", configure_host())
     if app.config.get("PAPERLESSPAPER_WATCH"):
         attach(app)
         return

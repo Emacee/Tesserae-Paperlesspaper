@@ -11,6 +11,13 @@ under its version number.
 
 ## [Unreleased]
 
+### Fixed
+- The **Frame** and **Last render** images in Home Assistant show the page
+  again, on a dashboard card too. Home Assistant was sent to fetch them at
+  your Home Assistant host's LAN address on port 8765, which is closed
+  unless you open it on the Network tab; while it is closed, it now fetches
+  them from the app directly. Opening the port still uses the LAN address.
+
 ## [0.2.5] - 2026-11-02
 
 Built on Tesserae 0.480.0, from commit `0d99c94`.
