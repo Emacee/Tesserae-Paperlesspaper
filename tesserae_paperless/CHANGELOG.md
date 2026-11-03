@@ -11,6 +11,10 @@ under its version number.
 
 ## [Unreleased]
 
+## [0.2.6] - 2026-11-03
+
+Built on Tesserae 0.480.0, from commit `a5465b4`.
+
 ### Fixed
 - The **Frame** and **Last render** images in Home Assistant show the page
   again, on a dashboard card too. Home Assistant was sent to fetch them at
@@ -176,7 +180,8 @@ Built on Tesserae 0.480.0, from commit `ad7e2ba`.
 - Energy, Dynamic Price: EPEX and Tibber electricity prices for today and
   tomorrow.
 
-[Unreleased]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/0d99c94...master
+[Unreleased]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/a5465b4...master
+[0.2.6]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/0d99c94...a5465b4
 [0.2.5]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/2824e7c...0d99c94
 [0.2.4]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/8832e6b...2824e7c
 [0.2.3]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/8b2f7aa...8832e6b
