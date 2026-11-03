@@ -69,3 +69,25 @@ def test_device_values_on_an_older_tesserae() -> None:
     srv.save_device_values(st, "pp", {"orientation": "portrait"})
     assert st.section["pp"] == {"paper_id": "p1", "orientation": "portrait"}
     assert srv.DEVICE_ID.match("paperlesspaper_l") and not srv.DEVICE_ID.match("L")
+
+
+def test_configure_host_names_the_app_while_the_port_is_closed() -> None:
+    import importlib.util
+    from pathlib import Path
+
+    spec = importlib.util.spec_from_file_location("pp_server_host", Path(__file__).resolve().parents[1] / "server.py")
+    srv = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(srv)
+
+    closed = lambda t: {"hostname": "abc-tesserae-paperless", "network": {"8765/tcp": None}}  # noqa: E731
+    opened = lambda t: {"hostname": "abc-tesserae-paperless", "network": {"8765/tcp": 8765}}  # noqa: E731
+    app_env = {"TESSERAE_HA_INGRESS": "1", "SUPERVISOR_TOKEN": "t"}
+
+    env = dict(app_env)
+    assert srv.configure_host(env, closed) == "set" and env["TESSERAE_HOST_IP"] == "abc-tesserae-paperless"
+    # The port opened later: back to Tesserae's own LAN address.
+    assert srv.configure_host(env, opened) == "kept" and "TESSERAE_HOST_IP" not in env
+    # An address of the user's own is kept, and outside the app nothing changes.
+    env = {**app_env, "TESSERAE_HOST_IP": "10.0.0.2"}
+    assert srv.configure_host(env, closed) == "kept" and env["TESSERAE_HOST_IP"] == "10.0.0.2"
+    assert srv.configure_host({}, closed) == "skipped"
