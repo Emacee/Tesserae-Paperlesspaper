@@ -11,6 +11,10 @@ under its version number.
 
 ## [Unreleased]
 
+## [0.2.7] - 2026-11-18
+
+Built on Tesserae 0.480.0, from commit `5f2f91c`.
+
 ### Fixed
 - paperlesspaper: on a phone (and in the Home Assistant app) the page's tables
   stack each row, so the device picker, **Link**, **Show** and **Upload now**
@@ -185,7 +189,8 @@ Built on Tesserae 0.480.0, from commit `ad7e2ba`.
 - Energy, Dynamic Price: EPEX and Tibber electricity prices for today and
   tomorrow.
 
-[Unreleased]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/a5465b4...master
+[Unreleased]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/5f2f91c...master
+[0.2.7]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/a5465b4...5f2f91c
 [0.2.6]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/0d99c94...a5465b4
 [0.2.5]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/2824e7c...0d99c94
 [0.2.4]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/8832e6b...2824e7c
