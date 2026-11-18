@@ -11,6 +11,15 @@ under its version number.
 
 ## [Unreleased]
 
+### Fixed
+- paperlesspaper: **Link** and **Upload now** no longer freeze the page when
+  paperlesspaper is slow or down. They answer at once and upload in the
+  background; the page shows *Uploading…* and updates itself with the result.
+  Tapping again while an upload runs no longer piles up more of them (one
+  follow-up at most), and a button is off once tapped.
+- paperlesspaper: a timed-out upload is tried up to three times, and one that
+  was slow to answer but did arrive counts as sent.
+
 ## [0.2.7] - 2026-11-18
 
 Built on Tesserae 0.480.0, from commit `5f2f91c`.

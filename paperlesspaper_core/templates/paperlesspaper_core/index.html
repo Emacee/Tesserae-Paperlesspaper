@@ -37,11 +37,11 @@
       <tr>
         <td><b>{{ t.name }}</b><br><code>{{ t.id }}</code></td>
         <td data-label="Paper">{% if t.paper %}{{ t.paper_name or 'paper' }}<br><code>{{ t.paper }}</code>{% else %}<span class="muted">none yet: link one below</span>{% endif %}</td>
-        <td data-label="Last upload">{% if t.last %}{{ t.last.when }}: {% if t.last.ok %}uploaded{% else %}<span class="pp-bad">{{ t.last.error }}</span>{% endif %}{% else %}<span class="muted">nothing yet</span>{% endif %}</td>
+        <td data-label="Last upload">{% if t.busy %}<b class="pp-busy">Uploading…</b><br>{% endif %}{% if t.last %}{{ t.last.when }}: {% if t.last.ok %}uploaded{% else %}<span class="pp-bad">{{ t.last.error }}</span>{% endif %}{% elif not t.busy %}<span class="muted">nothing yet</span>{% endif %}</td>
         <td class="pp-actions">
-          <form method="post" action="{{ url_for('paperlesspaper_core_admin.send') }}">
+          <form method="post" action="{{ url_for('paperlesspaper_core_admin.send') }}" data-pp-once>
             <input type="hidden" name="tesserae_device" value="{{ t.id }}">
-            {{ button('Upload now', variant='secondary', icon='upload-simple', disabled=not t.paper) }}
+            {{ button('Upload now', variant='secondary', icon='upload-simple', disabled=(not t.paper or t.busy)) }}
           </form>
         </td>
       </tr>
@@ -75,13 +75,13 @@
           <td data-label="Image">{{ p.updated }}</td>
           <td class="pp-actions">
             {% if not p.active %}
-            <form method="post" action="{{ url_for('paperlesspaper_core_admin.show') }}">
+            <form method="post" action="{{ url_for('paperlesspaper_core_admin.show') }}" data-pp-once>
               <input type="hidden" name="device" value="{{ f.id }}"><input type="hidden" name="paper" value="{{ p.id }}">
               {{ button('Show', variant='secondary', icon='monitor') }}
             </form>
             {% endif %}
             {% if tesserae %}
-            <form method="post" action="{{ url_for('paperlesspaper_core_admin.link') }}" class="pp-link">
+            <form method="post" action="{{ url_for('paperlesspaper_core_admin.link') }}" class="pp-link" data-pp-once>
               <input type="hidden" name="paper" value="{{ p.id }}">
               <select name="tesserae_device" aria-label="Tesserae device">{% for t in tesserae %}<option value="{{ t.id }}"{% if t.paper == p.id %} selected{% endif %}>{{ t.name }}</option>{% endfor %}</select>
               {{ button('Link', variant='secondary', icon='link') }}
@@ -112,7 +112,41 @@
 </section>
 {% endif %}
 
+<script>
+(function () {
+  // One tap, one request: a button is off once its form is sent, and back on
+  // if the browser shows this page again from its cache (iOS Safari's Back).
+  var forms = document.querySelectorAll('form[data-pp-once]');
+  forms.forEach(function (f) {
+    f.addEventListener('submit', function () {
+      setTimeout(function () {
+        f.querySelectorAll('button').forEach(function (b) { b.disabled = true; b.setAttribute('aria-busy', 'true'); });
+      }, 0);
+    });
+  });
+  window.addEventListener('pageshow', function (e) {
+    if (!e.persisted) return;
+    forms.forEach(function (f) {
+      f.querySelectorAll('button').forEach(function (b) { b.disabled = false; b.removeAttribute('aria-busy'); });
+    });
+  });
+  // An upload is running: look at its progress, and show the result once it is done.
+  {% if tesserae and tesserae | selectattr('busy') | list %}
+  var url = {{ url_for('paperlesspaper_core_admin.status_json') | tojson }};
+  var tries = 0;
+  (function poll() {
+    tries += 1;
+    fetch(url, { credentials: 'same-origin', cache: 'no-store' })
+      .then(function (r) { return r.json(); })
+      .then(function (j) { if (!j.busy.length) { location.reload(); } else if (tries < 100) { setTimeout(poll, 3000); } })
+      .catch(function () { if (tries < 100) { setTimeout(poll, 5000); } });
+  })();
+  {% endif %}
+})();
+</script>
+
 <style>
+  .pp-busy { color: var(--accent, #3a7); }
   .pp-table { width: 100%; border-collapse: collapse; }
   .pp-table th, .pp-table td { text-align: left; padding: .45rem .5rem; border-bottom: 1px solid var(--border, rgba(0,0,0,.12)); vertical-align: top; }
   .pp-table code { font-size: .8em; opacity: .7; overflow-wrap: anywhere; }

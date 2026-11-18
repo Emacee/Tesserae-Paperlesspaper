@@ -8,7 +8,10 @@ import importlib.util
 import io
 import json
 import sys
+import threading
+import time
 import urllib.error
+from datetime import UTC, datetime
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
@@ -153,7 +156,37 @@ class FakeEvents:
         return len(self.rows)
 
 
-def make(tmp_path: Path, *, cfg: dict[str, Any] | None = None, client: FakeClient | None = None, digest: str = "d1") -> Any:
+class SlowClient(FakeClient):
+    """An upload that stays in flight until the test lets it go."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.entered = threading.Event()
+        self.gate = threading.Event()
+
+    def upload(self, paper: str, png: bytes, settings: Any = None) -> None:
+        self.entered.set()
+        assert self.gate.wait(5), "the test never released the upload"
+        super().upload(paper, png, settings)
+
+
+def wait_until(check: Any, timeout: float = 3.0) -> bool:
+    end = time.monotonic() + timeout
+    while time.monotonic() < end:
+        if check():
+            return True
+        time.sleep(0.01)
+    return False
+
+
+def make(
+    tmp_path: Path,
+    *,
+    cfg: dict[str, Any] | None = None,
+    client: FakeClient | None = None,
+    digest: str = "d1",
+    run_async: bool = False,
+) -> Any:
     renders = tmp_path / "renders"
     renders.mkdir(parents=True, exist_ok=True)
     (renders / f"{digest}.png").write_bytes(PNG)
@@ -177,7 +210,7 @@ def make(tmp_path: Path, *, cfg: dict[str, Any] | None = None, client: FakeClien
         client_fn=lambda: client,
         state_path=tmp_path / "state" / "sent.json",
         event_log=events,
-        run_async=False,
+        run_async=run_async,
         retry_wait_s=0,
     )
     return SimpleNamespace(up=up, client=client, events=events, latest=latest, renders=renders, section=section)
@@ -233,6 +266,81 @@ def test_a_server_error_is_retried_once_a_refused_key_is_not(tmp_path: Path) -> 
     t.client.fail.clear()
     sent, _ = t.up.send("frame")
     assert sent, "a failed upload is tried again on the next push"
+
+
+def test_three_attempts_then_the_failure_is_shown(tmp_path: Path) -> None:
+    t = make(tmp_path, client=FakeClient([API.ApiError("busy", status=503)] * 3))
+    sent, msg = t.up.send("frame")
+    assert not sent and "busy" in msg and not t.client.fail and not t.client.sent
+    assert t.up.status("frame")["ok"] is False and not t.up.is_busy("frame")
+
+
+class _PaperAnswers(FakeClient):
+    def __init__(self, fail: list[Exception], image_at: str) -> None:
+        super().__init__(fail)
+        self.image_at = image_at
+
+    def paper(self, paper_id: str) -> dict[str, Any]:
+        return {"id": paper_id, "imageUpdatedAt": self.image_at}
+
+
+TIMED_OUT = "paperlesspaper could not be reached (The read operation timed out)."
+
+
+def test_a_slow_answer_that_landed_counts_as_sent(tmp_path: Path) -> None:
+    now = datetime.now(UTC).isoformat().replace("+00:00", "Z")
+    client = _PaperAnswers([API.ApiError(TIMED_OUT)], now)
+    t = make(tmp_path, client=client)
+    sent, msg = t.up.send("frame")
+    assert sent and "slow to answer" in msg and not client.sent, "one attempt, not three"
+    assert t.up.status("frame")["ok"] is True and t.events.rows[-1]["status"] == "ok"
+
+
+def test_a_slow_answer_that_did_not_land_is_tried_again(tmp_path: Path) -> None:
+    client = _PaperAnswers([API.ApiError(TIMED_OUT), API.ApiError(TIMED_OUT)], "2020-01-01T00:00:00Z")
+    t = make(tmp_path, client=client)
+    sent, _ = t.up.send("frame")
+    assert sent and len(client.sent) == 1 and not client.fail
+
+
+def test_start_answers_at_once_and_uploads_in_the_background(tmp_path: Path) -> None:
+    client = SlowClient()
+    t = make(tmp_path, client=client, run_async=True)
+    began = time.monotonic()
+    started, msg = t.up.start("frame")
+    assert started and "Uploading" in msg and time.monotonic() - began < 1
+    assert client.entered.wait(2) and t.up.is_busy("frame")
+    assert t.up.status("frame") == {}, "nothing is recorded until it is done"
+    client.gate.set()
+    assert wait_until(lambda: not t.up.is_busy("frame"))
+    assert t.up.status("frame")["ok"] is True and len(client.sent) == 1
+
+
+def test_taps_while_an_upload_runs_become_one_follow_up(tmp_path: Path) -> None:
+    client = SlowClient()
+    t = make(tmp_path, client=client, run_async=True)
+    t.up.start("frame")
+    assert client.entered.wait(2)
+    for _ in range(3):
+        started, msg = t.up.start("frame")
+        assert not started and "already running" in msg
+    client.gate.set()
+    assert wait_until(lambda: len(client.sent) == 2 and not t.up.is_busy("frame")), client.sent
+    time.sleep(0.1)
+    assert len(client.sent) == 2, "three more taps, one more upload"
+
+
+def test_a_new_frame_during_an_upload_is_not_lost(tmp_path: Path) -> None:
+    client = SlowClient()
+    t = make(tmp_path, client=client, run_async=True)
+    t.up.start("frame")
+    assert client.entered.wait(2)
+    (t.renders / "d2.png").write_bytes(PNG + b"2")
+    t.latest["frame"]["composition_digest"] = "d2"
+    t.up.on_push()
+    time.sleep(0.1)
+    client.gate.set()
+    assert wait_until(lambda: [s[1] for s in client.sent] == [PNG, PNG + b"2"] and not t.up.is_busy("frame")), client.sent
 
 
 def test_a_listener_never_raises(tmp_path: Path) -> None:
@@ -339,6 +447,7 @@ def app(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Any:
         return ""
 
     a.config["server"] = server
+    server.uploader(a)._run_async = False  # noqa: SLF001 - uploads inside the request, unless a test says otherwise
     return a
 
 
@@ -411,3 +520,40 @@ def test_the_key_is_set_on_the_page(app: Any, calls: list[Any]) -> None:
     page = app.test_client().get("/plugins/paperlesspaper_core/").get_data(as_text=True)
     assert "Add your API key" not in page and "Replace key" in page
 
+
+
+def test_the_buttons_answer_at_once_while_paperlesspaper_is_slow(app: Any, calls: list[Any]) -> None:
+    up = app.config["server"].uploader(app)
+    slow = SlowClient()
+    up._run_async = True  # noqa: SLF001
+    up._client = lambda: slow  # noqa: SLF001
+    up._retry_wait_s = 0  # noqa: SLF001
+    app.config["SETTINGS_STORE"].devices["frame"] = {"paper_id": "p-tess"}
+
+    began = time.monotonic()
+    r = app.test_client().post("/plugins/paperlesspaper_core/send", data={"tesserae_device": "frame"})
+    assert r.status_code == 302 and time.monotonic() - began < 1, "Upload now does not wait for the upload"
+    assert slow.entered.wait(2)
+
+    began = time.monotonic()
+    r = app.test_client().post("/plugins/paperlesspaper_core/link", data={"tesserae_device": "frame", "paper": "p-tess"})
+    assert r.status_code == 302 and time.monotonic() - began < 1, "nor does Link, with one already running"
+    assert len(slow.sent) == 0 and up.is_busy("frame")
+
+    calls.answers.append(b"[]")  # type: ignore[attr-defined]
+    page = app.test_client().get("/plugins/paperlesspaper_core/").get_data(as_text=True)
+    assert "Uploading" in page and "status.json" in page
+
+    got = app.test_client().get("/plugins/paperlesspaper_core/status.json").get_json()
+    assert got["busy"] == ["frame"] and got["devices"]["frame"]["busy"] is True
+
+    slow.gate.set()
+    assert wait_until(lambda: not up.is_busy("frame"))
+    got = app.test_client().get("/plugins/paperlesspaper_core/status.json").get_json()
+    assert got["busy"] == [] and got["devices"]["frame"]["ok"] is True
+
+
+def test_the_page_without_a_running_upload_does_not_poll(app: Any, calls: list[Any]) -> None:
+    calls.answers.append(b"[]")  # type: ignore[attr-defined]
+    page = app.test_client().get("/plugins/paperlesspaper_core/").get_data(as_text=True)
+    assert "Uploading" not in page and "status.json" not in page and "data-pp-once" in page
