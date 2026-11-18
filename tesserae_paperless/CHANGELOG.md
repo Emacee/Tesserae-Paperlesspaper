@@ -11,6 +11,10 @@ under its version number.
 
 ## [Unreleased]
 
+## [0.2.8] - 2026-11-18
+
+Built on Tesserae 0.480.0, from commit `847add3`.
+
 ### Fixed
 - paperlesspaper: **Link** and **Upload now** no longer freeze the page when
   paperlesspaper is slow or down. They answer at once and upload in the
@@ -198,7 +202,8 @@ Built on Tesserae 0.480.0, from commit `ad7e2ba`.
 - Energy, Dynamic Price: EPEX and Tibber electricity prices for today and
   tomorrow.
 
-[Unreleased]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/5f2f91c...master
+[Unreleased]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/847add3...master
+[0.2.8]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/5f2f91c...847add3
 [0.2.7]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/a5465b4...5f2f91c
 [0.2.6]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/0d99c94...a5465b4
 [0.2.5]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/2824e7c...0d99c94
