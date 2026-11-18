@@ -36,9 +36,9 @@
     {% for t in tesserae %}
       <tr>
         <td><b>{{ t.name }}</b><br><code>{{ t.id }}</code></td>
-        <td>{% if t.paper %}{{ t.paper_name or 'paper' }}<br><code>{{ t.paper }}</code>{% else %}<span class="muted">none yet: link one below</span>{% endif %}</td>
-        <td>{% if t.last %}{{ t.last.when }}: {% if t.last.ok %}uploaded{% else %}<span class="pp-bad">{{ t.last.error }}</span>{% endif %}{% else %}<span class="muted">nothing yet</span>{% endif %}</td>
-        <td>
+        <td data-label="Paper">{% if t.paper %}{{ t.paper_name or 'paper' }}<br><code>{{ t.paper }}</code>{% else %}<span class="muted">none yet: link one below</span>{% endif %}</td>
+        <td data-label="Last upload">{% if t.last %}{{ t.last.when }}: {% if t.last.ok %}uploaded{% else %}<span class="pp-bad">{{ t.last.error }}</span>{% endif %}{% else %}<span class="muted">nothing yet</span>{% endif %}</td>
+        <td class="pp-actions">
           <form method="post" action="{{ url_for('paperlesspaper_core_admin.send') }}">
             <input type="hidden" name="tesserae_device" value="{{ t.id }}">
             {{ button('Upload now', variant='secondary', icon='upload-simple', disabled=not t.paper) }}
@@ -71,8 +71,8 @@
       {% for p in f.papers %}
         <tr{% if p.active %} class="pp-active"{% endif %}>
           <td><b>{{ p.name }}</b>{% if p.active %} <span class="pp-chip">on the frame</span>{% endif %}<br><code>{{ p.id }}</code></td>
-          <td>{{ p.kind }}</td>
-          <td>{{ p.updated }}</td>
+          <td data-label="Kind">{{ p.kind }}</td>
+          <td data-label="Image">{{ p.updated }}</td>
           <td class="pp-actions">
             {% if not p.active %}
             <form method="post" action="{{ url_for('paperlesspaper_core_admin.show') }}">
@@ -115,7 +115,7 @@
 <style>
   .pp-table { width: 100%; border-collapse: collapse; }
   .pp-table th, .pp-table td { text-align: left; padding: .45rem .5rem; border-bottom: 1px solid var(--border, rgba(0,0,0,.12)); vertical-align: top; }
-  .pp-table code { font-size: .8em; opacity: .7; }
+  .pp-table code { font-size: .8em; opacity: .7; overflow-wrap: anywhere; }
   .pp-actions { display: flex; gap: .5rem; flex-wrap: wrap; }
   .pp-link { display: flex; gap: .35rem; align-items: center; }
   .pp-active { background: color-mix(in srgb, var(--accent, #3a7) 10%, transparent); }
@@ -127,5 +127,18 @@
   .pp-key-label { display: block; font-weight: 600; margin-bottom: .35rem; }
   .pp-key-row { display: flex; gap: .5rem; flex-wrap: wrap; }
   .pp-key-row input { flex: 1 1 14rem; min-width: 0; }
+  /* A phone, or the app inside Home Assistant's frame: one row is one block,
+     its fields under each other and its buttons on a line of their own, so
+     Link and Show are never pushed past the right edge. */
+  @media (max-width: 720px) {
+    .pp-table thead { display: none; }
+    .pp-table, .pp-table tbody, .pp-table tr, .pp-table td { display: block; width: 100%; box-sizing: border-box; }
+    .pp-table tr { border-bottom: 1px solid var(--border, rgba(0,0,0,.12)); padding: .5rem 0; }
+    .pp-table td { border-bottom: 0; padding: .2rem .5rem; }
+    .pp-table td[data-label]::before { content: attr(data-label) ": "; opacity: .65; }
+    .pp-table td.pp-actions { display: flex; padding-top: .5rem; }
+    .pp-link { flex: 1 1 100%; flex-wrap: wrap; }
+    .pp-link select { flex: 1 1 10rem; min-width: 0; }
+  }
 </style>
 {% endblock %}

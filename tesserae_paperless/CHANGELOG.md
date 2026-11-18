@@ -11,6 +11,11 @@ under its version number.
 
 ## [Unreleased]
 
+### Fixed
+- paperlesspaper: on a phone (and in the Home Assistant app) the page's tables
+  stack each row, so the device picker, **Link**, **Show** and **Upload now**
+  are on screen instead of past the right edge.
+
 ## [0.2.6] - 2026-11-03
 
 Built on Tesserae 0.480.0, from commit `a5465b4`.
