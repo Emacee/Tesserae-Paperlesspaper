@@ -478,6 +478,7 @@ def blueprint() -> Any:
                         "paper": str(cfg.get("paper_id") or ""),
                         "orientation": str(cfg.get("orientation") or "landscape"),
                         "last": {**last, "when": _when(last.get("at"))} if last else {},
+                        "busy": up.is_busy(device.id),
                     }
                 )
         frames, error = frames_overview(client_for(app, PAGE_TIMEOUT_S)) if has_key else ([], "")
@@ -541,7 +542,7 @@ def blueprint() -> Any:
             merged = dict(section.get(device) or {})
             merged["paper_id"] = paper
             store.patch_section("devices", {device: merged})
-        sent, msg = up.send(device, force=True)
+        sent, msg = up.start(device, force=True)
         flash(f"{device} now uploads to this paper. {msg}", "success" if sent else "warn")
         return back()
 
@@ -575,8 +576,25 @@ def blueprint() -> Any:
         up = uploader(app)
         if device not in {d.id for d in up.devices()}:
             abort(404)
-        sent, msg = up.send(device, force=True)
+        sent, msg = up.start(device, force=True)
         flash(msg, "success" if sent else "warn")
         return back()
+
+    @bp.get("/status.json")
+    def status_json() -> Any:
+        """JSON for the page while an upload runs: which devices are busy and each one's last upload."""
+        app = current_app._get_current_object()  # type: ignore[attr-defined]
+        up = uploader(app)
+        out: dict[str, Any] = {}
+        with contextlib.suppress(Exception):
+            for device in up.devices():
+                last = up.status(device.id)
+                out[device.id] = {
+                    "busy": up.is_busy(device.id),
+                    "ok": bool(last.get("ok")) if last else None,
+                    "error": str(last.get("error") or "") if last else "",
+                    "when": _when(last.get("at")) if last else "",
+                }
+        return jsonify({"devices": out, "busy": [k for k, v in out.items() if v["busy"]]})
 
     return bp

@@ -8,9 +8,12 @@ the ``paperlesspaper`` devices, and for each whose composition changed reads
 frame fetches it at its next wake-up.
 
 Uploads run on one background worker, coalesced by a dirty flag, so a slow
-upload never holds up the render pipeline. What was sent last is kept in a
-small JSON file, so a restart does not upload the same frame again; the
-plugin page reads the same file for each device's last upload.
+upload never holds up the render pipeline. The page's Link and Upload now
+buttons start theirs in the background too (``start``) and answer at once;
+a device has one upload at a time, and taps while one runs fold into a single
+follow-up. What was sent last is kept in a small JSON file, so a restart does
+not upload the same frame again; the plugin page reads the same file for each
+device's last upload.
 """
 
 from __future__ import annotations
@@ -21,13 +24,27 @@ import logging
 import threading
 import time
 from collections.abc import Callable
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
 logger = logging.getLogger(__name__)
 
 KIND = "paperlesspaper"
-RETRY_WAIT_S = 5.0
+ATTEMPTS = 3
+RETRY_WAIT_S = 5.0  # before the second attempt; four times as long before the third
+LANDED_SLACK_S = 5.0  # clock difference allowed when asking whether an upload landed
+BUSY_NOTE = "An upload is already running; one more follows right after it."
+
+
+def _epoch(value: Any) -> float | None:
+    """A paperlesspaper timestamp (ISO text, or seconds or milliseconds) as seconds."""
+    if isinstance(value, (int, float)):
+        return float(value) / 1000 if value > 1e11 else float(value)
+    try:
+        return datetime.fromisoformat(str(value).replace("Z", "+00:00")).timestamp()
+    except ValueError:
+        return None
 
 
 class Uploader:
@@ -56,6 +73,8 @@ class Uploader:
         self._lock = threading.Lock()
         self._dirty = False
         self._worker_running = False
+        self._busy: set[str] = set()
+        self._again: dict[str, bool] = {}  # device -> force, asked while its upload ran
         self._state = self._load()
 
     # -- state -------------------------------------------------------------
@@ -78,6 +97,10 @@ class Uploader:
         """The device's last upload: {digest, paper, at, ok, error}."""
         with self._lock:
             return dict(self._state.get(device_id) or {})
+
+    def is_busy(self, device_id: str) -> bool:
+        with self._lock:
+            return device_id in self._busy
 
     # -- devices -----------------------------------------------------------
 
@@ -128,55 +151,109 @@ class Uploader:
 
     def send(self, device_id: str, *, force: bool = False) -> tuple[bool, str]:
         """Upload the device's latest frame when it changed (or always, with
-        ``force``). (sent, a sentence for the page)."""
+        ``force``), and wait for it. (sent, a sentence for the page)."""
+        plan, msg = self._plan(device_id, force)
+        if plan is None:
+            return False, msg
+        return self._deliver(device_id, plan)
+
+    def start(self, device_id: str, *, force: bool = True) -> tuple[bool, str]:
+        """For a button: check what can be checked now, then upload in the
+        background and answer at once. (started, a sentence for the page)."""
+        plan, msg = self._plan(device_id, force)
+        if plan is None:
+            return False, msg
+        if not self._run_async:
+            return self._deliver(device_id, plan)
+        try:
+            threading.Thread(target=self._deliver, args=(device_id, plan), name="paperlesspaper-upload-now", daemon=True).start()
+        except Exception:  # noqa: BLE001 - no thread to run it: free the device again
+            with self._lock:
+                self._busy.discard(device_id)
+            raise
+        return True, "Uploading now: the result shows under Last upload in a moment."
+
+    def _plan(self, device_id: str, force: bool) -> tuple[dict[str, Any] | None, str]:
+        """What to upload, with the device marked busy; or (None, why not)."""
         latest = self._latest(device_id) or {}
         digest = str(latest.get("composition_digest") or "")
         if not digest:
-            return False, "Nothing rendered for this device yet: give it a page and send it once."
+            return None, "Nothing rendered for this device yet: give it a page and send it once."
         cfg = self.config(device_id)
         paper = str(cfg.get("paper_id") or "").strip()
         if not paper:
-            return False, "No paper set for this device: pick one on this page or under Settings › Devices."
+            return None, "No paper set for this device: pick one on this page or under Settings › Devices."
         with self._lock:
+            if device_id in self._busy:
+                self._again[device_id] = self._again.get(device_id, False) or force
+                return None, BUSY_NOTE
             last = self._state.get(device_id) or {}
             if not force and last.get("ok") and last.get("digest") == digest and last.get("paper") == paper:
-                return False, "The latest frame is already on the paper."
-        src = self._renders_dir / f"{digest}.png"
-        try:
-            png = src.read_bytes()
-        except OSError:
-            return False, f"The rendered frame {digest} is no longer on disk; render the page again."
+                return None, "The latest frame is already on the paper."
+            src = self._renders_dir / f"{digest}.png"
+            try:
+                png = src.read_bytes()
+            except OSError:
+                return None, f"The rendered frame {digest} is no longer on disk; render the page again."
+            self._busy.add(device_id)
         orientation = str(cfg.get("orientation") or "landscape")
         settings = {"orientation": orientation if orientation in ("landscape", "portrait") else "landscape"}
+        return {"digest": digest, "paper": paper, "png": png, "settings": settings}, ""
+
+    def _deliver(self, device_id: str, plan: dict[str, Any]) -> tuple[bool, str]:
         started = time.monotonic()
+        paper, digest = plan["paper"], plan["digest"]
+        try:
+            error, note = self._upload(paper, plan["png"], plan["settings"])
+            ok = not error
+            with self._lock:
+                self._state[device_id] = {"digest": digest, "paper": paper, "at": int(time.time()), "ok": ok, "error": error}
+                self._save()
+            self._record(device_id, digest, ok, error, time.monotonic() - started, paper)
+        finally:
+            with self._lock:
+                self._busy.discard(device_id)
+                follow = self._again.pop(device_id, None)
+        if ok:
+            logger.info("paperlesspaper %s: uploaded frame %s to paper %s%s", device_id, digest, paper, f" ({note})" if note else "")
+        else:
+            logger.warning("paperlesspaper %s: upload to paper %s failed: %s", device_id, paper, error)
+        if follow is not None:
+            with contextlib.suppress(Exception):
+                self.start(device_id, force=follow)
+        if ok:
+            return True, note or "Uploaded. The frame shows it at its next wake-up, or now if you press its button."
+        return False, f"Upload failed: {error}"
+
+    def _upload(self, paper: str, png: bytes, settings: dict[str, Any]) -> tuple[str, str]:
+        """Up to ATTEMPTS tries. (error, note): error is empty when the image
+        is on the paper; a slow answer that did land counts as sent."""
+        waits = (self._retry_wait_s, self._retry_wait_s * 4)
         error = ""
-        for attempt in range(2):
+        for attempt in range(ATTEMPTS):
+            began = time.time()
             try:
                 self._client().upload(paper, png, settings)
-                error = ""
-                break
+                return "", ""
             except Exception as err:  # noqa: BLE001 - ApiError, or anything the client raised
                 error = str(err) or err.__class__.__name__
-                if attempt == 0 and getattr(err, "retryable", False):
-                    time.sleep(self._retry_wait_s)
-                    continue
-                break
-        ok = not error
-        with self._lock:
-            self._state[device_id] = {
-                "digest": digest,
-                "paper": paper,
-                "at": int(time.time()),
-                "ok": ok,
-                "error": error,
-            }
-            self._save()
-        self._record(device_id, digest, ok, error, time.monotonic() - started, paper)
-        if ok:
-            logger.info("paperlesspaper %s: uploaded frame %s to paper %s", device_id, digest, paper)
-            return True, "Uploaded. The frame shows it at its next wake-up, or now if you press its button."
-        logger.warning("paperlesspaper %s: upload to paper %s failed: %s", device_id, paper, error)
-        return False, f"Upload failed: {error}"
+                if not getattr(err, "retryable", False):
+                    return error, ""
+                if self._landed(paper, began):
+                    return "", "paperlesspaper was slow to answer, but the image is there"
+                if attempt + 1 < ATTEMPTS:
+                    time.sleep(waits[min(attempt, len(waits) - 1)])
+        return error, ""
+
+    def _landed(self, paper: str, since: float) -> bool:
+        """Did the paper's image change after ``since``? A server that is slow
+        to answer may still have taken the upload."""
+        try:
+            row = self._client().paper(paper)
+        except Exception:  # noqa: BLE001 - cannot tell: treat as not landed
+            return False
+        at = _epoch((row or {}).get("imageUpdatedAt")) if isinstance(row, dict) else None
+        return at is not None and at >= since - LANDED_SLACK_S
 
     def _record(self, device_id: str, digest: str, ok: bool, error: str, took: float, paper: str) -> None:
         if self._events is None:
