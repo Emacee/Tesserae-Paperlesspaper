@@ -4,9 +4,12 @@ The events, places and drive times here are made up."""
 from __future__ import annotations
 
 import importlib.util
+import urllib.parse
 from datetime import date, datetime, timedelta
 from pathlib import Path
 from zoneinfo import ZoneInfo
+
+import pytest
 
 HERE = Path(__file__).resolve().parents[1]
 spec = importlib.util.spec_from_file_location("agenda_list_server", HERE / "server.py")
@@ -33,11 +36,40 @@ class FakeCore:
     def __init__(self, minutes=30.2, fail=False):
         self.minutes, self.fail, self.calls = minutes, fail, []
 
+    def get_state(self, eid):
+        if eid == "zone.home":
+            return {"attributes": {"latitude": 52.27, "longitude": 4.97}}
+        raise KeyError(eid)
+
     def call_service_with_response(self, domain, service, *, data=None, timeout=10):
         self.calls.append((domain, service, data))
         if self.fail:
             raise RuntimeError("no route")
         return {"service_response": {"routes": [{"duration": self.minutes + 9}, {"duration": self.minutes}]}}
+
+
+@pytest.fixture(autouse=True)
+def offline(monkeypatch):
+    """No network: OpenStreetMap and OSRM answer from this table unless a test
+    sets its own. Module state is cleared between tests."""
+    S._cache.clear(), S._geo.clear(), S._geo_t.clear(), S._geo_loaded.clear()
+    S._waze_down[0] = 0.0
+    S._last_geo[0] = 0.0
+    monkeypatch.setattr(S.time, "sleep", lambda s: None)
+    calls = []
+
+    def get_json(url):
+        calls.append(url)
+        if "nominatim" in url:
+            q = urllib.parse.parse_qs(urllib.parse.urlparse(url).query)["q"][0]
+            places = {"Vinkeveen": ("52.21", "4.93"), "Amsterdam": ("52.37", "4.90")}
+            return [{"lat": places[q][0], "lon": places[q][1]}] if q in places else []
+        if "osrm" in url:
+            return {"routes": [{"duration": 1200.0}]}  # 20 minutes
+        return None
+
+    monkeypatch.setattr(S, "_get_json", get_json)
+    return calls
 
 
 def utc(y, mo, d, h, mi=0):
@@ -58,7 +90,7 @@ def test_drive_and_time_to_leave_with_margin():
     core = FakeCore(minutes=34.2)
     out = run([ev(19, 19, "Tennis", "Court 1")], core=core)
     e = out["days"][0]["events"][0]
-    assert e["travel"] == {"min": 35, "leave": "18:20"}  # 19:00 - 35 - 5
+    assert e["travel"] == {"min": 35, "leave": "18:20", "est": False}  # 19:00 - 35 - 5
     assert out["travel"] == "ok"
     assert core.calls[0][:2] == ("waze_travel_time", "get_travel_times")
     assert core.calls[0][2]["origin"] == "zone.home" and core.calls[0][2]["destination"] == "Court 1"
@@ -92,7 +124,7 @@ def test_answers_are_cached_and_failures_remembered():
     S._fetch(TZ, {}, ctx={}, now=NOW, cal=FakeCal(events), core=core)
     assert len(core.calls) == 1
     bad = FakeCore(fail=True)
-    out = run([ev(20, 9, "A", "Nowhere")], core=bad)
+    out = run([ev(20, 9, "A", "Nowhere")], core=bad, travel_source="waze")
     assert "travel" not in out["days"][1]["events"][0] and out["travel"] == "unavailable"
 
 
@@ -128,3 +160,53 @@ def test_no_calendar_core_and_leave_rounding():
     s = datetime(2026, 11, 20, 9, 0, tzinfo=AMS)
     assert S.leave_at(s, 22.1, 5) == s - timedelta(minutes=28)
     assert S._minutes({"service_response": {"routes": []}}) is None
+
+
+def test_osrm_when_waze_does_not_answer():
+    out = run([ev(20, 10, "Visit", "Vinkeveen")], core=FakeCore(fail=True))
+    e = out["days"][1]["events"][0]
+    # 20 min + 15% surcharge = 23 min; 10:00 - 23 - 5 = 09:32
+    assert e["travel"] == {"min": 23, "leave": "09:32", "est": True}
+    assert out["travel"] == "ok" and out["via"] == "osrm"
+
+
+def test_waze_wins_when_it_answers_and_is_not_an_estimate():
+    out = run([ev(20, 10, "Visit", "Vinkeveen")], core=FakeCore(minutes=30))
+    assert out["days"][1]["events"][0]["travel"]["est"] is False and out["via"] == "waze"
+
+
+def test_osrm_only_never_asks_waze_and_surcharge_is_an_option():
+    core = FakeCore()
+    out = run([ev(20, 10, "Visit", "Vinkeveen")], core=core, travel_source="osrm", osrm_extra_pct=0)
+    assert core.calls == [] and out["days"][1]["events"][0]["travel"]["min"] == 20
+
+
+def test_unknown_place_shows_no_drive_and_waze_is_skipped_for_a_while():
+    core = FakeCore(fail=True)
+    out = run([ev(20, 10, "Visit", "Nowhere at all")], core=core)
+    assert out["travel"] == "unavailable" and "travel" not in out["days"][1]["events"][0]
+    out = run([ev(20, 10, "Visit", "Vinkeveen")], core=core)  # run() clears the cache, not the breaker
+    assert len(core.calls) == 1  # the second run went straight to OSRM
+
+
+def test_places_are_geocoded_once_kept_on_disk_and_budgeted(offline, tmp_path):
+    S._cache.clear()
+    events = [ev(20, 10, "A", "Vinkeveen"), ev(21, 10, "B", "Vinkeveen")]
+    S._fetch(TZ, {}, ctx={"data_dir": str(tmp_path)}, now=NOW, cal=FakeCal(events), core=FakeCore(fail=True))
+    assert sum("nominatim" in u for u in offline) == 1  # home is a zone (no lookup); the place once, not per event
+    assert (tmp_path / "geocode.json").exists()
+    S._geo.clear(), S._geo_loaded.clear(), S._cache.clear()
+    offline.clear()
+    S._fetch(TZ, {}, ctx={"data_dir": str(tmp_path)}, now=NOW, cal=FakeCal(events), core=FakeCore(fail=True))
+    assert not any("nominatim" in u for u in offline)  # read back from disk
+    many = [ev(20, 8 + i, f"E{i}", f"Place {i}") for i in range(8)]
+    S._cache.clear(), S._geo.clear(), S._geo_t.clear()
+    offline.clear()
+    run(many, core=FakeCore(fail=True))
+    assert sum("nominatim" in u for u in offline) <= S.GEOCODE_PER_FETCH
+
+
+def test_origin_can_be_coordinates_or_a_zone():
+    assert S.home_position("52.1, 5.2", None, [4], None) == (52.1, 5.2)
+    assert S.home_position("zone.home", FakeCore(), [4], None) == (52.27, 4.97)
+    assert S.home_position("zone.nope", FakeCore(), [4], None) is None

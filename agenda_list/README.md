@@ -17,25 +17,37 @@ Widgets › Calendar Feeds** (the Calendar Core plugin).
 
 ## The drive
 
-The widget asks Home Assistant's `waze_travel_time.get_travel_times` service
-for the drive from home to the event's location, so the **Waze Travel Time**
-integration must be set up in Home Assistant (it needs no account), and the
-**Home Assistant Core** plugin must be configured (Settings › Widgets).
+Two sources, chosen in the cell (*Drive time from*), **Waze, and OSRM when
+Waze does not answer** by default.
+
+- **Waze**, through Home Assistant's `waze_travel_time.get_travel_times`
+  service: live traffic, but it needs the **Waze Travel Time** integration in
+  Home Assistant (no account) and the **Home Assistant Core** plugin
+  (Settings › Widgets).
+- **OSRM**, a free routing service with no account or key. It knows no
+  traffic, so a surcharge (15% by default, a cell option) is added and the
+  drive shows with **≈**, with a line at the bottom saying so. The places are
+  found with OpenStreetMap's Nominatim, once each (kept on disk), at most four
+  new ones per refresh. Only your home position and the event locations are
+  sent to those two services, under a generic client name.
+
+For both:
 
 - *Time to leave* = start − drive (rounded up) − the margin (5 minutes by
   default, a cell option).
 - *Home* is the Home Assistant zone `zone.home`; change it in the cell's
   options to an address, a device or `latitude,longitude`. It is kept with
   the page and left out of an exported template.
-- An event less than three hours away gets a live answer with traffic, kept
-  for ten minutes. Further away, the answer is kept for six hours. A location
-  Waze cannot find is tried again after half an hour, and shown without a
-  drive meanwhile.
-- At most twelve locations are sent per refresh, and only for events in the
-  first *Work out the drive for* days (7 by default).
-- No locations, no Waze, no problem: the list simply shows no drive.
+- A Waze answer for an event less than three hours away has live traffic and
+  is kept for ten minutes; further away it is kept for six hours. After Waze
+  fails, OSRM is used straight away for ten minutes before Waze is tried again.
+- A location nobody can find is tried again after a while, and the event shows
+  without a drive.
+- At most twelve locations are worked out per refresh, and only for events in
+  the first *Work out the drive for* days (7 by default).
+- No locations, no services, no problem: the list simply shows no drive.
 
 ## Options
 
 Days, calendars, feed symbol before titles (off by default), drive time on or
-off, home, Waze region, margin, language.
+off, source, home, Waze region, surcharge without traffic, margin, language.
