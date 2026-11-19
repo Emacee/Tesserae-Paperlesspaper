@@ -76,6 +76,17 @@ def _plugin(name: str) -> Any:
     return None
 
 
+def _app_context() -> Any:
+    """A way to enter the current Flask application context again in another
+    thread. Home Assistant Core reads its settings through ``current_app``,
+    which exists only in the thread that is serving the request."""
+    with contextlib.suppress(Exception):
+        from flask import current_app
+
+        return current_app._get_current_object().app_context  # noqa: SLF001 - the documented way to hand it on
+    return contextlib.nullcontext
+
+
 def _zone(options: dict[str, Any]) -> Any:
     with contextlib.suppress(Exception):
         from app.tz_resolve import app_timezone
@@ -166,6 +177,17 @@ def _geo_save(data_dir: Path | None) -> None:
         path.write_text(json.dumps({k: v for k, v in _geo.items() if v}), encoding="utf-8")
 
 
+def _candidates(place: str) -> list[str]:
+    """The place as written, then without its first part: a venue name in front
+    of an address ("Omakase Amsterdam, Ferdinand Bolstraat 11H, 1072 LK")
+    often finds nothing, the address does."""
+    parts = [p.strip() for p in place.split(",") if p.strip()]
+    out = [", ".join(parts)] if parts else [place]
+    if len(parts) > 2:
+        out.append(", ".join(parts[1:]))
+    return out
+
+
 def geocode(place: str, near: tuple[float, float] | None, budget: list[int], data_dir: Path | None = None, *, now: float | None = None) -> tuple[float, float] | None:
     """Latitude and longitude of a place, from the cache or OpenStreetMap.
     A place found is kept for good (and on disk), one not found for a while.
@@ -187,16 +209,26 @@ def geocode(place: str, near: tuple[float, float] | None, budget: list[int], dat
         wait = _last_geo[0] + 1.1 - time.time()
         if wait > 0:
             time.sleep(wait)
-        params = {"q": place, "format": "jsonv2", "limit": "1"}
-        if near:
-            lat, lon = near
-            params["viewbox"] = f"{lon - 1.5},{lat + 1.5},{lon + 1.5},{lat - 1.5}"  # prefer what is near home
-        hits = _get_json(f"{NOMINATIM_URL}?{urllib.parse.urlencode(params)}")
-        _last_geo[0] = time.time()
-        try:
-            found = [round(float(hits[0]["lat"]), 6), round(float(hits[0]["lon"]), 6)]
-        except (TypeError, KeyError, IndexError, ValueError):
-            found = []
+        found = []
+        for i, query in enumerate(_candidates(place)):
+            if i and budget[0] <= 0:
+                break
+            if i:
+                budget[0] -= 1
+            wait = _last_geo[0] + 1.1 - time.time()
+            if wait > 0 and i:
+                time.sleep(wait)
+            params = {"q": query, "format": "jsonv2", "limit": "1"}
+            if near:
+                lat, lon = near
+                params["viewbox"] = f"{lon - 1.5},{lat + 1.5},{lon + 1.5},{lat - 1.5}"  # prefer what is near home
+            hits = _get_json(f"{NOMINATIM_URL}?{urllib.parse.urlencode(params)}")
+            _last_geo[0] = time.time()
+            try:
+                found = [round(float(hits[0]["lat"]), 6), round(float(hits[0]["lon"]), 6)]
+                break
+            except (TypeError, KeyError, IndexError, ValueError):
+                found = []
         if not found:
             _why(f"place not found: {place[:40]}")
         _geo[key] = found
@@ -416,10 +448,12 @@ def add_travel(
     if not asks:
         return "none"
     budget = [GEOCODE_PER_FETCH]
+    app_context = _app_context()
 
     def one(ev: dict[str, Any]) -> tuple[float | None, str]:
         soon = ev["_start"] - now < timedelta(hours=SOON_H)
-        return drive_minutes(core, origin, ev["location"], region, soon, source=source, extra_pct=extra, budget=budget, data_dir=data_dir)
+        with app_context():  # the worker thread has none of its own
+            return drive_minutes(core, origin, ev["location"], region, soon, source=source, extra_pct=extra, budget=budget, data_dir=data_dir)
 
     # Waze can be asked in parallel; OpenStreetMap is asked one place a second,
     # so with it in play the asks go one by one.
