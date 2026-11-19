@@ -11,6 +11,10 @@ under its version number.
 
 ## [Unreleased]
 
+## [0.3.6] - 2026-11-19
+
+Built on Tesserae 0.480.0, from commit `3452f5a`.
+
 ### Fixed
 - Agenda, with travel time: more addresses are found. A venue name in front of
   an address is dropped, a house number like *11H* is also tried as *11*, and a
@@ -286,7 +290,8 @@ Built on Tesserae 0.480.0, from commit `ad7e2ba`.
 - Energy, Dynamic Price: EPEX and Tibber electricity prices for today and
   tomorrow.
 
-[Unreleased]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/4c09a33...master
+[Unreleased]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/3452f5a...master
+[0.3.6]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/4c09a33...3452f5a
 [0.3.5]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/82bbb60...4c09a33
 [0.3.4]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/95e8285...82bbb60
 [0.3.3]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/0f2545f...95e8285
