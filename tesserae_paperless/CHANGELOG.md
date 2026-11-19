@@ -11,6 +11,11 @@ under its version number.
 
 ## [Unreleased]
 
+### Changed
+- Agenda, with travel time: when no drive time can be found, the note at the
+  bottom names the reason for each step (Waze, the home position, a place that
+  was not found, OSRM) instead of a general message.
+
 ## [0.3.3] - 2026-11-19
 
 Built on Tesserae 0.480.0, from commit `95e8285`.

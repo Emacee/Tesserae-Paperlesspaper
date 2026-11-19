@@ -56,6 +56,7 @@ def offline(monkeypatch):
     S._cache.clear(), S._geo.clear(), S._geo_t.clear(), S._geo_loaded.clear()
     S._waze_down[0] = 0.0
     S._last_geo[0] = 0.0
+    del S._trace[:]
     monkeypatch.setattr(S.time, "sleep", lambda s: None)
     calls = []
 
@@ -238,3 +239,12 @@ def test_get_json_prefers_tesserae_fetch_and_keeps_the_reason(monkeypatch):
     assert seen["headers"]["User-Agent"] == S.USER_AGENT
     assert REAL_GET_JSON("https://example.org/bad") is None
     assert "blocked by test" in S._last_error[0]
+
+
+def test_the_note_says_why_when_nothing_is_found():
+    out = run([ev(20, 10, "Visit", "Nowhere at all")], core=FakeCore(fail=True))
+    assert out["travel"] == "unavailable"
+    assert "Waze: RuntimeError" in out["why"] and "place not found: Nowhere at all" in out["why"]
+    S._cache.clear()
+    out = S._fetch(TZ, {}, ctx={}, now=NOW, cal=FakeCal([ev(20, 10, "Visit", "Vinkeveen")]), core=None)
+    assert "home zone.home" in out["why"] and "NoneType" in out["why"]
