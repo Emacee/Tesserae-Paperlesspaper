@@ -28,7 +28,15 @@ morgen zijn verzonnen, want die waren nog niet gepubliceerd.)*
   ringetje, en een grijze "40 NU" in de chip. Op lg staan in de legenda ook
   het huidige kwartier en het gemiddelde.
 - **Vandaag / Morgen**: een scheidingslijn met labels zodra er twee dagen in
-  beeld zijn. Zijn de prijzen van morgen er nog niet, dan staat er op lg
+  beeld zijn.
+- **Thuisbatterij** (optie *Home battery*, een Deye-omvormer via Solarman):
+  de stukken waarin de batterij van het net laadt staan als lichtblauwe
+  banden achter de prijzen, met "netladen" erin, en de laadtoestand van
+  vandaag is één blauwe lijn met het huidige percentage erbij. De legenda is
+  dan één regel: het gemiddelde, en wat de lijn en de banden zijn.
+
+![thuisbatterij](screenshots/battery.png)
+ Zijn de prijzen van morgen er nog niet, dan staat er op lg
   "Prijzen morgen vanaf ~13:00".
 
 ## Portrait / paperlesspaper

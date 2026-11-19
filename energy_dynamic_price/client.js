@@ -151,11 +151,18 @@ export default function render(shadow, ctx) {
     .ep-range i { font-size: 0.85em; }
     /* Narrow (portrait) cells: keep the title readable by dropping the
        "40 NU ·" part of the chip; the legend shows the current price. */
-    .ep-bat { --ep-blue: var(--accent-3, #2157ba); }
+    .ep-bat { --ep-blue: var(--accent-5, #2157ba); }
     .ep-bat .ln { display: inline-block; width: 1.4em; vertical-align: .3em; }
-    .ep-bat .ln-soc { border-top: 3px solid color-mix(in srgb, var(--ep-blue) 50%, transparent); }
-    .ep-bat .ln-tgt { border-top: 3px dashed var(--ep-blue); }
-    .ep-bat .ln-grid { border-top: 5px solid var(--ep-blue); }
+    .ep-bat .ln-soc { border-top: 3px solid var(--ep-blue); }
+    .ep-bat .sw {
+      display: inline-block;
+      width: 1.3em;
+      height: .75em;
+      vertical-align: -.05em;
+      background: color-mix(in srgb, var(--ep-blue) 16%, transparent);
+      box-shadow: inset 0 0 0 1.5px var(--ep-blue);
+    }
+    .ep-legend .grow { flex: 1 1 auto; }
     @container (max-width: 560px) {
       .ep-range .now, .ep-range .now + .sep { display: none; }
     }
@@ -176,17 +183,14 @@ export default function render(shadow, ctx) {
       </span>`
     : "";
 
-  // the home battery's lines under the legend: what the lines are, then the slot it is in
-  const PYLON = (c, sz) => `<svg width="${sz}" height="${sz}" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.15em"><path d="M12 2.5 7 21.5M12 2.5l5 19M8.6 8.5h6.8M7.6 13.5h8.8M9.5 3.8h5"/></svg>`;
-  const CLOCK = (sz) => `<svg width="${sz}" height="${sz}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" style="vertical-align:-0.15em"><circle cx="12" cy="12" r="8.5"/><path d="M12 7v5l3 2"/></svg>`;
-  const batteryLegend = bat && cellWidth > 440 ? `
-      <div class="ep-legend ep-bat">
-        ${bat.history && bat.history.length > 1 ? `<span class="ep-key"><span class="ln ln-soc"></span>${escapeHtml(t("battery_soc", "SOC today"))}</span>` : ""}
-        <span class="ep-key"><span class="ln ln-tgt"></span>${escapeHtml(t("battery_target", "target"))}</span>
-        <span class="ep-key"><span class="ln ln-grid"></span>${PYLON("var(--ep-blue)", "1em")} ${escapeHtml(t("battery_grid", "grid charging"))}</span>
-      </div>
-      ${bat.slot ? `<div class="ep-legend ep-bat"><span class="ep-key">${CLOCK("1.05em")} ${escapeHtml(t("slot", "Slot"))} <b>${escapeHtml(bat.slot.from)}–${escapeHtml(bat.slot.till)}</b> · ${escapeHtml(t("battery_target", "target"))} <b>${escapeHtml(bat.slot.target)}%</b>${bat.slot.grid ? ` · ${escapeHtml(t("battery_grid", "grid charging"))}` : ""}</span>
-        ${bat.next ? `<span class="ep-key"><span class="muted">${escapeHtml(t("next", "next"))}: ${escapeHtml(bat.next.from)} → ${escapeHtml(bat.next.target)}%</span></span>` : ""}</div>` : ""}` : "";
+  // the home battery in the legend: two keys at the end of the one row, what
+  // the line is and what the pale bands are. The slot it is in is not shown.
+  const hasGrid = bat && bat.segments.some((g) => g.grid);
+  const hasSoc = bat && Array.isArray(bat.history) && bat.history.length > 1;
+  const batteryKeys = bat && (hasSoc || hasGrid) ? `
+        <span class="grow"></span>
+        ${hasSoc ? `<span class="ep-key ep-bat"><span class="ln ln-soc"></span>${escapeHtml(t("battery_soc", "Charge level"))}</span>` : ""}
+        ${hasGrid ? `<span class="ep-key ep-bat"><span class="sw"></span>${escapeHtml(t("battery_grid", "grid charging"))}</span>` : ""}` : "";
 
   const showLegend = cellWidth > 440 && hasData;
   // md keeps the legend to one row (low + high); lg adds now, average and
@@ -205,12 +209,12 @@ export default function render(shadow, ctx) {
   const legend = showLegend
     ? `
       <div class="ep-legend">
-        ${lo && !compactLegend ? `<span class="ep-key"><span class="dot dot--lo"></span>${escapeHtml(t("lowest", "Lowest"))} <b>${escapeHtml(fmt(lo.p))}</b> ${escapeHtml(unit)} <span class="muted">${escapeHtml(when(lo))}</span></span>` : ""}
-        ${hi && !compactLegend ? `<span class="ep-key"><span class="dot dot--hi"></span>${escapeHtml(t("highest", "Highest"))} <b>${escapeHtml(fmt(hi.p))}</b> ${escapeHtml(unit)} <span class="muted">${escapeHtml(when(hi))}</span></span>` : ""}
-        ${(wide || narrow) && now ? `<span class="ep-key"><span class="ring"></span><span class="muted">${escapeHtml(t("now", "now"))} ${escapeHtml(fmt(now.p))} ${escapeHtml(unit)} · ${escapeHtml(now.from)}–${escapeHtml(now.till)}</span></span>` : ""}
-        ${wide && data.avg != null ? `<span class="ep-key"><span class="muted">${escapeHtml(t("average", "Average"))} ${escapeHtml(fmt(data.avg))} ${escapeHtml(unit)}</span></span>` : ""}
-        ${wide ? pendingNote : ""}
-      </div>${batteryLegend}`
+        ${lo && !compactLegend && !bat ? `<span class="ep-key"><span class="dot dot--lo"></span>${escapeHtml(t("lowest", "Lowest"))} <b>${escapeHtml(fmt(lo.p))}</b> ${escapeHtml(unit)} <span class="muted">${escapeHtml(when(lo))}</span></span>` : ""}
+        ${hi && !compactLegend && !bat ? `<span class="ep-key"><span class="dot dot--hi"></span>${escapeHtml(t("highest", "Highest"))} <b>${escapeHtml(fmt(hi.p))}</b> ${escapeHtml(unit)} <span class="muted">${escapeHtml(when(hi))}</span></span>` : ""}
+        ${(wide || narrow) && !bat && now ? `<span class="ep-key"><span class="ring"></span><span class="muted">${escapeHtml(t("now", "now"))} ${escapeHtml(fmt(now.p))} ${escapeHtml(unit)} · ${escapeHtml(now.from)}–${escapeHtml(now.till)}</span></span>` : ""}
+        ${(wide || bat) && data.avg != null ? `<span class="ep-key"><span class="muted">${escapeHtml(t("average", "Average"))} ${escapeHtml(fmt(data.avg))} ${escapeHtml(unit)}</span></span>` : ""}
+        ${wide || bat ? pendingNote : ""}${batteryKeys}
+      </div>`
     : "";
 
   const emptyMsg = `<p class="u-muted">${escapeHtml(t("no_data", "No prices available."))}</p>`;
@@ -352,18 +356,43 @@ export default function render(shadow, ctx) {
   const capBand = days.length > 1 && !small ? tickFontSize + 8 : 0;
   const markBand = markFont + 10;
 
-  // ---- the home battery: targets, grid slots, today's SOC ----------------
-  const blue = tok.accent3 && /^#|^rgb/.test(tok.accent3) ? tok.accent3 : "#2157ba";
+  // ---- the home battery: grid charging as pale bands, today's charge level ----
+  const blue = tok.accent5 && /^#|^rgb/.test(tok.accent5) ? tok.accent5 : "#2157ba";
+  // behind the prices: the stretches the battery charges from the grid
+  function drawBatteryBands(chart, c, family) {
+    const x = chart.scales.x;
+    const area = chart.chartArea;
+    const grid = bat.segments.filter((g) => g.grid);
+    if (!grid.length) return;
+    const label = t("battery_grid", "grid charging");
+    c.save();
+    c.font = `700 ${Math.round(tickFontSize * 0.85)}px ${family}`;
+    c.textAlign = "center";
+    c.textBaseline = "top";
+    const labelW = c.measureText(label).width + 8;
+    for (const g of grid) {
+      const x0 = Math.max(area.left, x.getPixelForValue(g.x0));
+      const x1 = Math.min(area.right, x.getPixelForValue(g.x1));
+      if (x1 <= x0) continue;
+      c.fillStyle = withAlpha(blue, 0.16);
+      c.fillRect(x0, area.top, x1 - x0, area.bottom - area.top);
+      if (x1 - x0 > labelW) {
+        c.fillStyle = blue;
+        c.fillText(label, (x0 + x1) / 2, area.top + 6);
+      }
+    }
+    c.restore();
+  }
+  // in front: today's charge level, one solid line, with the number where it ends
   function drawBattery(chart, c, family) {
     const x = chart.scales.x;
     const area = chart.chartArea;
     const ys = (v) => area.bottom - ((area.bottom - area.top) * Math.max(0, Math.min(100, v))) / 100;
     const px = (v) => x.getPixelForValue(v);
-    c.save();
-    // today's state of charge, pale
     const hist = Array.isArray(bat.history) ? bat.history : [];
+    c.save();
     if (hist.length > 1) {
-      c.strokeStyle = withAlpha(blue, 0.5);
+      c.strokeStyle = blue;
       c.lineWidth = 3;
       c.lineJoin = "round";
       c.setLineDash([]);
@@ -371,71 +400,21 @@ export default function render(shadow, ctx) {
       hist.forEach(([hx, hv], k) => (k ? c.lineTo(px(hx), ys(hv)) : c.moveTo(px(hx), ys(hv))));
       c.stroke();
     }
-    // the targets: one dashed step line, grid-charging stretches heavy with a pylon
-    const segs = bat.segments;
-    c.strokeStyle = blue;
-    c.lineWidth = 2.5;
-    c.setLineDash([7, 5]);
-    c.beginPath();
-    segs.forEach((g, k) => {
-      if (k) c.lineTo(px(g.x0), ys(g.target));
-      else c.moveTo(px(g.x0), ys(g.target));
-      c.lineTo(px(g.x1), ys(g.target));
-    });
-    c.stroke();
-    c.setLineDash([]);
-    for (const g of segs) {
-      if (!g.grid) continue;
-      c.lineWidth = 6;
-      c.lineCap = "round";
-      c.beginPath();
-      c.moveTo(px(g.x0) + 3, ys(g.target));
-      c.lineTo(px(g.x1) - 3, ys(g.target));
-      c.stroke();
-      if (px(g.x1) - px(g.x0) > 34) {
-        const cx = (px(g.x0) + px(g.x1)) / 2, cy = ys(g.target) + (g.target > 50 ? -22 : 22);
-        c.lineWidth = 2.2;
-        c.beginPath();
-        c.moveTo(cx, cy - 10); c.lineTo(cx - 5, cy + 10);
-        c.moveTo(cx, cy - 10); c.lineTo(cx + 5, cy + 10);
-        c.moveTo(cx - 3.5, cy - 4); c.lineTo(cx + 3.5, cy - 4);
-        c.moveTo(cx - 4.5, cy + 2); c.lineTo(cx + 4.5, cy + 2);
-        c.stroke();
-      }
-    }
-    // the current slot, outlined
-    if (bat.current) {
-      c.strokeStyle = tok.textPrimary;
-      c.lineWidth = 2.5;
-      c.strokeRect(px(bat.current.x0), area.top, px(bat.current.x1) - px(bat.current.x0), area.bottom - area.top);
-    }
-    // the battery now
     if (bat.soc != null && Number.isFinite(bat.now_x)) {
-      const bx = px(bat.now_x), by = ys(bat.soc);
-      c.beginPath();
-      c.arc(bx, by, 7, 0, Math.PI * 2);
-      c.fillStyle = tok.surface;
-      c.fill();
-      c.strokeStyle = blue;
-      c.lineWidth = 3;
-      c.stroke();
       c.font = `800 ${Math.round(tickFontSize * 0.95)}px ${family}`;
       c.fillStyle = blue;
-      c.textAlign = "left";
+      c.textAlign = "right";
       c.textBaseline = "bottom";
-      c.fillText(`${bat.soc}%`, bx + 10, by - 6);
+      c.fillText(`${bat.soc}%`, px(bat.now_x) - 8, ys(bat.soc) - 26);
     }
-    // its axis, on the right
-    c.font = `700 ${Math.round(tickFontSize * 0.85)}px ${family}`;
-    c.fillStyle = blue;
-    c.textAlign = "left";
-    c.textBaseline = "middle";
-    for (const v of [0, 50, 100]) c.fillText(`${v}%`, area.right + 6, ys(v));
     c.restore();
   }
 
   const overlay = {
     id: "ep-overlay",
+    beforeDatasetsDraw(chart) {
+      if (bat) drawBatteryBands(chart, chart.ctx, tok.fontFamily);
+    },
     afterDatasetsDraw(chart) {
       const x = chart.scales.x;
       const y = chart.scales.y;
@@ -539,7 +518,7 @@ export default function render(shadow, ctx) {
       responsive: true,
       maintainAspectRatio: false,
       parsing: true,
-      layout: { padding: { left: 4, right: bat ? Math.round(tickFontSize * 2.6) : 4, top: capBand + markBand } },
+      layout: { padding: { left: 4, right: 4, top: capBand + markBand } },
       scales: {
         x: {
           type: "linear",
