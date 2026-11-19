@@ -50,7 +50,7 @@ OSRM_URL = "https://router.project-osrm.org/route/v1/driving/{a};{b}?overview=fa
 NOMINATIM_URL = "https://nominatim.openstreetmap.org/search"
 USER_AGENT = "tesserae-agenda-list/0.1"  # generic: nothing about the user
 HTTP_TIMEOUT_S = 10
-GEOCODE_PER_FETCH = 4  # new places looked up per refresh (1 request a second is Nominatim's rule)
+GEOCODE_PER_FETCH = 6  # new places looked up per refresh (1 request a second is Nominatim's rule)
 GEOCODE_MISS_TTL_S = 6 * 3600
 WAZE_DOWN_S = 10 * 60  # after Waze failed and OSRM answered, go straight to OSRM for a while
 
@@ -177,15 +177,31 @@ def _geo_save(data_dir: Path | None) -> None:
         path.write_text(json.dumps({k: v for k, v in _geo.items() if v}), encoding="utf-8")
 
 
+_POSTCODE_NL = re.compile(r"\b(\d{4}\s?[A-Za-z]{2})\b")
+_NUMBER_LETTER = re.compile(r"\b(\d+)\s?[A-Za-z]\b")
+
+
 def _candidates(place: str) -> list[str]:
-    """The place as written, then without its first part: a venue name in front
-    of an address ("Omakase Amsterdam, Ferdinand Bolstraat 11H, 1072 LK")
-    often finds nothing, the address does."""
+    """What to ask OpenStreetMap, best first. A venue name in front of an
+    address ("Omakase Amsterdam, Ferdinand Bolstraat 11H, 1072 LK") often finds
+    nothing and the address does; "11H" is found as "11"; a Dutch postcode alone
+    still puts the drive within a kilometre or so."""
     parts = [p.strip() for p in place.split(",") if p.strip()]
-    out = [", ".join(parts)] if parts else [place]
+    out = [", ".join(parts) if parts else place]
     if len(parts) > 2:
         out.append(", ".join(parts[1:]))
-    return out
+    base = out[-1]
+    plain = _NUMBER_LETTER.sub(r"\1", base)
+    if plain != base:
+        out.append(plain)
+    m = _POSTCODE_NL.search(place)
+    if m:
+        out.append(m.group(1))
+    seen: list[str] = []
+    for q in out:
+        if q and q not in seen:
+            seen.append(q)
+    return seen[:4]
 
 
 def geocode(place: str, near: tuple[float, float] | None, budget: list[int], data_dir: Path | None = None, *, now: float | None = None) -> tuple[float, float] | None:

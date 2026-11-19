@@ -266,7 +266,8 @@ def test_core_is_called_with_the_flask_app_context_in_worker_threads():
 def test_a_venue_name_in_front_of_an_address_is_dropped_when_not_found(offline):
     assert S._candidates("Omakase Amsterdam\nFerdinand".replace("\n", ", ")) == ["Omakase Amsterdam, Ferdinand"]
     full = "Omakase Amsterdam, Ferdinand Bolstraat 11H, 1072 LK"
-    assert S._candidates(full) == [full, "Ferdinand Bolstraat 11H, 1072 LK"]
-    got = S.geocode(full, None, [4])
-    assert got is None  # neither form is in the offline table
-    assert sum("nominatim" in u for u in offline) == 2
+    assert S._candidates(full) == [full, "Ferdinand Bolstraat 11H, 1072 LK", "Ferdinand Bolstraat 11, 1072 LK", "1072 LK"]
+    got = S.geocode(full, None, [6])
+    assert got is None  # none of the forms is in the offline table
+    assert sum("nominatim" in u for u in offline) == 4
+    assert S._candidates("Vinkeveen") == ["Vinkeveen"]
