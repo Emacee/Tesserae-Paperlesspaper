@@ -11,6 +11,10 @@ under its version number.
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-11-19
+
+Built on Tesserae 0.480.0, from commit `766faec`.
+
 ### Fixed
 - Agenda, with travel time: the Waze region is sent to Home Assistant in lower
   case (`eu`), as the Waze service requires. With *EU* it refused the request,
@@ -234,7 +238,8 @@ Built on Tesserae 0.480.0, from commit `ad7e2ba`.
 - Energy, Dynamic Price: EPEX and Tibber electricity prices for today and
   tomorrow.
 
-[Unreleased]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/49fd53e...master
+[Unreleased]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/766faec...master
+[0.3.1]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/49fd53e...766faec
 [0.3.0]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/22b3d7c...49fd53e
 [0.2.9]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/847add3...22b3d7c
 [0.2.8]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/5f2f91c...847add3
