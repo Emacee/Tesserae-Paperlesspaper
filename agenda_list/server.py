@@ -108,13 +108,26 @@ def _minutes(response: Any) -> float | None:
     return best
 
 
+_last_error = [""]
+
+
 def _get_json(url: str) -> Any:
-    """GET a URL, parsed JSON, or None. Only the generic client name is sent."""
+    """GET a URL, parsed JSON, or None (the reason is kept in _last_error).
+    Goes through Tesserae's own guarded fetch when it is there, which is what
+    its other widgets use; only a generic client name is sent."""
+    headers = {"User-Agent": USER_AGENT, "Accept": "application/json"}
     try:
-        req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT, "Accept": "application/json"})
+        try:
+            from app.net_guard import fetch_json  # Tesserae's SSRF-guarded fetch
+        except ImportError:
+            fetch_json = None
+        if fetch_json is not None:
+            return fetch_json(url, headers=headers, timeout=HTTP_TIMEOUT_S)
+        req = urllib.request.Request(url, headers=headers)
         with urllib.request.urlopen(req, timeout=HTTP_TIMEOUT_S) as resp:  # noqa: S310 - fixed https hosts
             return json.loads(resp.read().decode("utf-8"))
-    except Exception:  # noqa: BLE001 - offline, blocked, a bad answer
+    except Exception as err:  # noqa: BLE001 - offline, blocked, a bad answer
+        _last_error[0] = f"{type(err).__name__}: {err}"[:200]
         return None
 
 
@@ -359,7 +372,7 @@ def build_days(
             "colour": colour,
             "start": start.strftime("%H:%M"),
             "end": end.strftime("%H:%M"),
-            "location": str(ev.get("location") or "").strip(),
+            "location": ", ".join(p.strip() for p in str(ev.get("location") or "").splitlines() if p.strip()),
             "_start": start,
         })
     for row in out:
@@ -472,6 +485,7 @@ def _fetch(
         "margin": _int(options.get("margin_min"), 5, 0, 60),
         "travel": travel,
         "via": via,
+        "why": _last_error[0] if travel == "unavailable" else "",
         "days": rows,
     }
 

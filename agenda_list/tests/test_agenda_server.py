@@ -17,6 +17,7 @@ S = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(S)  # type: ignore[union-attr]
 
 AMS = ZoneInfo("Europe/Amsterdam")
+REAL_GET_JSON = S._get_json  # before the offline stub replaces it
 TZ = {"timezone": "Europe/Amsterdam"}
 NOW = datetime(2026, 11, 19, 6, 0, tzinfo=AMS)
 
@@ -210,3 +211,30 @@ def test_origin_can_be_coordinates_or_a_zone():
     assert S.home_position("52.1, 5.2", None, [4], None) == (52.1, 5.2)
     assert S.home_position("zone.home", FakeCore(), [4], None) == (52.27, 4.97)
     assert S.home_position("zone.nope", FakeCore(), [4], None) is None
+
+
+def test_multi_line_locations_become_one_line():
+    out = run([ev(20, 10, "Dinner", "Omakase Amsterdam\nFerdinand Bolstraat 11H\n1072 LK")], core=FakeCore(), travel_source="osrm")
+    assert out["days"][1]["events"][0]["location"] == "Omakase Amsterdam, Ferdinand Bolstraat 11H, 1072 LK"
+
+
+def test_get_json_prefers_tesserae_fetch_and_keeps_the_reason(monkeypatch):
+    import sys
+    import types
+
+    mod = types.ModuleType("app.net_guard")
+    seen = {}
+
+    def fetch_json(url, headers=None, timeout=0):
+        seen["headers"] = headers
+        if "bad" in url:
+            raise OSError("blocked by test")
+        return {"ok": True}
+
+    mod.fetch_json = fetch_json
+    monkeypatch.setitem(sys.modules, "app", types.ModuleType("app"))
+    monkeypatch.setitem(sys.modules, "app.net_guard", mod)
+    assert REAL_GET_JSON("https://example.org/good") == {"ok": True}
+    assert seen["headers"]["User-Agent"] == S.USER_AGENT
+    assert REAL_GET_JSON("https://example.org/bad") is None
+    assert "blocked by test" in S._last_error[0]

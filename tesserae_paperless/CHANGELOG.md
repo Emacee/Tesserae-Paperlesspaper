@@ -11,6 +11,13 @@ under its version number.
 
 ## [Unreleased]
 
+### Fixed
+- Agenda, with travel time: the OSRM and OpenStreetMap requests now go through
+  Tesserae's own guarded fetch, like its other widgets, instead of a plain
+  request that did not get an answer on Home Assistant. When no drive time can
+  be found, the note at the bottom now says why. A location of several lines
+  (a name, then an address) is read as one address.
+
 ## [0.3.2] - 2026-11-19
 
 Built on Tesserae 0.480.0, from commit `0f2545f`.

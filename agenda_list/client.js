@@ -92,7 +92,7 @@ export default function render(shadow, ctx) {
   };
 
   const note = data.travel === "no_core" ? t("no_core", "")
-    : data.travel === "unavailable" ? t("unavailable", "")
+    : data.travel === "unavailable" ? `${t("unavailable", "")}${data.why ? ` (${data.why})` : ""}`
     : data.via === "osrm" || data.via === "mixed" ? t("estimate", "≈ estimated drive, no live traffic") : "";
   shadow.innerHTML = `<style>${style}</style>
     <div class="al" data-widget="agenda_list">
