@@ -11,6 +11,11 @@ under its version number.
 
 ## [Unreleased]
 
+### Fixed
+- Agenda, with travel time: more addresses are found. A venue name in front of
+  an address is dropped, a house number like *11H* is also tried as *11*, and a
+  Dutch postcode alone is the last resort.
+
 ## [0.3.5] - 2026-11-19
 
 Built on Tesserae 0.480.0, from commit `4c09a33`.
