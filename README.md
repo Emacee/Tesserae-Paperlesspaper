@@ -67,6 +67,7 @@ An unchanged page is never uploaded twice.
 | **Overhead** (fork): aircraft and helicopters above a place, with a radius and a height ceiling, and a map of their tracks | [`overhead_core/`](overhead_core/) + `overhead_cluster/`, `overhead_photo/`, `overhead_plate/`, `overhead_scene/`, `overhead_map/` |
 | **Energy, Dynamic Price**: EPEX and Tibber electricity prices for today and tomorrow | [`energy_dynamic_price/`](energy_dynamic_price/) |
 | **Travel time**: to work in the morning, home in the afternoon, with the delay against normal, from Waze (or other) sensors in Home Assistant | [`travel_time/`](travel_time/) |
+| **Agenda, with travel time**: the next days as a list, with the drive from home to each event's location (Waze) and when to leave | [`agenda_list/`](agenda_list/) |
 | **Weather, Today**: today's weather as a column, hour by hour, for a narrow portrait cell | [`weather_today/`](weather_today/) |
 | **Home batteries**: small rings for the home battery (Deye via Solarman) and the car, with state of charge, target, mode and range | [`home_batteries/`](home_batteries/) |
 
