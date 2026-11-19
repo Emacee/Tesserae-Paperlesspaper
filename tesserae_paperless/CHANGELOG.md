@@ -11,6 +11,10 @@ under its version number.
 
 ## [Unreleased]
 
+## [0.3.4] - 2026-11-19
+
+Built on Tesserae 0.480.0, from commit `82bbb60`.
+
 ### Changed
 - Agenda, with travel time: when no drive time can be found, the note at the
   bottom names the reason for each step (Waze, the home position, a place that
@@ -266,7 +270,8 @@ Built on Tesserae 0.480.0, from commit `ad7e2ba`.
 - Energy, Dynamic Price: EPEX and Tibber electricity prices for today and
   tomorrow.
 
-[Unreleased]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/95e8285...master
+[Unreleased]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/82bbb60...master
+[0.3.4]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/95e8285...82bbb60
 [0.3.3]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/0f2545f...95e8285
 [0.3.2]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/766faec...0f2545f
 [0.3.1]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/49fd53e...766faec
