@@ -11,6 +11,10 @@ under its version number.
 
 ## [Unreleased]
 
+## [0.2.9] - 2026-11-19
+
+Built on Tesserae 0.480.0, from commit `22b3d7c`.
+
 ### Changed
 - Energy, Dynamic Price with a home battery is simpler: the stretches that
   charge from the grid are pale blue bands behind the prices (labelled
@@ -212,7 +216,8 @@ Built on Tesserae 0.480.0, from commit `ad7e2ba`.
 - Energy, Dynamic Price: EPEX and Tibber electricity prices for today and
   tomorrow.
 
-[Unreleased]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/847add3...master
+[Unreleased]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/22b3d7c...master
+[0.2.9]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/847add3...22b3d7c
 [0.2.8]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/5f2f91c...847add3
 [0.2.7]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/a5465b4...5f2f91c
 [0.2.6]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/0d99c94...a5465b4
