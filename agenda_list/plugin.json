@@ -15,9 +15,9 @@
     {"name": "show_symbol", "type": "boolean", "label": "Feed symbol before titles", "default": false, "help": "The symbol set for a feed in Calendar Feeds. Off by default: it takes width on every title."},
     {"name": "show_travel", "type": "boolean", "label": "Drive time and time to leave", "default": true, "help": "For events with a location that have not started yet: the minutes by car from home, and when to leave."},
     {"name": "origin", "type": "string", "label": "Home (start of the drive)", "default": "zone.home", "secret": true, "mask": false, "help": "A Home Assistant zone or device (zone.home), an address, or latitude,longitude. Kept with the page, never in an exported template."},
-    {"name": "region", "type": "select", "label": "Waze region", "default": "EU", "choices": [
-      {"value": "EU", "label": "Europe"}, {"value": "NA", "label": "North America"}, {"value": "US", "label": "United States"},
-      {"value": "IL", "label": "Israel"}, {"value": "AU", "label": "Australia"}
+    {"name": "region", "type": "select", "label": "Waze region", "default": "eu", "choices": [
+      {"value": "eu", "label": "Europe"}, {"value": "na", "label": "North America"}, {"value": "us", "label": "United States"},
+      {"value": "il", "label": "Israel"}, {"value": "au", "label": "Australia"}
     ]},
     {"name": "margin_min", "type": "slider", "label": "Margin", "default": 5, "min": 0, "max": 30, "step": 1, "unit": " min", "help": "Extra minutes before the time to leave, for parking and getting out of the door."},
     {"name": "travel_days", "type": "slider", "label": "Work out the drive for", "default": 7, "min": 1, "max": 14, "step": 1, "unit": " days", "advanced": true, "help": "Only events in the first days are sent to Waze."},

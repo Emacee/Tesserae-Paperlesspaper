@@ -68,7 +68,13 @@ def test_margin_origin_and_region_are_options():
     core = FakeCore(minutes=10)
     out = run([ev(20, 10, "Lunch", "Cafe")], core=core, margin_min=15, origin="52.1,5.1", region="US")
     assert out["days"][1]["events"][0]["travel"]["leave"] == "09:35"
-    assert core.calls[0][2]["origin"] == "52.1,5.1" and core.calls[0][2]["region"] == "US"
+    assert core.calls[0][2]["origin"] == "52.1,5.1" and core.calls[0][2]["region"] == "us"
+
+
+def test_region_goes_to_home_assistant_in_lower_case():
+    core = FakeCore()
+    run([ev(20, 10, "Lunch", "Cafe")], core=core, region="EU")
+    assert core.calls[0][2]["region"] == "eu"
 
 
 def test_no_location_or_past_event_asks_nothing():

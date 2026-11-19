@@ -11,6 +11,11 @@ under its version number.
 
 ## [Unreleased]
 
+### Fixed
+- Agenda, with travel time: the Waze region is sent to Home Assistant in lower
+  case (`eu`), as the Waze service requires. With *EU* it refused the request,
+  so no drive times showed even when Waze was working.
+
 ## [0.3.0] - 2026-11-19
 
 Built on Tesserae 0.480.0, from commit `49fd53e`.
