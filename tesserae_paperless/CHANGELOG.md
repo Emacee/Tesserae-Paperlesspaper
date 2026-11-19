@@ -11,6 +11,10 @@ under its version number.
 
 ## [Unreleased]
 
+## [0.3.2] - 2026-11-19
+
+Built on Tesserae 0.480.0, from commit `0f2545f`.
+
 ### Added
 - Agenda, with travel time works without Waze: when Waze does not answer (or
   when you choose *OSRM only* in the cell), the drive comes from the free OSRM
@@ -246,7 +250,8 @@ Built on Tesserae 0.480.0, from commit `ad7e2ba`.
 - Energy, Dynamic Price: EPEX and Tibber electricity prices for today and
   tomorrow.
 
-[Unreleased]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/766faec...master
+[Unreleased]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/0f2545f...master
+[0.3.2]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/766faec...0f2545f
 [0.3.1]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/49fd53e...766faec
 [0.3.0]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/22b3d7c...49fd53e
 [0.2.9]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/847add3...22b3d7c
