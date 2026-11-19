@@ -109,6 +109,12 @@ def _minutes(response: Any) -> float | None:
 
 
 _last_error = [""]
+_trace: list[str] = []  # why drives were not found, for the note at the bottom
+
+
+def _why(msg: str) -> None:
+    if msg not in _trace and len(_trace) < 4:
+        _trace.append(msg[:120])
 
 
 def _get_json(url: str) -> Any:
@@ -175,6 +181,7 @@ def geocode(place: str, near: tuple[float, float] | None, budget: list[int], dat
         if got == [] and _geo_t.get(key, 0) > now:
             return None
         if budget[0] <= 0:
+            _why("place lookups wait for the next refresh")
             return None
         budget[0] -= 1
         wait = _last_geo[0] + 1.1 - time.time()
@@ -190,6 +197,8 @@ def geocode(place: str, near: tuple[float, float] | None, budget: list[int], dat
             found = [round(float(hits[0]["lat"]), 6), round(float(hits[0]["lon"]), 6)]
         except (TypeError, KeyError, IndexError, ValueError):
             found = []
+        if not found:
+            _why(f"place not found: {place[:40]}")
         _geo[key] = found
         _geo_t[key] = now + GEOCODE_MISS_TTL_S
         if found:
@@ -207,7 +216,8 @@ def home_position(origin: str, core: Any, budget: list[int], data_dir: Path | No
         try:
             attrs = (core.get_state(origin) or {}).get("attributes") or {}
             return float(attrs["latitude"]), float(attrs["longitude"])
-        except Exception:  # noqa: BLE001 - not a zone, no position
+        except Exception as err:  # noqa: BLE001 - not a zone, no position
+            _why(f"home {origin}: {type(err).__name__}: {err}")
             return None
     return geocode(origin, None, budget, data_dir)
 
@@ -219,6 +229,7 @@ def osrm_minutes(a: tuple[float, float], b: tuple[float, float], extra_pct: int)
     try:
         seconds = float(body["routes"][0]["duration"])
     except (TypeError, KeyError, IndexError, ValueError):
+        _why("OSRM found no route")
         return None
     return seconds / 60.0 * (1 + extra_pct / 100.0)
 
@@ -240,7 +251,8 @@ def _waze(core: Any, origin: str, destination: str, region: str, soon: bool) -> 
                 timeout=WAZE_TIMEOUT_S,
             )
         )
-    except Exception:  # noqa: BLE001 - Waze not set up, address not found, HA down
+    except Exception as err:  # noqa: BLE001 - Waze not set up, address not found, HA down
+        _why(f"Waze: {type(err).__name__}: {err}")
         return None
 
 
@@ -274,6 +286,8 @@ def drive_minutes(
             _waze_down[0] = now + WAZE_DOWN_S
     if minutes is None and source in ("auto", "osrm"):
         a = home_position(origin, core, budget, data_dir)
+        if a is None and not any(t.startswith("home") for t in _trace):
+            _why(f"home position unknown: {origin}" + ("" if core is not None else " (no Home Assistant Core)"))
         b = geocode(destination, a, budget, data_dir) if a else None
         if a and b:
             minutes = osrm_minutes(a, b, extra_pct)
@@ -467,6 +481,8 @@ def _fetch(
         return {"error": f"{type(err).__name__}: {err}", "days": []}
 
     rows = build_days(events, today, days, zone, symbols=_flag(options.get("show_symbol"), False))
+    del _trace[:]
+    _last_error[0] = ""
     travel, via = "off", ""
     if _flag(options.get("show_travel"), True):
         source = str(options.get("travel_source") or "auto")
@@ -485,7 +501,7 @@ def _fetch(
         "margin": _int(options.get("margin_min"), 5, 0, 60),
         "travel": travel,
         "via": via,
-        "why": _last_error[0] if travel == "unavailable" else "",
+        "why": "; ".join(_trace + ([_last_error[0]] if _last_error[0] else [])) if travel == "unavailable" else "",
         "days": rows,
     }
 
