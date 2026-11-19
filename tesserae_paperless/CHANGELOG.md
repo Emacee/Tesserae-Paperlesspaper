@@ -11,6 +11,16 @@ under its version number.
 
 ## [Unreleased]
 
+### Changed
+- Energy, Dynamic Price with a home battery is simpler: the stretches that
+  charge from the grid are pale blue bands behind the prices (labelled
+  *netladen*), and the battery's charge level is one solid blue line with the
+  current percentage at its end. The dashed target line, the pylons, the
+  outlined current slot, the 0–100% axis and the slot line under the chart are
+  gone, and the legend is one row: the average, and what the line and the
+  bands are. The battery colour is now the theme's blue (it was moss green).
+  A cell without a battery looks exactly as before.
+
 ## [0.2.8] - 2026-11-18
 
 Built on Tesserae 0.480.0, from commit `847add3`.
