@@ -210,7 +210,7 @@ def add_travel(
     """Put {"min", "leave"} on timed events with a location that are still to
     come. Returns whether Waze answered for at least one (or none was asked)."""
     origin = str(options.get("origin") or "").strip() or "zone.home"
-    region = str(options.get("region") or "EU").strip() or "EU"
+    region = (str(options.get("region") or "eu").strip() or "eu").lower()  # Home Assistant wants it in lower case
     margin = _int(options.get("margin_min"), 5, 0, 60)
     horizon = _int(options.get("travel_days"), 7, 1, 14)
     asks = []
