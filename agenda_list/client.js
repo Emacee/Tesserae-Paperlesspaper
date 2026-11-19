@@ -80,7 +80,7 @@ export default function render(shadow, ctx) {
     }
     for (const e of d.events || []) {
       const tr = e.travel
-        ? `<div class="al-tr"><div>${CAR}<span>${e.travel.min} ${esc(t("min", "min"))}</span></div><small>${esc(t("leave", "leave"))} ${esc(e.travel.leave)}</small></div>`
+        ? `<div class="al-tr"><div>${CAR}<span>${e.travel.est ? "≈ " : ""}${e.travel.min} ${esc(t("min", "min"))}</span></div><small>${esc(t("leave", "leave"))} ${esc(e.travel.leave)}</small></div>`
         : "";
       parts.push(`<div class="al-ev"><span class="al-t">${esc(e.start)}</span>
         <div class="al-main"><span class="al-ttl">${esc(e.title)}</span><span class="al-end">${esc(t("until", "until"))} ${esc(e.end)}</span>
@@ -91,7 +91,9 @@ export default function render(shadow, ctx) {
     return `<div class="al-day${d.is_today ? " is-today" : ""}"><div class="al-dn"><b>${esc(dow(d.date))}</b><i>${esc(String(+dd))}</i></div><div class="al-body">${parts.join("")}</div></div>`;
   };
 
-  const note = data.travel === "no_core" ? t("no_core", "") : data.travel === "unavailable" ? t("unavailable", "") : "";
+  const note = data.travel === "no_core" ? t("no_core", "")
+    : data.travel === "unavailable" ? t("unavailable", "")
+    : data.via === "osrm" || data.via === "mixed" ? t("estimate", "≈ estimated drive, no live traffic") : "";
   shadow.innerHTML = `<style>${style}</style>
     <div class="al" data-widget="agenda_list">
       <div class="al-head"><span class="al-title">${esc(title)}</span><span class="al-range">${esc(range)}</span></div>

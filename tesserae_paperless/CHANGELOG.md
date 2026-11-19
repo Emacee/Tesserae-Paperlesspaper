@@ -11,6 +11,14 @@ under its version number.
 
 ## [Unreleased]
 
+### Added
+- Agenda, with travel time works without Waze: when Waze does not answer (or
+  when you choose *OSRM only* in the cell), the drive comes from the free OSRM
+  routing service, with the places found by OpenStreetMap. It has no live
+  traffic, so 15% is added (a cell option) and the drive shows with a ≈ and a
+  note at the bottom. Your home position and the event locations are sent to
+  those two services, and nothing else.
+
 ## [0.3.1] - 2026-11-19
 
 Built on Tesserae 0.480.0, from commit `766faec`.

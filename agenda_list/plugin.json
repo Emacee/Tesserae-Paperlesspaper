@@ -3,40 +3,231 @@
   "name": "Agenda, with travel time",
   "version": "0.1.0",
   "kind": "widget",
-  "description": "The next days as a list: each day on a row, events with their time, location and the drive from home with the time to leave (Waze, through Home Assistant). Events come from Widgets → Calendar Feeds. Requires the Calendar Core plugin, and the Home Assistant Core plugin with the Waze Travel Time integration for the drive.",
+  "description": "The next days as a list: each day on a row, events with their time, location and the drive from home with the time to leave (Waze, through Home Assistant). Events come from Widgets → Calendar Feeds. Requires the Calendar Core plugin. The drive comes from Waze through Home Assistant (Waze Travel Time integration) or, without it, from the free OSRM service.",
   "icon": "ph-calendar-check",
   "category": "plans",
-  "locales": ["en", "nl", "de"],
-  "supports": {"sizes": ["sm", "md", "lg"]},
-  "cell_options": [
-    {"name": "title", "type": "string", "label": "Title", "default": "", "help": "Blank uses \"This week\"."},
-    {"name": "days", "type": "slider", "label": "Days", "default": 7, "min": 1, "max": 14, "step": 1, "unit": " days", "help": "Starting today."},
-    {"name": "feeds_filter", "type": "string", "label": "Calendars", "default": "", "help": "Feed IDs, separated by commas. Blank shows every enabled calendar."},
-    {"name": "show_symbol", "type": "boolean", "label": "Feed symbol before titles", "default": false, "help": "The symbol set for a feed in Calendar Feeds. Off by default: it takes width on every title."},
-    {"name": "show_travel", "type": "boolean", "label": "Drive time and time to leave", "default": true, "help": "For events with a location that have not started yet: the minutes by car from home, and when to leave."},
-    {"name": "origin", "type": "string", "label": "Home (start of the drive)", "default": "zone.home", "secret": true, "mask": false, "help": "A Home Assistant zone or device (zone.home), an address, or latitude,longitude. Kept with the page, never in an exported template."},
-    {"name": "region", "type": "select", "label": "Waze region", "default": "eu", "choices": [
-      {"value": "eu", "label": "Europe"}, {"value": "na", "label": "North America"}, {"value": "us", "label": "United States"},
-      {"value": "il", "label": "Israel"}, {"value": "au", "label": "Australia"}
-    ]},
-    {"name": "margin_min", "type": "slider", "label": "Margin", "default": 5, "min": 0, "max": 30, "step": 1, "unit": " min", "help": "Extra minutes before the time to leave, for parking and getting out of the door."},
-    {"name": "travel_days", "type": "slider", "label": "Work out the drive for", "default": 7, "min": 1, "max": 14, "step": 1, "unit": " days", "advanced": true, "help": "Only events in the first days are sent to Waze."},
-    {"name": "language", "type": "select", "label": "Language", "default": "auto", "choices": [
-      {"value": "auto", "label": "The dashboard's language"}, {"value": "nl", "label": "Nederlands"},
-      {"value": "en", "label": "English"}, {"value": "de", "label": "Deutsch"}
-    ], "help": "The widget's words in this language, whatever the dashboard's."}
+  "locales": [
+    "en",
+    "nl",
+    "de"
   ],
-  "render": {"dither": "none", "needs_network": true},
+  "supports": {
+    "sizes": [
+      "sm",
+      "md",
+      "lg"
+    ]
+  },
+  "cell_options": [
+    {
+      "name": "title",
+      "type": "string",
+      "label": "Title",
+      "default": "",
+      "help": "Blank uses \"This week\"."
+    },
+    {
+      "name": "days",
+      "type": "slider",
+      "label": "Days",
+      "default": 7,
+      "min": 1,
+      "max": 14,
+      "step": 1,
+      "unit": " days",
+      "help": "Starting today."
+    },
+    {
+      "name": "feeds_filter",
+      "type": "string",
+      "label": "Calendars",
+      "default": "",
+      "help": "Feed IDs, separated by commas. Blank shows every enabled calendar."
+    },
+    {
+      "name": "show_symbol",
+      "type": "boolean",
+      "label": "Feed symbol before titles",
+      "default": false,
+      "help": "The symbol set for a feed in Calendar Feeds. Off by default: it takes width on every title."
+    },
+    {
+      "name": "show_travel",
+      "type": "boolean",
+      "label": "Drive time and time to leave",
+      "default": true,
+      "help": "For events with a location that have not started yet: the minutes by car from home, and when to leave."
+    },
+    {
+      "name": "travel_source",
+      "type": "select",
+      "label": "Drive time from",
+      "default": "auto",
+      "choices": [
+        {
+          "value": "auto",
+          "label": "Waze, and OSRM when Waze does not answer"
+        },
+        {
+          "value": "waze",
+          "label": "Waze only (Home Assistant)"
+        },
+        {
+          "value": "osrm",
+          "label": "OSRM only (free, no live traffic)"
+        }
+      ],
+      "help": "Waze needs the Waze Travel Time integration in Home Assistant and has live traffic. OSRM is a free routing service with no traffic: the drive is then an estimate (≈). It sends your home position and the event locations to OSRM and OpenStreetMap."
+    },
+    {
+      "name": "origin",
+      "type": "string",
+      "label": "Home (start of the drive)",
+      "default": "zone.home",
+      "secret": true,
+      "mask": false,
+      "help": "A Home Assistant zone or device (zone.home), an address, or latitude,longitude. Kept with the page, never in an exported template."
+    },
+    {
+      "name": "region",
+      "type": "select",
+      "label": "Waze region",
+      "default": "eu",
+      "choices": [
+        {
+          "value": "eu",
+          "label": "Europe"
+        },
+        {
+          "value": "na",
+          "label": "North America"
+        },
+        {
+          "value": "us",
+          "label": "United States"
+        },
+        {
+          "value": "il",
+          "label": "Israel"
+        },
+        {
+          "value": "au",
+          "label": "Australia"
+        }
+      ],
+      "help": "Only for Waze."
+    },
+    {
+      "name": "osrm_extra_pct",
+      "type": "slider",
+      "label": "Surcharge without traffic",
+      "default": 15,
+      "min": 0,
+      "max": 100,
+      "step": 5,
+      "unit": "%",
+      "advanced": true,
+      "help": "Added to an OSRM drive, which knows no traffic. 15% suits most days; raise it for busy roads."
+    },
+    {
+      "name": "margin_min",
+      "type": "slider",
+      "label": "Margin",
+      "default": 5,
+      "min": 0,
+      "max": 30,
+      "step": 1,
+      "unit": " min",
+      "help": "Extra minutes before the time to leave, for parking and getting out of the door."
+    },
+    {
+      "name": "travel_days",
+      "type": "slider",
+      "label": "Work out the drive for",
+      "default": 7,
+      "min": 1,
+      "max": 14,
+      "step": 1,
+      "unit": " days",
+      "advanced": true,
+      "help": "Only events in the first days are sent to Waze."
+    },
+    {
+      "name": "language",
+      "type": "select",
+      "label": "Language",
+      "default": "auto",
+      "choices": [
+        {
+          "value": "auto",
+          "label": "The dashboard's language"
+        },
+        {
+          "value": "nl",
+          "label": "Nederlands"
+        },
+        {
+          "value": "en",
+          "label": "English"
+        },
+        {
+          "value": "de",
+          "label": "Deutsch"
+        }
+      ],
+      "help": "The widget's words in this language, whatever the dashboard's."
+    }
+  ],
+  "render": {
+    "dither": "none",
+    "needs_network": true
+  },
   "data_schema": {
     "color": "#4F6F36",
-    "fields": [{"name": "days", "type": "arr", "label": "Days"}],
+    "fields": [
+      {
+        "name": "days",
+        "type": "arr",
+        "label": "Days"
+      }
+    ],
     "sample": {
-      "travel": "ok", "margin": 5,
+      "travel": "ok",
+      "margin": 5,
       "days": [
-        {"date": "2026-07-10", "weekday": 4, "day": 10, "is_today": true, "all_day": [], "events": [
-          {"title": "Dentist", "start": "09:30", "end": "10:15", "location": "Main Street 4, Utrecht", "travel": {"min": 28, "leave": "08:57"}}
-        ]},
-        {"date": "2026-07-11", "weekday": 5, "day": 11, "is_today": false, "all_day": [{"title": "Market", "through": "2026-07-12", "through_weekday": 6}], "events": []}
+        {
+          "date": "2026-07-10",
+          "weekday": 4,
+          "day": 10,
+          "is_today": true,
+          "all_day": [],
+          "events": [
+            {
+              "title": "Dentist",
+              "start": "09:30",
+              "end": "10:15",
+              "location": "Main Street 4, Utrecht",
+              "travel": {
+                "min": 28,
+                "leave": "08:57"
+              }
+            }
+          ]
+        },
+        {
+          "date": "2026-07-11",
+          "weekday": 5,
+          "day": 11,
+          "is_today": false,
+          "all_day": [
+            {
+              "title": "Market",
+              "through": "2026-07-12",
+              "through_weekday": 6
+            }
+          ],
+          "events": []
+        }
       ]
     }
   }
