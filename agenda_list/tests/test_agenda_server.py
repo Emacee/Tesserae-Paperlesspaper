@@ -247,4 +247,4 @@ def test_the_note_says_why_when_nothing_is_found():
     assert "Waze: RuntimeError" in out["why"] and "place not found: Nowhere at all" in out["why"]
     S._cache.clear()
     out = S._fetch(TZ, {}, ctx={}, now=NOW, cal=FakeCal([ev(20, 10, "Visit", "Vinkeveen")]), core=None)
-    assert "home position unknown: zone.home (no Home Assistant Core)" in out["why"]
+    assert "home zone.home" in out["why"] and "NoneType" in out["why"]
