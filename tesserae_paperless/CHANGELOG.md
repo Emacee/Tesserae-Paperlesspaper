@@ -11,6 +11,10 @@ under its version number.
 
 ## [Unreleased]
 
+## [0.3.3] - 2026-11-19
+
+Built on Tesserae 0.480.0, from commit `95e8285`.
+
 ### Fixed
 - Agenda, with travel time: the OSRM and OpenStreetMap requests now go through
   Tesserae's own guarded fetch, like its other widgets, instead of a plain
@@ -257,7 +261,8 @@ Built on Tesserae 0.480.0, from commit `ad7e2ba`.
 - Energy, Dynamic Price: EPEX and Tibber electricity prices for today and
   tomorrow.
 
-[Unreleased]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/0f2545f...master
+[Unreleased]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/95e8285...master
+[0.3.3]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/0f2545f...95e8285
 [0.3.2]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/766faec...0f2545f
 [0.3.1]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/49fd53e...766faec
 [0.3.0]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/22b3d7c...49fd53e
