@@ -11,6 +11,15 @@ under its version number.
 
 ## [Unreleased]
 
+### Added
+- A new widget, **Agenda, with travel time**: the next days as a list, one row
+  per day with the weekday and date in fixed columns, all-day events as chips
+  (a multi-day one once, with *through Sat*), and timed events with their time,
+  title, end time and location. For events with a location it shows the drive
+  from home by car and when to leave (start minus the drive minus a margin of
+  5 minutes), worked out by Waze through Home Assistant. It needs the Waze
+  Travel Time integration in Home Assistant.
+
 ## [0.2.9] - 2026-11-19
 
 Built on Tesserae 0.480.0, from commit `22b3d7c`.

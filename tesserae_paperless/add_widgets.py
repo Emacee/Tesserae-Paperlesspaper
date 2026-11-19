@@ -22,6 +22,7 @@ PLUGINS = (
     "overhead_map",
     "energy_dynamic_price",
     "travel_time",
+    "agenda_list",
     "weather_today",
     "home_batteries",
     "paperlesspaper_core",
