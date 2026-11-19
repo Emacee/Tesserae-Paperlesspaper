@@ -11,6 +11,10 @@ under its version number.
 
 ## [Unreleased]
 
+## [0.3.5] - 2026-11-19
+
+Built on Tesserae 0.480.0, from commit `4c09a33`.
+
 ### Fixed
 - Agenda, with travel time: the drive times now work on Home Assistant. The
   lookups ran in a thread that could not read the Home Assistant Core
@@ -277,7 +281,8 @@ Built on Tesserae 0.480.0, from commit `ad7e2ba`.
 - Energy, Dynamic Price: EPEX and Tibber electricity prices for today and
   tomorrow.
 
-[Unreleased]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/82bbb60...master
+[Unreleased]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/4c09a33...master
+[0.3.5]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/82bbb60...4c09a33
 [0.3.4]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/95e8285...82bbb60
 [0.3.3]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/0f2545f...95e8285
 [0.3.2]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/766faec...0f2545f
