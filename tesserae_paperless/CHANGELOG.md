@@ -11,6 +11,13 @@ under its version number.
 
 ## [Unreleased]
 
+### Fixed
+- Agenda, with travel time: the drive times now work on Home Assistant. The
+  lookups ran in a thread that could not read the Home Assistant Core
+  settings ("Working outside of application context"), so neither Waze nor
+  the home position (`zone.home`) could be asked. A location with a venue
+  name in front of an address is also tried again as the address alone.
+
 ## [0.3.4] - 2026-11-19
 
 Built on Tesserae 0.480.0, from commit `82bbb60`.

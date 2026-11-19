@@ -248,3 +248,25 @@ def test_the_note_says_why_when_nothing_is_found():
     S._cache.clear()
     out = S._fetch(TZ, {}, ctx={}, now=NOW, cal=FakeCal([ev(20, 10, "Visit", "Vinkeveen")]), core=None)
     assert "home zone.home" in out["why"] and "NoneType" in out["why"]
+
+
+def test_core_is_called_with_the_flask_app_context_in_worker_threads():
+    flask = pytest.importorskip("flask")
+
+    class NeedsContext(FakeCore):
+        def call_service_with_response(self, domain, service, *, data=None, timeout=10):
+            flask.current_app.name  # raises outside an application context, like Home Assistant Core's settings
+            return super().call_service_with_response(domain, service, data=data, timeout=timeout)
+
+    with flask.Flask("test").app_context():
+        out = run([ev(20, 10, "Visit", "Cafe")], core=NeedsContext(minutes=10), travel_source="waze")
+    assert out["days"][1]["events"][0]["travel"]["min"] == 10, out["why"]
+
+
+def test_a_venue_name_in_front_of_an_address_is_dropped_when_not_found(offline):
+    assert S._candidates("Omakase Amsterdam\nFerdinand".replace("\n", ", ")) == ["Omakase Amsterdam, Ferdinand"]
+    full = "Omakase Amsterdam, Ferdinand Bolstraat 11H, 1072 LK"
+    assert S._candidates(full) == [full, "Ferdinand Bolstraat 11H, 1072 LK"]
+    got = S.geocode(full, None, [4])
+    assert got is None  # neither form is in the offline table
+    assert sum("nominatim" in u for u in offline) == 2
