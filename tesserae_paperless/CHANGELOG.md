@@ -11,6 +11,10 @@ under its version number.
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-11-20
+
+Built on Tesserae 0.480.0, from commit `2db98ad`.
+
 ### Added
 - Travel time works while Waze is down: give each person a *work address* in
   the cell and, when their sensor has no value, the drive is worked out with the
@@ -299,7 +303,8 @@ Built on Tesserae 0.480.0, from commit `ad7e2ba`.
 - Energy, Dynamic Price: EPEX and Tibber electricity prices for today and
   tomorrow.
 
-[Unreleased]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/3452f5a...master
+[Unreleased]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/2db98ad...master
+[0.4.0]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/3452f5a...2db98ad
 [0.3.6]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/4c09a33...3452f5a
 [0.3.5]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/82bbb60...4c09a33
 [0.3.4]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/95e8285...82bbb60
