@@ -11,6 +11,10 @@ under its version number.
 
 ## [Unreleased]
 
+### Changed
+- Agenda, with travel time: in a tall cell the type grows with the room (up to
+  24 px, it stopped at 18), so the list fills the cell.
+
 ## [0.4.0] - 2026-11-20
 
 Built on Tesserae 0.480.0, from commit `2db98ad`.
