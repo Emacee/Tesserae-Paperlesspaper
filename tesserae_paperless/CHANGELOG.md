@@ -11,6 +11,10 @@ under its version number.
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-11-20
+
+Built on Tesserae 0.480.0, from commit `838fff1`.
+
 ### Changed
 - Agenda, with travel time: in a tall cell the type grows with the room (up to
   24 px, it stopped at 18), so the list fills the cell.
@@ -307,7 +311,8 @@ Built on Tesserae 0.480.0, from commit `ad7e2ba`.
 - Energy, Dynamic Price: EPEX and Tibber electricity prices for today and
   tomorrow.
 
-[Unreleased]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/2db98ad...master
+[Unreleased]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/838fff1...master
+[0.4.1]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/2db98ad...838fff1
 [0.4.0]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/3452f5a...2db98ad
 [0.3.6]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/4c09a33...3452f5a
 [0.3.5]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/82bbb60...4c09a33

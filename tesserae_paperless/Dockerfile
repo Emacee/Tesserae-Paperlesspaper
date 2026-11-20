@@ -5,7 +5,7 @@
 ARG BUILD_FROM=ghcr.io/dmellok/tesserae:0.480.0
 FROM ${BUILD_FROM}
 
-ARG WIDGETS_REF=2db98adfa36d3d9f27d5b0584a6f7a2a153bb0a4
+ARG WIDGETS_REF=838fff18aa887e537d6c57eca09caa16244790d0
 ARG WIDGETS_REPO=Emacee/Tesserae-Paperlesspaper
 
 USER root
