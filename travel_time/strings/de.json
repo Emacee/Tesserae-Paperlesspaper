@@ -5,5 +5,6 @@
   "min": "Min.",
   "no_people": "Wähle die Fahrzeit-Sensoren in den Zelleinstellungen.",
   "weekend": "Wochenende",
-  "unavailable": "kein Wert"
+  "unavailable": "kein Wert",
+  "estimate": "≈ geschätzt, ohne aktuellen Verkehr"
 }

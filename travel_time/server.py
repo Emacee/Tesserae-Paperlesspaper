@@ -12,8 +12,17 @@ day over the last weeks, from Home Assistant's history. It is worked out
 once a day per sensor, in the background, and kept in the widget's data
 folder; until it is there the delay is left out.
 
+When a sensor has no value (Waze Travel Time is down, or the sensor was never
+set up), the drive can still be worked out from the person's work address with
+the free OSRM routing service, the places found with OpenStreetMap's Nominatim.
+That has no live traffic, so a surcharge (15% by default) is added, the minutes
+show with a ≈ and no delay against normal is given. Only the home position and
+the work address leave the house for those two services, under a generic client
+name.
+
 Nothing about the people, their sensors or their addresses lives in this
-file: the sensors are picked in the cell's options and kept with the page.
+file: the sensors and addresses are picked in the cell's options and kept with
+the page.
 """
 
 from __future__ import annotations
@@ -25,6 +34,8 @@ import re
 import statistics
 import threading
 import time
+import urllib.parse
+import urllib.request
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
@@ -293,6 +304,13 @@ def _fetch(
         if not eid:
             continue
         people.append((i, str(options.get(f"person_{i}_name") or "").strip(), eid))
+    source = str(options.get("travel_source") or "auto")
+    if source != "waze":
+        # a person with only a work address (no sensor) is still shown
+        for i in range(1, PEOPLE + 1):
+            if str(options.get(f"person_{i}_work") or "").strip() and not any(p[0] == i for p in people):
+                people.append((i, str(options.get(f"person_{i}_name") or "").strip(), ""))
+        people.sort(key=lambda p: p[0])
     if not people:
         return {"state": "empty", "direction": direction, "title": title}
 
@@ -305,12 +323,22 @@ def _fetch(
     tz = local.tzinfo
 
     rows = []
+    budget = [GEOCODE_PER_FETCH]
+    home = str(options.get("home") or "").strip() or "zone.home"
+    extra = _int(options.get("osrm_extra_pct"), 15, 0, 100)
+    used_osrm = False
     for i, name, eid in people:
         try:
-            st = core.get_state(eid)
+            st = core.get_state(eid) if eid else {}
         except Exception:  # noqa: BLE001 - one person's sensor down is not the cell's
             st = {}
         minutes = _minutes((st or {}).get("state"))
+        estimate = False
+        work = str(options.get(f"person_{i}_work") or "").strip()
+        if minutes is None and work and source in ("auto", "osrm"):
+            minutes = osrm_drive(core, home, work, direction, extra, budget, data_dir)
+            estimate = minutes is not None
+            used_osrm = used_osrm or estimate
         attrs = (st or {}).get("attributes") or {}
         row: dict[str, Any] = {
             "n": i,
@@ -321,7 +349,9 @@ def _fetch(
             "km": round(float(attrs["distance"])) if isinstance(attrs.get("distance"), (int, float)) else None,
             "waze": bool(st) and _is_waze(st),
         }
-        base = baseline_for(core, eid, weeks, data_dir, tz)
+        if estimate:
+            row["est"] = True
+        base = baseline_for(core, eid, weeks, data_dir, tz) if eid and not estimate else None
         if base and minutes is not None:
             normal = normal_at(base["table"], base.get("counts"), local)
             if normal is not None:
@@ -336,8 +366,157 @@ def _fetch(
         "title": title,
         "time": local.strftime("%H:%M"),
         "people": rows,
-        "source": "Waze" if any(r["waze"] for r in rows) else "",
+        "source": "Waze" if any(r["waze"] and not r.get("est") for r in rows) else ("OSRM" if used_osrm else ""),
+        "est": used_osrm,
     }
+
+
+# ----------------------------------------------------------------------
+# OSRM, when a sensor has no value
+# ----------------------------------------------------------------------
+OSRM_URL = "https://router.project-osrm.org/route/v1/driving/{a};{b}?overview=false"
+NOMINATIM_URL = "https://nominatim.openstreetmap.org/search"
+USER_AGENT = "tesserae-travel-time/0.1"  # generic: nothing about the user
+HTTP_TIMEOUT_S = 10
+GEOCODE_PER_FETCH = 4  # new places looked up per refresh (Nominatim allows one request a second)
+GEOCODE_MISS_TTL_S = 6 * 3600
+OSRM_TTL_S = 15 * 60
+
+_geo: dict[str, list[float]] = {}
+_geo_miss: dict[str, float] = {}
+_geo_loaded: set[str] = set()
+_geo_lock = threading.Lock()
+_last_geo = [0.0]
+_route_cache: dict[tuple[tuple[float, float], tuple[float, float]], tuple[float, float]] = {}
+_COORDS = re.compile(r"^\s*(-?\d{1,3}(?:\.\d+)?)\s*,\s*(-?\d{1,3}(?:\.\d+)?)\s*$")
+_ENTITY = re.compile(r"^[a-z_]+\.[a-z0-9_]+$")
+_POSTCODE_NL = re.compile(r"\b(\d{4}\s?[A-Za-z]{2})\b")
+_NUMBER_LETTER = re.compile(r"\b(\d+)\s?[A-Za-z]\b")
+
+
+def _get_json(url: str) -> Any:
+    """GET a URL, parsed JSON, or None. Tesserae's guarded fetch when it is there."""
+    headers = {"User-Agent": USER_AGENT, "Accept": "application/json"}
+    try:
+        try:
+            from app.net_guard import fetch_json  # Tesserae's SSRF-guarded fetch
+        except ImportError:
+            fetch_json = None
+        if fetch_json is not None:
+            return fetch_json(url, headers=headers, timeout=HTTP_TIMEOUT_S)
+        req = urllib.request.Request(url, headers=headers)
+        with urllib.request.urlopen(req, timeout=HTTP_TIMEOUT_S) as resp:  # noqa: S310 - fixed https hosts
+            return json.loads(resp.read().decode("utf-8"))
+    except Exception:  # noqa: BLE001 - offline, blocked, a bad answer
+        return None
+
+
+def _candidates(place: str) -> list[str]:
+    """What to ask OpenStreetMap, best first: as written, without a venue name in
+    front, with a house number like 11H as 11, and a Dutch postcode alone."""
+    parts = [p.strip() for p in place.split(",") if p.strip()]
+    out = [", ".join(parts) if parts else place]
+    if len(parts) > 2:
+        out.append(", ".join(parts[1:]))
+    plain = _NUMBER_LETTER.sub(r"\1", out[-1])
+    if plain != out[-1]:
+        out.append(plain)
+    m = _POSTCODE_NL.search(place)
+    if m:
+        out.append(m.group(1))
+    seen: list[str] = []
+    for q in out:
+        if q and q not in seen:
+            seen.append(q)
+    return seen[:4]
+
+
+def _geo_path(data_dir: Path | None) -> Path | None:
+    return data_dir / "geocode.json" if data_dir else None
+
+
+def geocode(place: str, near: tuple[float, float] | None, budget: list[int], data_dir: Path | None = None, *, now: float | None = None) -> tuple[float, float] | None:
+    """Latitude and longitude of an address: the cache (kept on disk for good),
+    else OpenStreetMap, at most budget[0] addresses per refresh, one request a second."""
+    now = time.time() if now is None else now
+    key = " ".join(place.lower().split())
+    path = _geo_path(data_dir)
+    with _geo_lock:
+        if path is not None and str(path) not in _geo_loaded:
+            _geo_loaded.add(str(path))
+            with contextlib.suppress(OSError, ValueError):
+                for k, v in json.loads(path.read_text(encoding="utf-8")).items():
+                    if isinstance(v, list) and len(v) == 2:
+                        _geo.setdefault(k, v)
+        got = _geo.get(key)
+        if got:
+            return float(got[0]), float(got[1])
+        if _geo_miss.get(key, 0) > now or budget[0] <= 0:
+            return None
+        budget[0] -= 1
+        found: list[float] = []
+        for i, query in enumerate(_candidates(place)):
+            wait = _last_geo[0] + 1.1 - time.time()
+            if wait > 0:
+                time.sleep(wait)
+            params = {"q": query, "format": "jsonv2", "limit": "1"}
+            if near:
+                params["viewbox"] = f"{near[1] - 1.5},{near[0] + 1.5},{near[1] + 1.5},{near[0] - 1.5}"
+            hits = _get_json(f"{NOMINATIM_URL}?{urllib.parse.urlencode(params)}")
+            _last_geo[0] = time.time()
+            try:
+                found = [round(float(hits[0]["lat"]), 6), round(float(hits[0]["lon"]), 6)]
+                break
+            except (TypeError, KeyError, IndexError, ValueError):
+                found = []
+        if found:
+            _geo[key] = found
+            if path is not None:
+                with contextlib.suppress(OSError):
+                    path.parent.mkdir(parents=True, exist_ok=True)
+                    path.write_text(json.dumps(_geo), encoding="utf-8")
+        else:
+            _geo_miss[key] = now + GEOCODE_MISS_TTL_S
+    return (found[0], found[1]) if found else None
+
+
+def position(place: str, core: Any, budget: list[int], data_dir: Path | None, near: tuple[float, float] | None = None) -> tuple[float, float] | None:
+    """latitude,longitude as typed, a Home Assistant zone or device, or an address."""
+    place = (place or "").strip()
+    m = _COORDS.match(place)
+    if m:
+        return float(m.group(1)), float(m.group(2))
+    if _ENTITY.match(place):
+        try:
+            attrs = (core.get_state(place) or {}).get("attributes") or {}
+            return float(attrs["latitude"]), float(attrs["longitude"])
+        except Exception:  # noqa: BLE001 - not a zone, no position
+            return None
+    return geocode(place, near, budget, data_dir)
+
+
+def osrm_minutes(a: tuple[float, float], b: tuple[float, float], extra_pct: int, *, now: float | None = None) -> float | None:
+    """Minutes by car from a to b without traffic, plus the surcharge."""
+    now = time.time() if now is None else now
+    hit = _route_cache.get((a, b))
+    if hit and hit[0] > now:
+        return hit[1] * (1 + extra_pct / 100.0)
+    body = _get_json(OSRM_URL.format(a=f"{a[1]},{a[0]}", b=f"{b[1]},{b[0]}"))
+    try:
+        base = float(body["routes"][0]["duration"]) / 60.0
+    except (TypeError, KeyError, IndexError, ValueError):
+        return None
+    _route_cache[(a, b)] = (now + OSRM_TTL_S, base)
+    return base * (1 + extra_pct / 100.0)
+
+
+def osrm_drive(core: Any, home: str, work: str, direction: str, extra_pct: int, budget: list[int], data_dir: Path | None) -> float | None:
+    """Minutes between home and a work address, in the direction asked."""
+    a = position(home, core, budget, data_dir)
+    b = position(work, core, budget, data_dir, near=a) if a else None
+    if not (a and b):
+        return None
+    return osrm_minutes(a, b, extra_pct) if direction == "work" else osrm_minutes(b, a, extra_pct)
 
 
 # ----------------------------------------------------------------------

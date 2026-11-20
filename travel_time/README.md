@@ -16,12 +16,25 @@ Time**, **Google Maps Travel Time**, or any sensor in minutes. Requires the
   option (+2 min by default).
 - At the weekend the cell is empty (or shown, if you choose).
 
+## When Waze is down: OSRM
+
+If a sensor has no value (Waze Travel Time cannot reach Waze, or the sensor was
+never set up), the drive can still be worked out from the person's **work
+address** (a cell option) with the free **OSRM** routing service. The places
+are found with OpenStreetMap's Nominatim, once each (kept on disk). OSRM knows
+no traffic, so 15% is added (a cell option), the minutes show with a **≈**, no
+delay against normal is given, and a line at the bottom says so. Only your home
+position (the Home Assistant zone `zone.home` unless the cell says otherwise)
+and the work address are sent to those two services, under a generic client
+name. *Drive time from* in the cell chooses: the sensor and OSRM when it has no
+value (the default), the sensor only, or OSRM only.
+
 ## Your sensors stay yours
 
 The sensors are picked from a dropdown in the cell's options: travel-time
 sensors only, Waze first, each with its current value. They are stored with
 the page in Tesserae, not in this widget. A page exported as a template
-leaves them out and asks the new user for their own. The names you type are
+leaves them out and asks the new user for their own. The work addresses and the names you type are
 stored with the page as well; leave a name blank to use the sensor's name.
 
 ## "Normal"

@@ -204,3 +204,75 @@ def test_sensors_and_names_are_secrets() -> None:
 def test_language_switch(tmp_path: Path) -> None:
     got = S.fetch({**OPTS, "language": "de"}, {}, ctx={"data_dir": str(tmp_path)}, now=at(2, 7, 45), core=FakeCore(STATES))
     assert got["lang"] == "de" and got["strings"]["to_work"] == "Fahrzeit zur Arbeit"
+
+
+# ----------------------------------------------------------------------
+# OSRM, when a sensor has no value
+# ----------------------------------------------------------------------
+import pytest  # noqa: E402
+
+
+@pytest.fixture
+def osrm(monkeypatch):
+    """No network: OpenStreetMap and OSRM answer from here. Returns the URLs asked."""
+    S._geo.clear(), S._geo_miss.clear(), S._geo_loaded.clear(), S._route_cache.clear()
+    S._last_geo[0] = 0.0
+    monkeypatch.setattr(S.time, "sleep", lambda s: None)
+    asked: list[str] = []
+
+    def get_json(url):
+        asked.append(url)
+        if "nominatim" in url:
+            q = S.urllib.parse.parse_qs(S.urllib.parse.urlparse(url).query)["q"][0]
+            places = {"Euclideslaan 251, Utrecht": ("52.09", "5.17")}
+            return [{"lat": places[q][0], "lon": places[q][1]}] if q in places else []
+        if "osrm" in url:
+            return {"routes": [{"duration": 1200.0}]}  # 20 minutes
+        return None
+
+    monkeypatch.setattr(S, "_get_json", get_json)
+    return asked
+
+
+def down_states():
+    states = dict(STATES)
+    states["sensor.example_a_to_work"] = {"entity_id": "sensor.example_a_to_work", "state": "unavailable", "attributes": {"friendly_name": "a"}}
+    states["sensor.example_a_to_home"] = {"entity_id": "sensor.example_a_to_home", "state": "unavailable", "attributes": {"friendly_name": "a"}}
+    states["zone.home"] = {"entity_id": "zone.home", "state": "0", "attributes": {"latitude": 52.27, "longitude": 4.97}}
+    return states
+
+
+def test_osrm_fills_in_when_the_sensor_has_no_value(osrm, tmp_path) -> None:
+    opts = {**OPTS, "person_1_work": "Euclideslaan 251, Utrecht"}
+    out = S._fetch(opts, {}, ctx={"data_dir": str(tmp_path)}, now=at(2, 8), core=FakeCore(down_states()))
+    a, b = out["people"]
+    assert a["min"] == 23 and a["est"] is True and "normal" not in a and "late" not in a  # 20 min + 15%
+    assert b["min"] == 41 and "est" not in b  # a sensor with a value is used as it is
+    assert out["source"] == "Waze" and out["est"] is True
+    assert (tmp_path / "geocode.json").exists()
+
+
+def test_osrm_direction_and_only_when_allowed(osrm, tmp_path) -> None:
+    opts = {**OPTS, "person_1_work": "Euclideslaan 251, Utrecht"}
+    out = S._fetch(opts, {}, ctx={"data_dir": str(tmp_path)}, now=at(2, 16), core=FakeCore(down_states()))  # after 14:00: home
+    assert out["direction"] == "home" and out["people"][0]["est"] is True
+    route = [u for u in osrm if "osrm" in u][0]
+    assert route.split("/driving/")[1].startswith("5.17,52.09;4.97,52.27")  # work first, then home
+    osrm.clear()
+    out = S._fetch({**opts, "travel_source": "waze"}, {}, ctx={"data_dir": str(tmp_path)}, now=at(2, 8), core=FakeCore(down_states()))
+    assert out["people"][0]["min"] is None and not osrm
+
+
+def test_a_person_with_only_a_work_address_is_shown_and_places_are_not_looked_up_twice(osrm, tmp_path) -> None:
+    opts = {"timezone": "Europe/Amsterdam", "person_1_name": "Sam", "person_1_work": "Euclideslaan 251, Utrecht"}
+    core = FakeCore(down_states())
+    for _ in range(2):
+        out = S._fetch(opts, {}, ctx={"data_dir": str(tmp_path)}, now=at(2, 8), core=core)
+    assert out["state"] == "ok" and out["people"][0]["name"] == "Sam" and out["people"][0]["min"] == 23
+    assert sum("nominatim" in u for u in osrm) == 1 and sum("osrm" in u for u in osrm) == 1
+
+
+def test_an_address_that_is_not_found_gives_no_value(osrm, tmp_path) -> None:
+    opts = {**OPTS, "person_1_work": "Nowhere 1"}
+    out = S._fetch(opts, {}, ctx={"data_dir": str(tmp_path)}, now=at(2, 8), core=FakeCore(down_states()))
+    assert out["people"][0]["min"] is None and "est" not in out["people"][0] and out["est"] is False

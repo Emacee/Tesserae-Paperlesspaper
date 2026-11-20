@@ -5,5 +5,6 @@
   "min": "min",
   "no_people": "Pick the travel-time sensors in the cell's options.",
   "weekend": "Weekend",
-  "unavailable": "no value"
+  "unavailable": "no value",
+  "estimate": "≈ estimated, no live traffic"
 }
