@@ -36,7 +36,7 @@ export default function render(shadow, ctx) {
     const evs = (d.events || []).reduce((n, e) => n + 1 + (e.location ? 0.85 : 0), 0);
     lines += Math.max(1, allDay + evs) + 0.5;
   }
-  const fs = Math.max(11, Math.min(18, (h - 70) / Math.max(lines, 1) / 1.45));
+  const fs = Math.max(11, Math.min(24, (h - 70) / Math.max(lines, 1) / 1.45));
 
   const style = `
     :host { display: block; }
