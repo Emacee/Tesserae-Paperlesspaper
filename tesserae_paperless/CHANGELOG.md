@@ -11,6 +11,15 @@ under its version number.
 
 ## [Unreleased]
 
+### Added
+- Travel time works while Waze is down: give each person a *work address* in
+  the cell and, when their sensor has no value, the drive is worked out with the
+  free OSRM routing service (no account). It has no live traffic, so 15% is
+  added (a cell option), the minutes show with a ≈, no delay against normal is
+  given and a note at the bottom says so. A person with only a work address
+  (no sensor) is shown too. Your home position and the work address are sent to
+  OSRM and OpenStreetMap, and nothing else.
+
 ## [0.3.6] - 2026-11-19
 
 Built on Tesserae 0.480.0, from commit `3452f5a`.

@@ -29,7 +29,8 @@ export default function render(shadow, ctx) {
     .tt-head { display: flex; align-items: center; gap: .5em; flex: none;
       font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
     .tt-head svg { width: 1.25em; height: 1.25em; }
-    .tt-chip { margin-left: auto; color: var(--text-muted, #8a877f); letter-spacing: .02em; text-transform: none; font-weight: 700; }
+    .tt-head > span:nth-of-type(1) { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+    .tt-chip { white-space: nowrap; flex: none; margin-left: auto; color: var(--text-muted, #8a877f); letter-spacing: .02em; text-transform: none; font-weight: 700; }
     .tt-rows { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 0; }
     .tt-row { flex: 1 1 0; display: flex; align-items: center; gap: .7em; min-height: 0; }
     .tt-row + .tt-row { border-top: 1px solid var(--border-subtle, #d6d1c6); }
@@ -47,7 +48,7 @@ export default function render(shadow, ctx) {
   `;
   const shell = (inner, head = true) => {
     const chip = data.time ? `${data.source ? esc(data.source) + " · " : ""}${esc(data.time)}` : "";
-    const headH = Math.max(14, Math.min(22, h * 0.085));
+    const headH = Math.max(13, Math.min(22, h * 0.085, w * 0.04));
     shadow.innerHTML = `<style>${style}</style>
       <div class="tt" data-widget="travel_time">
         ${head ? `<div class="tt-head" style="font-size:${headH}px">${CAR}<span>${esc(title)}</span>${chip ? `<span class="tt-chip">${chip}</span>` : ""}</div>` : ""}
@@ -63,7 +64,7 @@ export default function render(shadow, ctx) {
     return;
   }
 
-  const rowH = (h - Math.min(22, h * 0.085) * 2.4) / people.length;
+  const rowH = (h - Math.min(22, h * 0.085, w * 0.04) * 2.4) / people.length;
   const big = Math.max(18, Math.min(64, rowH * 0.55, w * 0.075));
   const name = Math.max(13, Math.min(27, big * 0.5));
   const small = Math.max(11, Math.min(19, big * 0.36));
@@ -77,7 +78,7 @@ export default function render(shadow, ctx) {
       : p.normal != null ? `<span class="tt-ok" style="font-size:${small}px">${esc(t("normal", "normal"))}</span>` : "";
     const via = p.roads && p.roads.length ? `via ${p.roads.map(esc).join(" · ")}` : "";
     const mins = p.min != null
-      ? `${esc(p.min)}<small> ${esc(unit)}</small>`
+      ? `${p.est ? "≈ " : ""}${esc(p.min)}<small> ${esc(unit)}</small>`
       : `<small>${esc(t("unavailable", "no value"))}</small>`;
     return `<div class="tt-row">
         ${narrow ? "" : `<span class="tt-ini" style="width:${ini}px;height:${ini}px;font-size:${ini * 0.46}px">${esc(p.initial)}</span>`}
@@ -86,5 +87,5 @@ export default function render(shadow, ctx) {
         <span class="tt-min" style="font-size:${big}px">${mins}</span>
       </div>`;
   }).join("");
-  shell(`<div class="tt-rows">${rows}</div>`);
+  shell(`<div class="tt-rows">${rows}</div>${data.est ? `<div class="tt-msg" style="font-size:${small * 0.85}px;margin:0;flex:none">${esc(t("estimate", "≈ estimated, no live traffic"))}</div>` : ""}`);
 }

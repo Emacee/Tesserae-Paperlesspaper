@@ -3,7 +3,7 @@
   "name": "Travel time",
   "version": "0.1.0",
   "kind": "widget",
-  "description": "Travel time to work in the morning and home in the afternoon, for up to three people, from travel-time sensors in Home Assistant (Waze Travel Time, Google Maps Travel Time). A delay against what is normal for that weekday and time shows as +x min. Hidden at the weekend if you like. Requires the Home Assistant Core plugin.",
+  "description": "Travel time to work in the morning and home in the afternoon, for up to three people, from travel-time sensors in Home Assistant (Waze Travel Time, Google Maps Travel Time). A delay against what is normal for that weekday and time shows as +x min. Hidden at the weekend if you like. Without a value from the sensor, the drive can come from the free OSRM service, using the work address. Requires the Home Assistant Core plugin.",
   "icon": "ph-car",
   "category": "home-assistant",
   "locales": [
@@ -50,6 +50,15 @@
       "mask": false
     },
     {
+      "name": "person_1_work",
+      "type": "string",
+      "label": "Person 1: work address",
+      "default": "",
+      "secret": true,
+      "mask": false,
+      "help": "Street, number and city of the workplace (or latitude,longitude). Used for a drive time from the free OSRM service when the sensor has no value, for instance while Waze Travel Time is down. Kept with the page, never in an exported template."
+    },
+    {
       "name": "person_2_name",
       "type": "string",
       "label": "Person 2: name",
@@ -76,6 +85,15 @@
       "mask": false
     },
     {
+      "name": "person_2_work",
+      "type": "string",
+      "label": "Person 2: work address",
+      "default": "",
+      "secret": true,
+      "mask": false,
+      "help": "The same, for this person."
+    },
+    {
       "name": "person_3_name",
       "type": "string",
       "label": "Person 3: name",
@@ -100,6 +118,57 @@
       "choices_from": "travel_sensor",
       "secret": true,
       "mask": false
+    },
+    {
+      "name": "person_3_work",
+      "type": "string",
+      "label": "Person 3: work address",
+      "default": "",
+      "secret": true,
+      "mask": false,
+      "help": "The same, for this person."
+    },
+    {
+      "name": "travel_source",
+      "type": "select",
+      "label": "Drive time from",
+      "default": "auto",
+      "choices": [
+        {
+          "value": "auto",
+          "label": "The sensor, and OSRM when it has no value"
+        },
+        {
+          "value": "waze",
+          "label": "The sensor only"
+        },
+        {
+          "value": "osrm",
+          "label": "OSRM only (work address, no live traffic)"
+        }
+      ],
+      "help": "OSRM is a free routing service with no live traffic: the drive then shows with a ≈ and without a delay against normal. It is sent your home position and the work address."
+    },
+    {
+      "name": "home",
+      "type": "string",
+      "label": "Home (for OSRM)",
+      "default": "zone.home",
+      "secret": true,
+      "mask": false,
+      "help": "A Home Assistant zone or device (zone.home), an address, or latitude,longitude."
+    },
+    {
+      "name": "osrm_extra_pct",
+      "type": "slider",
+      "label": "Surcharge without traffic",
+      "default": 15,
+      "min": 0,
+      "max": 100,
+      "step": 5,
+      "unit": "%",
+      "advanced": true,
+      "help": "Added to an OSRM drive, which knows no traffic."
     },
     {
       "name": "switch_hour",
