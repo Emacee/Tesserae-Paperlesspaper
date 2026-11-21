@@ -11,6 +11,11 @@ under its version number.
 
 ## [Unreleased]
 
+### Changed
+- Agenda, with travel time: the type is measured against the cell, so the list
+  fills the cell exactly, whether the week holds a few events or many. It used
+  to leave empty space under a quiet week.
+
 ## [0.4.3] - 2026-11-21
 
 Built on Tesserae 0.480.0, from commit `b8474bc`.
