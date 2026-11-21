@@ -61,6 +61,7 @@
   <div class="pp-frame">
     <h3>{{ f.name }} <span class="muted">{{ f.org }}{% if f.status %} · {{ f.status }}{% endif %}</span></h3>
     <p class="field-help">
+      {% if f.loaded %}The frame last loaded its paper {{ f.loaded }}.{% endif %}
       {% if f.wake %}Last awake {{ f.wake.at }}{% if f.wake.why %} ({{ f.wake.why }}){% endif %}{% if f.wake.battery %}, battery {{ f.wake.battery }}{% endif %}{% if f.wake.usb %}, on USB{% endif %}{% if f.wake.fw %}, firmware {{ f.wake.fw }}{% endif %}.{% endif %}
       {% if f.last_update %} Last update {{ f.last_update.at }}: {{ f.last_update.state | replace('_', ' ') }}.{% endif %}
     </p>

@@ -11,6 +11,11 @@ under its version number.
 
 ## [Unreleased]
 
+### Added
+- paperlesspaper plugin: each frame on the page now says when it last loaded
+  its paper, which tells whether the frame has picked up the newest upload.
+  `events.json` shows that time and the frame's own data too.
+
 ## [0.4.2] - 2026-11-21
 
 Built on Tesserae 0.480.0, from commit `56cd15b`.

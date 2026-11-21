@@ -431,6 +431,7 @@ def frames_overview(client: Any) -> tuple[list[dict[str, Any]], str]:
                         "id": did,
                         "name": API.label(dev),
                         "status": str(dev.get("status") or ""),
+                        "loaded": _when(dev.get("loadedAt")),
                         "org": API.label(org),
                         "active": active,
                         "papers": [
@@ -621,6 +622,9 @@ def blueprint() -> Any:
                             "status": str(dev.get("status") or ""),
                             "paper": API.ref(dev.get("paper")),
                             "device_keys": sorted(dev.keys()),
+                            "loadedAt": dev.get("loadedAt"),
+                            "updatedAt": dev.get("updatedAt"),
+                            "meta": json.dumps(dev.get("meta"), default=str)[:400],
                             "events_total": len(events),
                             "events": [
                                 {
