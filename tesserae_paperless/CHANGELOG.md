@@ -11,6 +11,12 @@ under its version number.
 
 ## [Unreleased]
 
+### Added
+- paperlesspaper plugin: `…/plugins/paperlesspaper_core/events.json` shows what
+  the paperlesspaper cloud reports about each frame (its status, its paper and
+  its newest events), to find out when a frame last woke up and why it still
+  shows an older image.
+
 ## [0.4.1] - 2026-11-20
 
 Built on Tesserae 0.480.0, from commit `838fff1`.
