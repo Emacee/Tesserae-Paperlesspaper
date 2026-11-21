@@ -461,7 +461,7 @@ def test_page_lists_frames_switches_and_links(app: Any, calls: list[Any]) -> Non
     calls.answers.extend(  # type: ignore[attr-defined]
         [
             json.dumps([{"id": "org1", "name": "Home"}]).encode(),
-            json.dumps([{"id": "dev1", "name": "Living room", "status": "online", "paper": "p-xkcd"}]).encode(),
+            json.dumps([{"id": "dev1", "name": "Living room", "status": "online", "paper": "p-xkcd", "loadedAt": "2026-11-01T09:59:00Z"}]).encode(),
             json.dumps(
                 {
                     "results": [
@@ -482,6 +482,7 @@ def test_page_lists_frames_switches_and_links(app: Any, calls: list[Any]) -> Non
     assert "Living room" in page and "Daily XKCD" in page and "Tesserae" in page
     assert "on the frame" in page and "3.75 V" in page, page
     assert "(button)" in page and "update ok" in page, page
+    assert "last loaded its paper" in page, page
     assert calls[0].full_url == "https://api.example/v1/organizations/"
 
     calls.clear()
@@ -499,7 +500,7 @@ def test_events_json_shows_what_the_cloud_reports(app: Any, calls: list[Any]) ->
     calls.answers.extend(  # type: ignore[attr-defined]
         [
             json.dumps([{"id": "org1", "name": "Home"}]).encode(),
-            json.dumps([{"id": "dev1", "name": "Living room", "status": "online", "paper": "p-tess"}]).encode(),
+            json.dumps([{"id": "dev1", "name": "Living room", "status": "online", "paper": "p-tess", "loadedAt": "2026-11-01T09:00:00Z", "meta": {"x": 1}}]).encode(),
             json.dumps(
                 [
                     {"id": "e1", "type": "activate", "payload": {"json": '{"fw":"b3.0.10","bat":"3749","wake":"TIMER","usb":"0"}'}, "timestamp": "2026-11-01T10:00:00Z"},
@@ -511,6 +512,7 @@ def test_events_json_shows_what_the_cloud_reports(app: Any, calls: list[Any]) ->
     got = app.test_client().get("/plugins/paperlesspaper_core/events.json").get_json()
     frame = got["frames"][0]
     assert got["error"] == "" and frame["id"] == "dev1" and frame["paper"] == "p-tess" and frame["status"] == "online"
+    assert frame["loadedAt"] == "2026-11-01T09:00:00Z" and '"x": 1' in frame["meta"]
     assert frame["events_total"] == 2 and frame["events"][0]["type"] == "state"
     assert frame["wake"]["wake"]["why"] == "timer" and frame["wake"]["wake"]["battery"] == "3.75 V"
 
