@@ -11,6 +11,10 @@ under its version number.
 
 ## [Unreleased]
 
+## [0.4.3] - 2026-11-21
+
+Built on Tesserae 0.480.0, from commit `b8474bc`.
+
 ### Added
 - paperlesspaper plugin: each frame on the page now says when it last loaded
   its paper, which tells whether the frame has picked up the newest upload.
@@ -326,7 +330,8 @@ Built on Tesserae 0.480.0, from commit `ad7e2ba`.
 - Energy, Dynamic Price: EPEX and Tibber electricity prices for today and
   tomorrow.
 
-[Unreleased]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/56cd15b...master
+[Unreleased]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/b8474bc...master
+[0.4.3]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/56cd15b...b8474bc
 [0.4.2]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/838fff1...56cd15b
 [0.4.1]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/2db98ad...838fff1
 [0.4.0]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/3452f5a...2db98ad
