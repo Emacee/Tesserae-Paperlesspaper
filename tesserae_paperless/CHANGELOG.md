@@ -11,6 +11,10 @@ under its version number.
 
 ## [Unreleased]
 
+## [0.4.2] - 2026-11-21
+
+Built on Tesserae 0.480.0, from commit `56cd15b`.
+
 ### Added
 - paperlesspaper plugin: `…/plugins/paperlesspaper_core/events.json` shows what
   the paperlesspaper cloud reports about each frame (its status, its paper and
@@ -317,7 +321,8 @@ Built on Tesserae 0.480.0, from commit `ad7e2ba`.
 - Energy, Dynamic Price: EPEX and Tibber electricity prices for today and
   tomorrow.
 
-[Unreleased]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/838fff1...master
+[Unreleased]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/56cd15b...master
+[0.4.2]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/838fff1...56cd15b
 [0.4.1]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/2db98ad...838fff1
 [0.4.0]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/3452f5a...2db98ad
 [0.3.6]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/4c09a33...3452f5a
