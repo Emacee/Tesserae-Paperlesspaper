@@ -597,4 +597,44 @@ def blueprint() -> Any:
                 }
         return jsonify({"devices": out, "busy": [k for k, v in out.items() if v["busy"]]})
 
+    @bp.get("/events.json")
+    def events_json() -> Any:
+        """What the paperlesspaper cloud says about each frame: its status and paper, its newest events as sent,
+        and the wake-up read from them. For finding out why a frame has not changed (a frame that has
+        not woken up since an upload shows the old image)."""
+        app = current_app._get_current_object()  # type: ignore[attr-defined]
+        client = client_for(app, PAGE_TIMEOUT_S)
+        out: list[dict[str, Any]] = []
+        error = ""
+        try:
+            for org in client.organizations():
+                for dev in client.devices(API.ident(org)):
+                    did = API.ident(dev)
+                    events = []
+                    with contextlib.suppress(Exception):
+                        events = client.events(did)
+                    rows = sorted(events, key=lambda e: str(e.get("timestamp") or e.get("createdAt") or ""), reverse=True)
+                    out.append(
+                        {
+                            "id": did,
+                            "name": API.label(dev),
+                            "status": str(dev.get("status") or ""),
+                            "paper": API.ref(dev.get("paper")),
+                            "device_keys": sorted(dev.keys()),
+                            "events_total": len(events),
+                            "events": [
+                                {
+                                    "type": str(e.get("type") or e.get("eventType") or ""),
+                                    "at": _when(e.get("timestamp") or e.get("createdAt")),
+                                    "payload": json.dumps({k: v for k, v in e.items() if k not in ("id", "deviceId")}, default=str)[:300],
+                                }
+                                for e in rows[:10]
+                            ],
+                            "wake": wake_info(events),
+                        }
+                    )
+        except Exception as err:  # noqa: BLE001 - shown as the answer
+            error = str(err)
+        return jsonify({"frames": out, "error": error})
+
     return bp

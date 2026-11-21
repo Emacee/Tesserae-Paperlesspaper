@@ -495,6 +495,26 @@ def test_page_lists_frames_switches_and_links(app: Any, calls: list[Any]) -> Non
     assert calls[0].full_url.endswith("/papers/uploadSingleImage/p-tess"), "linking uploads the current frame"
 
 
+def test_events_json_shows_what_the_cloud_reports(app: Any, calls: list[Any]) -> None:
+    calls.answers.extend(  # type: ignore[attr-defined]
+        [
+            json.dumps([{"id": "org1", "name": "Home"}]).encode(),
+            json.dumps([{"id": "dev1", "name": "Living room", "status": "online", "paper": "p-tess"}]).encode(),
+            json.dumps(
+                [
+                    {"id": "e1", "type": "activate", "payload": {"json": '{"fw":"b3.0.10","bat":"3749","wake":"TIMER","usb":"0"}'}, "timestamp": "2026-11-01T10:00:00Z"},
+                    {"id": "e2", "type": "state", "payload": {"state": "update_ok"}, "timestamp": "2026-11-01T10:00:05Z"},
+                ]
+            ).encode(),
+        ]
+    )
+    got = app.test_client().get("/plugins/paperlesspaper_core/events.json").get_json()
+    frame = got["frames"][0]
+    assert got["error"] == "" and frame["id"] == "dev1" and frame["paper"] == "p-tess" and frame["status"] == "online"
+    assert frame["events_total"] == 2 and frame["events"][0]["type"] == "state"
+    assert frame["wake"]["wake"]["why"] == "timer" and frame["wake"]["wake"]["battery"] == "3.75 V"
+
+
 def test_page_without_a_key(app: Any, calls: list[Any]) -> None:
     app.config["SETTINGS_STORE"].key = ""
     page = app.test_client().get("/plugins/paperlesspaper_core/").get_data(as_text=True)
