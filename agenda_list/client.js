@@ -100,4 +100,21 @@ export default function render(shadow, ctx) {
       ${data.error ? `<p class="al-none">${esc(data.error)}</p>` : days.map(dayHtml).join("")}
       ${note ? `<div class="al-note">${esc(note)}</div>` : ""}
     </div>`;
+
+  // The estimate above only guesses how tall the list comes out. Measure it and
+  // size the type so the list fills the cell, however many events the week has.
+  const root = shadow.querySelector(".al");
+  if (root && root.clientHeight > 0) {
+    const cs = getComputedStyle(root);
+    const avail = root.clientHeight - parseFloat(cs.paddingTop || "0") - parseFloat(cs.paddingBottom || "0");
+    let size = fs;
+    for (let i = 0; i < 3; i += 1) {
+      const used = Array.from(root.children).reduce((n, el) => n + el.getBoundingClientRect().height, 0);
+      if (!(used > 0) || Math.abs(avail - used) / avail < 0.01) break;
+      const next = Math.max(11, Math.min(24, size * (avail / used)));
+      if (Math.abs(next - size) < 0.1) break;
+      size = next;
+      root.style.fontSize = `${size}px`;
+    }
+  }
 }
