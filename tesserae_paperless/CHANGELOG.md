@@ -11,6 +11,10 @@ under its version number.
 
 ## [Unreleased]
 
+### Fixed
+- Waste: a paper container (`papiercont`, as some municipalities call it) gets
+  the paper bin and its name, instead of a plain bin.
+
 ## [0.5.1] - 2026-11-28
 
 Built on Tesserae 0.480.0, from commit `6471250`.

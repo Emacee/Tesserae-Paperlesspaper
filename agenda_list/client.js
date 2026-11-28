@@ -12,6 +12,10 @@ function esc(s) {
 const PIN = `<svg viewBox="0 0 12 14" aria-hidden="true"><path d="M6 13C6 13 1.5 8.2 1.5 5.3a4.5 4.5 0 019 0C10.5 8.2 6 13 6 13z" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="6" cy="5.3" r="1.6" fill="currentColor"/></svg>`;
 const CAR = `<svg viewBox="0 0 18 14" aria-hidden="true"><path d="M2 10V7l1.6-4A1.5 1.5 0 015 2h8a1.5 1.5 0 011.4 1L16 7v3H2z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="5" cy="11" r="1.6" fill="currentColor"/><circle cx="13" cy="11" r="1.6" fill="currentColor"/></svg>`;
 
+// Types some municipalities call differently, folded onto the ones with an icon.
+const ALIASES = { papiercont: "papier", papierbak: "papier", gftcont: "gft", plastic: "pmd", plasticafval: "pmd", glascont: "glas" };
+const canon = (type) => ALIASES[type] || type;
+
 // Waste bins, as in the Waste widget: the colour of the stream, a small sign on it.
 const WASTE_COLOURS = {
   papier: ["--accent-5", "#2157ba"], gft: ["--accent-4", "#22706a"], restafval: ["--text-primary", "#2f2f2c"],
@@ -28,12 +32,12 @@ const WASTE_GLYPHS = {
   tuinafval: '<path d="M9.2 17.6c0-3.8 2.4-6.2 5.8-6.2 0 3.8-2.1 6.2-5.8 6.2zM9.2 17.6l3-3"/>',
 };
 function wasteColour(type) {
-  const [name, fallback] = WASTE_COLOURS[type] || ["--text-primary", "#2f2f2c"];
+  const [name, fallback] = WASTE_COLOURS[canon(type)] || ["--text-primary", "#2f2f2c"];
   return `var(${name}, ${fallback})`;
 }
 function wasteBin(type, size) {
   const colour = wasteColour(type);
-  return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" aria-hidden="true" style="flex:none;vertical-align:middle"><path d="M6 8.6h12l-1.2 11a1.6 1.6 0 0 1-1.6 1.4H8.8a1.6 1.6 0 0 1-1.6-1.4z" fill="${colour}"/><path d="M4.6 8.6h14.8V6.4a1 1 0 0 0-1-1H5.6a1 1 0 0 0-1 1z" fill="${colour}"/><path d="M10 5.4V4h4v1.4" fill="none" stroke="${colour}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><g fill="none" stroke="var(--surface, #fff)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${WASTE_GLYPHS[type] || ""}</g></svg>`;
+  return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" aria-hidden="true" style="flex:none;vertical-align:middle"><path d="M6 8.6h12l-1.2 11a1.6 1.6 0 0 1-1.6 1.4H8.8a1.6 1.6 0 0 1-1.6-1.4z" fill="${colour}"/><path d="M4.6 8.6h14.8V6.4a1 1 0 0 0-1-1H5.6a1 1 0 0 0-1 1z" fill="${colour}"/><path d="M10 5.4V4h4v1.4" fill="none" stroke="${colour}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><g fill="none" stroke="var(--surface, #fff)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${WASTE_GLYPHS[canon(type)] || ""}</g></svg>`;
 }
 
 export default function render(shadow, ctx) {
@@ -101,7 +105,7 @@ export default function render(shadow, ctx) {
     const parts = [];
     for (const a of d.all_day || []) {
       if (a.waste) {
-        const nm = t(a.waste, "") || a.title;
+        const nm = t(canon(a.waste), "") || a.title;
         parts.push(`<div class="al-ad"><span class="al-lab">${esc(t("waste", "waste"))}</span><span class="al-chip al-waste" style="--c:${wasteColour(a.waste)}">${wasteBin(a.waste, Math.round(fs * 1.15))}<span>${esc(nm)}</span></span></div>`);
         continue;
       }

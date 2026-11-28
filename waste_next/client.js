@@ -10,6 +10,10 @@ function esc(s) {
   }[c]));
 }
 
+// Types some municipalities call differently, folded onto the ones with an icon.
+const ALIASES = { papiercont: "papier", papierbak: "papier", gftcont: "gft", plastic: "pmd", plasticafval: "pmd", glascont: "glas" };
+const canon = (type) => ALIASES[type] || type;
+
 // Bin colours: the standard container colours, on the colours an e-paper panel has.
 const COLOURS = {
   papier: ["--accent-5", "#2157ba"],
@@ -33,13 +37,13 @@ const GLYPHS = {
 };
 
 function colourOf(type, cs) {
-  const [name, fallback] = COLOURS[type] || ["--text-primary", "#2f2f2c"];
+  const [name, fallback] = COLOURS[canon(type)] || ["--text-primary", "#2f2f2c"];
   return (cs && cs.getPropertyValue(name).trim()) || fallback;
 }
 
 // A wheelie bin in the colour of its stream, with a small sign on it.
 export function bin(type, size, colour) {
-  const glyph = GLYPHS[type] || "";
+  const glyph = GLYPHS[canon(type)] || "";
   return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" aria-hidden="true" style="flex:none"><path d="M6 8.6h12l-1.2 11a1.6 1.6 0 0 1-1.6 1.4H8.8a1.6 1.6 0 0 1-1.6-1.4z" fill="${colour}"/><path d="M4.6 8.6h14.8V6.4a1 1 0 0 0-1-1H5.6a1 1 0 0 0-1 1z" fill="${colour}"/><path d="M10 5.4V4h4v1.4" fill="none" stroke="${colour}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><g fill="none" stroke="var(--surface, #fff)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${glyph}</g></svg>`;
 }
 
@@ -55,7 +59,7 @@ export default function render(shadow, ctx) {
   const red = v("--accent-1", "#b5482a");
 
   const nameOf = (it) => {
-    const own = t(it.type, "");
+    const own = t(canon(it.type), "");
     if (own) return own;
     const n = String(it.name || it.type || "");
     return n.charAt(0).toUpperCase() + n.slice(1);
