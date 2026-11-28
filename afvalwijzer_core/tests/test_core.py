@@ -46,6 +46,7 @@ def test_address_and_configured() -> None:
     a = S.address(SETTINGS)
     assert (a["postcode"], a["huisnummer"], a["toevoeging"]) == ("1234AB", "12", "A")
     assert S.configured(SETTINGS) and not S.configured({}) and not S.configured({**SETTINGS, "postcode_secret": "12"})
+    assert S.address({**SETTINGS, "api_key": ""})["api_key"] == S.default_key() != ""  # a blank key falls back to the manifest's
 
 
 def test_parse_sorts_and_drops_duplicates_and_rows_without_type() -> None:
@@ -100,3 +101,61 @@ def test_pickups_window_types_and_next_groups() -> None:
     assert [g["date"] for g in groups] == ["2026-12-02", "2026-12-04"]
     assert groups[0]["days"] == 1 and [i["type"] for i in groups[1]["items"]] == ["pmd", "restafval"]
     assert S.next_groups(S.parse(ANSWER), date(2026, 12, 4), 1)[0]["days"] == 0  # today counts
+
+
+# ----------------------------------------------------------------------
+# The plugin page
+# ----------------------------------------------------------------------
+flask = pytest.importorskip("flask")
+
+
+class Store:
+    def __init__(self):
+        self.values = {}
+        self.saved = None
+
+    def get_for_runtime(self, ns, pid, fields):
+        return dict(self.values)
+
+    def get_section(self, name):
+        return {"afvalwijzer_core": dict(self.values)} if name == "plugins" else {}
+
+    def update_for_namespace(self, ns, pid, values, fields):
+        self.saved = (ns, pid, values, [f["name"] for f in fields])
+        self.values.update({f"{k}_secret": v for k, v in values.items()})
+
+
+@pytest.fixture
+def app(tmp_path):
+    import jinja2
+
+    a = flask.Flask("t")
+    a.secret_key = "t"
+    stubs = {
+        "_base.html": "<html>{% block main %}{% endblock %}</html>",
+        "_components.html": (
+            "{% macro card_head(title, icon_name=None, level=2, blurb=None, action=None) %}<h2>{{ title }}</h2>{% endmacro %}"
+            "{% macro button(label, variant='primary', type='submit', name=None, value=None, full_width=False, title=None, disabled=False, icon=None) %}<button>{{ label }}</button>{% endmacro %}"
+        ),
+    }
+    a.jinja_loader = jinja2.ChoiceLoader([jinja2.DictLoader(stubs), a.jinja_loader])
+    store = Store()
+    a.config.update(SETTINGS_STORE=store, PLUGIN_REGISTRY={"afvalwijzer_core": type("P", (), {"data_dir": str(tmp_path)})()})
+    a.register_blueprint(S.blueprint(), url_prefix="/plugins/afvalwijzer_core")
+    a.config["store"] = store
+    return a
+
+
+def test_the_page_saves_the_address_as_form_or_json_and_shows_the_next_collections(app, monkeypatch) -> None:
+    monkeypatch.setattr(S, "_get_json", lambda url: ANSWER)
+    c = app.test_client()
+    assert "Enter your postcode" in c.get("/plugins/afvalwijzer_core/").get_data(as_text=True)
+    r = c.post("/plugins/afvalwijzer_core/address", json={"postcode": "1391 et", "huisnummer": "50", "toevoeging": ""})
+    assert r.get_json() == {"ok": True, "configured": True}  # the service key falls back to the manifest's
+    store = app.config["store"]
+    assert store.saved[:2] == ("plugins", "afvalwijzer_core") and store.saved[2]["postcode"] == "1391 et"
+    assert store.saved[3] == ["postcode", "huisnummer", "toevoeging"]  # the key is left alone
+    r = c.post("/plugins/afvalwijzer_core/address", data={"postcode": "1391ET", "huisnummer": "50"})
+    assert r.status_code == 302
+    page = c.get("/plugins/afvalwijzer_core/").get_data(as_text=True)
+    assert 'value="1391 ET"' in page and 'value="50"' in page

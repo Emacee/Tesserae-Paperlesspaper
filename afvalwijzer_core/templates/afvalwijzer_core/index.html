@@ -1,0 +1,42 @@
+{% extends "_base.html" %}
+{% from "_components.html" import card_head, button %}
+{% block title %}Mijn Afvalwijzer, Tesserae{% endblock %}
+
+{% block main %}
+<div class="page-head">
+  <h1><i class="ph-bold ph-trash" aria-hidden="true"></i> Mijn Afvalwijzer</h1>
+  <p class="page-blurb">The collection dates of your household waste, for the <b>Waste, next collection</b> widget and the waste line in <b>Agenda, with travel time</b>. They come from the web service behind mijnafvalwijzer.nl, asked once every twelve hours. Your address is only sent there.</p>
+</div>
+
+<section class="card">
+  {{ card_head('Your address', icon_name='house-line', level=2, blurb='Postcode and house number, and an addition if you have one (a letter or number after the house number).') }}
+  <form method="post" action="{{ url_for('afvalwijzer_core_admin.set_address') }}" class="form">
+    <div class="field"><label for="aw-postcode">Postcode</label><input id="aw-postcode" name="postcode" value="{{ postcode }}" placeholder="1234 AB" autocomplete="off"></div>
+    <div class="field"><label for="aw-nr">House number</label><input id="aw-nr" name="huisnummer" value="{{ huisnummer }}" inputmode="numeric" autocomplete="off"></div>
+    <div class="field"><label for="aw-add">Addition (optional)</label><input id="aw-add" name="toevoeging" value="{{ toevoeging }}" autocomplete="off"></div>
+    {{ button('Save address', variant='primary', icon='floppy-disk') }}
+  </form>
+</section>
+
+<section class="card">
+  {{ card_head('The next collections', icon_name='calendar-check', level=2) }}
+  {% if not configured %}
+    <p class="muted">Enter your postcode and house number above.</p>
+  {% elif error %}
+    <p style="color: var(--danger, #b33)">{{ error }}</p>
+    <p class="muted">If the address is right, your municipality may not use Mijn Afvalwijzer.</p>
+  {% elif groups %}
+    <table class="table">
+      <thead><tr><th>Day</th><th>What</th><th></th></tr></thead>
+      <tbody>
+      {% for g in groups %}
+        <tr><td>{{ g.date }}</td><td>{% for i in g['items'] %}{{ i.name }}{% if not loop.last %} + {% endif %}{% endfor %}</td>
+            <td class="muted">{% if g.days == 0 %}today{% elif g.days == 1 %}tomorrow{% else %}in {{ g.days }} days{% endif %}</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p class="muted">No collection days found.</p>
+  {% endif %}
+</section>
+{% endblock %}
