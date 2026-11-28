@@ -283,6 +283,8 @@ def test_an_address_that_is_not_found_gives_no_value(osrm, tmp_path) -> None:
 # ----------------------------------------------------------------------
 CAR_STATES = {
     "sensor.car_range": {"entity_id": "sensor.car_range", "state": "172", "attributes": {"unit_of_measurement": "mi"}},
+    "sensor.car_range_m": {"entity_id": "sensor.car_range_m", "state": "230000", "attributes": {"unit_of_measurement": "m"}},
+    "sensor.car_soc": {"entity_id": "sensor.car_soc", "state": "0", "attributes": {}},
     "binary_sensor.car_plug": {"entity_id": "binary_sensor.car_plug", "state": "off", "attributes": {}},
     "binary_sensor.car_charging": {"entity_id": "binary_sensor.car_charging", "state": "unavailable", "attributes": {}},
 }
@@ -316,3 +318,9 @@ def test_the_car_sensors_are_secrets_and_a_choice_of_entities() -> None:
     for name in ("car_range", "car_plug", "car_charging", "car_name"):
         assert opts[name]["secret"] is True
     assert opts["car_range"]["choices_from"] == "entity" and opts["layout"]["default"] == "rows"
+
+
+def test_a_range_in_metres_is_km_and_zero_percent_is_a_value(tmp_path: Path) -> None:
+    opts = {**OPTS, "layout": "strip", "car_range": "sensor.car_range_m", "car_soc": "sensor.car_soc"}
+    out = S._fetch(opts, {}, ctx={"data_dir": str(tmp_path)}, now=at(2, 8), core=FakeCore({**STATES, **CAR_STATES}))
+    assert out["car"]["km"] == 230 and out["car"]["soc"] == 0

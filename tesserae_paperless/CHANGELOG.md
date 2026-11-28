@@ -11,6 +11,12 @@ under its version number.
 
 ## [Unreleased]
 
+### Fixed
+- The car in the price chart shows its line also when the car has not changed
+  since yesterday (a parked car): its last value runs from midnight.
+- Travel time, with a car: a range in metres (as the Volkswagen reports it) is
+  shown in km, and a charge level of 0% counts as a value.
+
 ## [0.6.0] - 2026-11-29
 
 Built on Tesserae 0.480.0, from commit `b9676ad`.

@@ -78,3 +78,12 @@ def test_the_car_sensors_are_secrets_and_a_choice_of_entities() -> None:
     for name in ("car_soc", "car_charging", "car_name"):
         assert opts[name]["secret"] is True
     assert opts["car_soc"]["choices_from"] == "entity"
+
+
+def test_a_value_from_before_midnight_is_carried_to_the_start() -> None:
+    class Idle(FakeCore):
+        def history(self, eid, *, hours=24, timeout=12):
+            return [{"state": "57", "last_changed": at(-20)}]
+
+    out = S.car_overlay(view(), {"car_soc": "sensor.car_soc"}, NOW, core=Idle(soc_now="57"))
+    assert out["history"][0] == [0.0, 57.0] and out["history"][-1] == [out["now_x"], 57.0]
