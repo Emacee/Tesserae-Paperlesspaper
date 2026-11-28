@@ -14,5 +14,8 @@
   "battery_target": "target",
   "battery_grid": "grid charging",
   "slot": "Slot",
-  "next": "next"
+  "next": "next",
+  "title_batteries": "Electricity price & batteries",
+  "title_car": "Electricity price & car",
+  "car": "Car"
 }

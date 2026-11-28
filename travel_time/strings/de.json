@@ -6,5 +6,12 @@
   "no_people": "Wähle die Fahrzeit-Sensoren in den Zelleinstellungen.",
   "weekend": "Wochenende",
   "unavailable": "kein Wert",
-  "estimate": "≈ geschätzt, ohne aktuellen Verkehr"
+  "estimate": "≈ geschätzt, ohne aktuellen Verkehr",
+  "car": "Auto",
+  "km": "km",
+  "plugged": "angesteckt",
+  "unplugged": "nicht angesteckt",
+  "charging": "lädt",
+  "to_work_short": "zur Arbeit",
+  "to_home_short": "nach Hause"
 }

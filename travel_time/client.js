@@ -8,7 +8,7 @@ function esc(s) {
   }[c]));
 }
 
-const CAR = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 16V12l2-5h10l2 5v4M3 12h18v5H3z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="7.5" cy="17.5" r="1.8" fill="currentColor"/><circle cx="16.5" cy="17.5" r="1.8" fill="currentColor"/></svg>`;
+const CAR = `<svg viewBox="0 0 24 24" aria-hidden="true" style="flex:none"><path d="M5 16V12l2-5h10l2 5v4M3 12h18v5H3z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="7.5" cy="17.5" r="1.8" fill="currentColor"/><circle cx="16.5" cy="17.5" r="1.8" fill="currentColor"/></svg>`;
 
 export default function render(shadow, ctx) {
   const data = ctx?.data ?? {};
@@ -55,6 +55,43 @@ export default function render(shadow, ctx) {
         ${inner}
       </div>`;
   };
+
+  // The strip: the car and each person side by side, the figure large, for a wide, low cell.
+  if (data.layout === "strip" && !data.error && data.state !== "off") {
+    const people = Array.isArray(data.people) ? data.people : [];
+    const car = data.car || null;
+    const blocks = (car ? 1 : 0) + people.length;
+    if (blocks) {
+      const unit = t("min", "min");
+      const cell = w / Math.max(blocks, 1);
+      const big = Math.max(22, Math.min(64, h * 0.4, cell * 0.28));
+      const small = Math.max(12, Math.min(19, big * 0.36));
+      const icon = Math.round(big * 0.7);
+      const dirWord = data.direction === "work" ? t("to_work_short", "to work") : t("to_home_short", "home");
+      const carBlock = car ? `<div class="sb">
+          <span class="sb-ic">${CAR.replace("<svg ", `<svg width="${icon}" height="${icon}" `)}</span>
+          <span class="sb-tx"><span class="sb-big" style="font-size:${big}px">${car.km != null ? esc(car.km) : "–"}<small style="font-size:${big * 0.4}px"> ${esc(t("km", "km"))}</small></span>
+          <span class="sb-sub" style="font-size:${small}px">${esc(car.name || t("car", "Car"))}${car.charging ? ` · ${esc(t("charging", "charging"))}` : car.plugged === true ? ` · ${esc(t("plugged", "plugged in"))}` : car.plugged === false ? ` · ${esc(t("unplugged", "not plugged in"))}` : ""}</span></span></div>` : "";
+      const personBlocks = people.map((p) => {
+        const late = Number(p.late) > 0 ? ` <span class="tt-late" style="font-size:${small * 1.05}px">+${esc(p.late)}</span>` : "";
+        const mins = p.min != null ? `${p.est ? "≈ " : ""}${esc(p.min)}<small style="font-size:${big * 0.4}px"> ${esc(unit)}</small>` : `<small style="font-size:${big * 0.4}px">–</small>`;
+        return `<div class="sb"><span class="tt-ini" style="width:${icon}px;height:${icon}px;font-size:${icon * 0.46}px">${esc(p.initial)}</span>
+          <span class="sb-tx"><span class="sb-big" style="font-size:${big}px">${mins}${late}</span>
+          <span class="sb-sub" style="font-size:${small}px">${esc(p.name)} · ${esc(dirWord)}</span></span></div>`;
+      }).join("");
+      shadow.innerHTML = `<style>${style}
+        .tt { padding: var(--space-3, 14px) var(--space-4, 24px); justify-content: center; }
+        .strip { display: grid; grid-template-columns: repeat(${blocks}, minmax(0, 1fr)); align-items: center; gap: .6em; height: 100%; }
+        .sb { display: flex; align-items: center; gap: .6em; min-width: 0; }
+        .sb-ic { flex: none; display: flex; }
+        .sb-tx { display: flex; flex-direction: column; line-height: 1.12; min-width: 0; }
+        .sb-big { font-weight: 800; letter-spacing: -.02em; white-space: nowrap; }
+        .sb-big small { color: var(--text-muted, #8a877f); font-weight: 700; letter-spacing: 0; }
+        .sb-sub { color: var(--text-muted, #8a877f); font-weight: 700; display: flex; align-items: center; gap: .4em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      </style><div class="tt" data-widget="travel_time"><div class="strip">${carBlock}${personBlocks}</div></div>`;
+      return;
+    }
+  }
 
   if (data.error) { shell(`<p class="tt-msg">${esc(data.error)}</p>`); return; }
   if (data.state === "off") { shadow.innerHTML = ""; return; }

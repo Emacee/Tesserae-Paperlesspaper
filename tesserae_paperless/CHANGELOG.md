@@ -11,6 +11,17 @@ under its version number.
 
 ## [Unreleased]
 
+### Added
+- Energy, Dynamic Price can draw the car's charge level over the prices, like
+  the home battery's: a black line from midnight to now, thick where the car was
+  charging, with the percentage at its end and the car in the legend. Pick the
+  car's state of charge (and, if you like, its charging sensor) in the cell; the
+  title becomes *Stroomprijs & batterijen*.
+- Travel time has a **strip** layout for a wide, low cell: the car's range in
+  km (and whether it is plugged in or charging) and each person's drive side by
+  side, the figures large. At the weekend the strip keeps the car and rests the
+  commutes. Pick the car's range, plug and charging sensors in the cell.
+
 ## [0.5.2] - 2026-11-28
 
 Built on Tesserae 0.480.0, from commit `3a9f308`.

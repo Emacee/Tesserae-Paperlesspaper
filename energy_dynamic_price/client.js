@@ -56,7 +56,12 @@ export default function render(shadow, ctx) {
   const locale = data.lang || ctx?.locale || "en";
   const css = `<link rel="stylesheet" href="/static/style/spectra-widgets.css">`;
   const bat = data.battery && Array.isArray(data.battery.segments) ? data.battery : null;
-  const title = (data.title || "").trim() || (bat ? t("title_battery", "Electricity price & home battery") : t("title", "Electricity price"));
+  const car = data.car && Array.isArray(data.car.history) && data.car.history.length > 1 ? data.car : null;
+  const over = bat || car;
+  const title = (data.title || "").trim()
+    || (bat && car ? t("title_batteries", "Electricity price & batteries")
+      : bat ? t("title_battery", "Electricity price & home battery")
+        : car ? t("title_car", "Electricity price & car") : t("title", "Electricity price"));
 
   if (data.error) {
     shadow.innerHTML = `
@@ -154,6 +159,8 @@ export default function render(shadow, ctx) {
     .ep-bat { --ep-blue: var(--accent-5, #2157ba); }
     .ep-bat .ln { display: inline-block; width: 1.4em; vertical-align: .3em; }
     .ep-bat .ln-soc { border-top: 3px solid var(--ep-blue); }
+    .ep-car .ln { display: inline-block; width: 1.4em; vertical-align: .3em; }
+    .ep-car .ln-car { border-top: 3px solid var(--text-primary, #2f2f2c); }
     .ep-bat .sw {
       display: inline-block;
       width: 1.3em;
@@ -187,9 +194,11 @@ export default function render(shadow, ctx) {
   // the line is and what the pale bands are. The slot it is in is not shown.
   const hasGrid = bat && bat.segments.some((g) => g.grid);
   const hasSoc = bat && Array.isArray(bat.history) && bat.history.length > 1;
-  const batteryKeys = bat && (hasSoc || hasGrid) ? `
+  const carKey = car ? `<span class="ep-key ep-car"><span class="ln ln-car"></span>${escapeHtml(car.name || t("car", "Car"))}</span>` : "";
+  const batteryKeys = (bat && (hasSoc || hasGrid)) || car ? `
         <span class="grow"></span>
         ${hasSoc ? `<span class="ep-key ep-bat"><span class="ln ln-soc"></span>${escapeHtml(t("battery_soc", "Charge level"))}</span>` : ""}
+        ${carKey}
         ${hasGrid ? `<span class="ep-key ep-bat"><span class="sw"></span>${escapeHtml(t("battery_grid", "grid charging"))}</span>` : ""}` : "";
 
   const showLegend = cellWidth > 440 && hasData;
@@ -209,11 +218,11 @@ export default function render(shadow, ctx) {
   const legend = showLegend
     ? `
       <div class="ep-legend">
-        ${lo && !compactLegend && !bat ? `<span class="ep-key"><span class="dot dot--lo"></span>${escapeHtml(t("lowest", "Lowest"))} <b>${escapeHtml(fmt(lo.p))}</b> ${escapeHtml(unit)} <span class="muted">${escapeHtml(when(lo))}</span></span>` : ""}
-        ${hi && !compactLegend && !bat ? `<span class="ep-key"><span class="dot dot--hi"></span>${escapeHtml(t("highest", "Highest"))} <b>${escapeHtml(fmt(hi.p))}</b> ${escapeHtml(unit)} <span class="muted">${escapeHtml(when(hi))}</span></span>` : ""}
-        ${(wide || narrow) && !bat && now ? `<span class="ep-key"><span class="ring"></span><span class="muted">${escapeHtml(t("now", "now"))} ${escapeHtml(fmt(now.p))} ${escapeHtml(unit)} · ${escapeHtml(now.from)}–${escapeHtml(now.till)}</span></span>` : ""}
-        ${(wide || bat) && data.avg != null ? `<span class="ep-key"><span class="muted">${escapeHtml(t("average", "Average"))} ${escapeHtml(fmt(data.avg))} ${escapeHtml(unit)}</span></span>` : ""}
-        ${wide || bat ? pendingNote : ""}${batteryKeys}
+        ${lo && !compactLegend && !over ? `<span class="ep-key"><span class="dot dot--lo"></span>${escapeHtml(t("lowest", "Lowest"))} <b>${escapeHtml(fmt(lo.p))}</b> ${escapeHtml(unit)} <span class="muted">${escapeHtml(when(lo))}</span></span>` : ""}
+        ${hi && !compactLegend && !over ? `<span class="ep-key"><span class="dot dot--hi"></span>${escapeHtml(t("highest", "Highest"))} <b>${escapeHtml(fmt(hi.p))}</b> ${escapeHtml(unit)} <span class="muted">${escapeHtml(when(hi))}</span></span>` : ""}
+        ${(wide || narrow) && !over && now ? `<span class="ep-key"><span class="ring"></span><span class="muted">${escapeHtml(t("now", "now"))} ${escapeHtml(fmt(now.p))} ${escapeHtml(unit)} · ${escapeHtml(now.from)}–${escapeHtml(now.till)}</span></span>` : ""}
+        ${(wide || over) && data.avg != null ? `<span class="ep-key"><span class="muted">${escapeHtml(t("average", "Average"))} ${escapeHtml(fmt(data.avg))} ${escapeHtml(unit)}</span></span>` : ""}
+        ${wide || over ? pendingNote : ""}${batteryKeys}
       </div>`
     : "";
 
@@ -410,6 +419,55 @@ export default function render(shadow, ctx) {
     c.restore();
   }
 
+  // the car: its charge level today as a black line, thick where it was charging
+  const ink = tok.textPrimary && /^#|^rgb/.test(tok.textPrimary) ? tok.textPrimary : "#1f1d1a";
+  function drawCar(chart, c, family) {
+    const x = chart.scales.x;
+    const area = chart.chartArea;
+    const ys = (v) => area.bottom - ((area.bottom - area.top) * Math.max(0, Math.min(100, v))) / 100;
+    const px = (v) => x.getPixelForValue(v);
+    const hist = car.history;
+    const valueAt = (hx) => {
+      for (let k = 1; k < hist.length; k += 1) {
+        if (hist[k][0] >= hx) {
+          const [x0, v0] = hist[k - 1], [x1, v1] = hist[k];
+          return x1 === x0 ? v1 : v0 + ((v1 - v0) * (hx - x0)) / (x1 - x0);
+        }
+      }
+      return hist[hist.length - 1][1];
+    };
+    c.save();
+    c.strokeStyle = ink;
+    c.lineJoin = "round";
+    c.lineCap = "butt";
+    c.setLineDash([]);
+    c.lineWidth = 3;
+    c.beginPath();
+    hist.forEach(([hx, hv], k) => (k ? c.lineTo(px(hx), ys(hv)) : c.moveTo(px(hx), ys(hv))));
+    c.stroke();
+    // the stretches it was charging, drawn over the line, thick
+    c.lineWidth = 8;
+    for (const [a, b] of car.charging || []) {
+      const inside = hist.filter(([hx]) => hx > a && hx < b);
+      c.beginPath();
+      c.moveTo(px(a), ys(valueAt(a)));
+      inside.forEach(([hx, hv]) => c.lineTo(px(hx), ys(hv)));
+      c.lineTo(px(b), ys(valueAt(b)));
+      c.stroke();
+    }
+    if (car.soc != null && Number.isFinite(car.now_x)) {
+      c.font = `800 ${Math.round(tickFontSize * 0.95)}px ${family}`;
+      c.fillStyle = ink;
+      c.textAlign = "right";
+      // above its end, unless the home battery's number is already there: then below
+      const tooClose = bat && bat.soc != null && Math.abs(ys(bat.soc) - ys(car.soc)) < tickFontSize * 1.8;
+      const above = !(tooClose && car.soc <= bat.soc);
+      c.textBaseline = above ? "bottom" : "top";
+      c.fillText(`${car.soc}%`, px(car.now_x) - 8, above ? ys(car.soc) - 26 : ys(car.soc) + 10);
+    }
+    c.restore();
+  }
+
   const overlay = {
     id: "ep-overlay",
     beforeDatasetsDraw(chart) {
@@ -423,6 +481,7 @@ export default function render(shadow, ctx) {
       const family = tok.fontFamily;
       c.save();
       if (bat) drawBattery(chart, c, family);
+      if (car) drawCar(chart, c, family);
 
       // Day divider + day captions (only when two days are on screen).
       if (days.length > 1) {

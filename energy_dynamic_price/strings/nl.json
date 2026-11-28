@@ -14,5 +14,8 @@
   "battery_target": "doel",
   "battery_grid": "netladen",
   "slot": "Tijdslot",
-  "next": "volgende"
+  "next": "volgende",
+  "title_batteries": "Stroomprijs & batterijen",
+  "title_car": "Stroomprijs & auto",
+  "car": "Auto"
 }

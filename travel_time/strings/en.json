@@ -6,5 +6,12 @@
   "no_people": "Pick the travel-time sensors in the cell's options.",
   "weekend": "Weekend",
   "unavailable": "no value",
-  "estimate": "≈ estimated, no live traffic"
+  "estimate": "≈ estimated, no live traffic",
+  "car": "Car",
+  "km": "km",
+  "plugged": "plugged in",
+  "unplugged": "not plugged in",
+  "charging": "charging",
+  "to_work_short": "to work",
+  "to_home_short": "home"
 }
