@@ -51,3 +51,18 @@ For both:
 
 Days, calendars, feed symbol before titles (off by default), drive time on or
 off, source, home, Waze region, surcharge without traffic, margin, language.
+
+## Waste collections, with icons
+
+*Waste collection* shows the collections on their days with a bin icon in the colour
+of the stream, once each. They come from two places, either is enough:
+
+- **Mijn Afvalwijzer** (the plugin of that name: postcode and house number under
+  Settings › Widgets), and
+- **waste events in your calendars**: an all-day event whose title names one stream
+  (*GFT*, *GFTE*, *Restafval*, *PMD*, *Papier*, *Glas* …, with or without an emoji), for
+  instance the Mijn Afvalwijzer iCal subscription added under **Calendar Feeds**. A
+  title that says anything else (*Restaurant*, *GFT en restafval*) stays an ordinary
+  event.
+
+An iCal feed carries no icon of its own; the icon is chosen from the title.

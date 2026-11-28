@@ -11,6 +11,14 @@ under its version number.
 
 ## [Unreleased]
 
+### Changed
+- Agenda, with travel time: *Waste collection* now also reads the waste events in
+  your calendars (titles such as *GFT*, *🍏 GFTE*, *Restafval*, *PMD*, *Papier*,
+  for instance the Mijn Afvalwijzer iCal subscription) and gives them the same bin
+  icon, so a collection that is both in a calendar and in Mijn Afvalwijzer shows
+  once. Either source is enough; a title that says anything else (*Restaurant*,
+  *GFT en restafval*) stays an ordinary event.
+
 ## [0.6.1] - 2026-11-29
 
 Built on Tesserae 0.480.0, from commit `281b802`.
