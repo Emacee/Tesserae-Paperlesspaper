@@ -282,10 +282,17 @@ def _int(value: Any, default: int, low: int, high: int) -> int:
         return default
 
 
+def _num(value: Any) -> float | None:
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
 def _km(st: dict[str, Any] | None) -> int | None:
     """A range sensor in km, whatever unit it reports (m, km, mi)."""
-    v = _minutes((st or {}).get("state"))
-    if v is None:
+    v = _num((st or {}).get("state"))
+    if v is None or v < 0:
         return None
     unit = str(((st or {}).get("attributes") or {}).get("unit_of_measurement") or "km").lower()
     return round(v * {"m": 0.001, "km": 1.0, "mi": 1.609344}.get(unit, 1.0))
@@ -308,7 +315,7 @@ def car_block(core: Any, options: dict[str, Any]) -> dict[str, Any] | None:
         state = str((get(eid) or {}).get("state") or "").lower()
         return None if state in ("", "unknown", "unavailable") else state in ("on", "true", "plugged", "connected")
 
-    soc = _minutes((get(ids["soc"]) or {}).get("state")) if ids["soc"] else None
+    soc = _num((get(ids["soc"]) or {}).get("state")) if ids["soc"] else None
     return {
         "name": str(options.get("car_name") or "").strip(),
         "km": _km(get(ids["range"])) if ids["range"] else None,

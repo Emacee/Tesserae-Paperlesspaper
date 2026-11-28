@@ -482,7 +482,11 @@ def car_overlay(view: dict[str, Any], options: dict[str, Any], now: datetime, co
     for x, state in _history_points(core, soc_id, hours, x_of):
         with contextlib.suppress(ValueError):
             pts.append([x, round(float(state), 1)])
+    # a car that has not changed since yesterday has its last value from before the window: carry it to the start
+    before = [p for p in pts if p[0] < 0]
     pts = [p for p in pts if 0 <= p[0] <= nx]
+    if before and (not pts or pts[0][0] > 0):
+        pts.insert(0, [0.0, before[-1][1]])
     soc = None
     with contextlib.suppress(Exception):
         soc = round(float((core.get_state(soc_id) or {}).get("state")))
