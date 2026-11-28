@@ -35,12 +35,36 @@ _memory: dict[str, tuple[float, list[dict[str, str]]]] = {}
 # ----------------------------------------------------------------------
 # Settings
 # ----------------------------------------------------------------------
+_HERE = Path(__file__).resolve().parent
+PLUGIN_ID = "afvalwijzer_core"
+
+
+def _manifest_settings() -> list[dict[str, Any]]:
+    with contextlib.suppress(OSError, ValueError):
+        got = json.loads((_HERE / "plugin.json").read_text(encoding="utf-8")).get("settings")
+        return got if isinstance(got, list) else []
+    return []
+
+
+def default_key() -> str:
+    """The service key in the manifest's settings, for a blank one."""
+    for f in _manifest_settings():
+        if f.get("name") == "api_key":
+            return str(f.get("default") or "")
+    return ""
+
+
 def _settings() -> dict[str, Any]:
+    """The plugin's settings, secrets decrypted, the way Tesserae's settings form stores them."""
     with contextlib.suppress(Exception):
         from flask import current_app
 
         store = current_app.config["SETTINGS_STORE"]
-        return (store.get_section("plugins") or {}).get("afvalwijzer_core") or {}
+        with contextlib.suppress(Exception):
+            got = store.get_for_runtime("plugins", PLUGIN_ID, _manifest_settings())
+            if isinstance(got, dict) and got:
+                return got
+        return (store.get_section("plugins") or {}).get(PLUGIN_ID) or {}
     return {}
 
 
@@ -57,7 +81,7 @@ def address(settings: dict[str, Any] | None = None) -> dict[str, str]:
         "postcode": postcode,
         "huisnummer": number,
         "toevoeging": _secret(s, "toevoeging"),
-        "api_key": _secret(s, "api_key"),
+        "api_key": _secret(s, "api_key") or default_key(),
     }
 
 
@@ -202,3 +226,60 @@ def next_groups(rows: list[dict[str, str]], today: date, count: int) -> list[dic
         d = date.fromisoformat(day)
         out.append({"date": day, "days": (d - today).days, "weekday": d.weekday(), "items": groups[day]})
     return out
+
+
+# ----------------------------------------------------------------------
+# The plugin page: the address, and what the service says for it
+# ----------------------------------------------------------------------
+def save_address(store: Any, values: dict[str, Any]) -> None:
+    """Store the address the way Tesserae's settings form does (secrets encrypted),
+    the other settings left as they are."""
+    keep = {k: str(values.get(k) or "").strip() for k in ("postcode", "huisnummer", "toevoeging") if k in values}
+    fields = [f for f in _manifest_settings() if f["name"] in keep]
+    store.update_for_namespace("plugins", PLUGIN_ID, keep, fields)
+
+
+def blueprint() -> Any:
+    from flask import Blueprint, current_app, flash, jsonify, redirect, render_template, request, url_for
+
+    bp = Blueprint("afvalwijzer_core_admin", __name__, template_folder="templates", root_path=str(_HERE))
+
+    def preview() -> dict[str, Any]:
+        out: dict[str, Any] = {"configured": configured(), "groups": [], "error": ""}
+        if not out["configured"]:
+            return out
+        try:
+            today = date.today()
+            data_dir = Path(str(current_app.config["PLUGIN_REGISTRY"].get(PLUGIN_ID).data_dir))
+            out["groups"] = next_groups(pickups(today, today + timedelta(days=120), data_dir=data_dir), today, 6)
+        except Exception as err:  # noqa: BLE001 - shown on the page
+            out["error"] = f"{type(err).__name__}: {err}"
+        return out
+
+    @bp.get("/")
+    def index() -> Any:
+        a = address()
+        return render_template(
+            "afvalwijzer_core/index.html",
+            postcode=a["postcode"][:4] + " " + a["postcode"][4:] if a["postcode"] else "",
+            huisnummer=a["huisnummer"],
+            toevoeging=a["toevoeging"],
+            **preview(),
+        )
+
+    @bp.post("/address")
+    def set_address() -> Any:
+        """Save the address. A form from the page, or the same fields as JSON."""
+        body = request.get_json(silent=True)
+        values = body if isinstance(body, dict) else request.form.to_dict()
+        store = current_app.config.get("SETTINGS_STORE")
+        if store is None or not hasattr(store, "update_for_namespace"):
+            return jsonify({"ok": False, "error": "settings unavailable"}), 503
+        save_address(store, values)
+        _memory.clear()
+        if isinstance(body, dict):
+            return jsonify({"ok": True, "configured": configured()})
+        flash("Address saved.", "success")
+        return redirect(url_for("afvalwijzer_core_admin.index"))
+
+    return bp

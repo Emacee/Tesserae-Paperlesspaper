@@ -11,6 +11,15 @@ under its version number.
 
 ## [Unreleased]
 
+### Added
+- Mijn Afvalwijzer has a page of its own in Tesserae's sidebar (Admin pages):
+  fill in your postcode, house number and addition there and see the next
+  collections at once, to check that your address is known.
+
+### Fixed
+- Mijn Afvalwijzer: the address is read the way Tesserae stores secret settings,
+  and a blank service key falls back to the default.
+
 ## [0.5.0] - 2026-11-28
 
 Built on Tesserae 0.480.0, from commit `2cb7b85`.
