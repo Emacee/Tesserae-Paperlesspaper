@@ -11,6 +11,10 @@ under its version number.
 
 ## [Unreleased]
 
+## [0.5.2] - 2026-11-28
+
+Built on Tesserae 0.480.0, from commit `3a9f308`.
+
 ### Fixed
 - Waste: a paper container (`papiercont`, as some municipalities call it) gets
   the paper bin and its name, instead of a plain bin.
@@ -370,7 +374,8 @@ Built on Tesserae 0.480.0, from commit `ad7e2ba`.
 - Energy, Dynamic Price: EPEX and Tibber electricity prices for today and
   tomorrow.
 
-[Unreleased]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/6471250...master
+[Unreleased]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/3a9f308...master
+[0.5.2]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/6471250...3a9f308
 [0.5.1]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/2cb7b85...6471250
 [0.5.0]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/0fba937...2cb7b85
 [0.4.4]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/b8474bc...0fba937
