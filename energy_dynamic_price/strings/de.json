@@ -14,5 +14,8 @@
   "battery_target": "Ziel",
   "battery_grid": "Netzladen",
   "slot": "Zeitfenster",
-  "next": "nächstes"
+  "next": "nächstes",
+  "title_batteries": "Strompreis & Batterien",
+  "title_car": "Strompreis & Auto",
+  "car": "Auto"
 }

@@ -16,6 +16,14 @@ Time**, **Google Maps Travel Time**, or any sensor in minutes. Requires the
   option (+2 min by default).
 - At the weekend the cell is empty (or shown, if you choose).
 
+## The strip, with the car
+
+*Layout: A strip* puts the blocks side by side for a wide, low cell (about 900
+by 150): first the car, with its range in km and whether it is plugged in or
+charging (pick the range, plug and charging sensors in the cell; all are kept as
+secrets), then each person with the minutes large and, when a sensor knows what
+is normal, **+4**. At the weekend the commutes rest and the car stays.
+
 ## When Waze is down: OSRM
 
 If a sensor has no value (Waze Travel Time cannot reach Waze, or the sensor was

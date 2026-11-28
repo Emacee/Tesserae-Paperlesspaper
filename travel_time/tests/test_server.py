@@ -276,3 +276,43 @@ def test_an_address_that_is_not_found_gives_no_value(osrm, tmp_path) -> None:
     opts = {**OPTS, "person_1_work": "Nowhere 1"}
     out = S._fetch(opts, {}, ctx={"data_dir": str(tmp_path)}, now=at(2, 8), core=FakeCore(down_states()))
     assert out["people"][0]["min"] is None and "est" not in out["people"][0] and out["est"] is False
+
+
+# ----------------------------------------------------------------------
+# The car beside the commutes, and the strip
+# ----------------------------------------------------------------------
+CAR_STATES = {
+    "sensor.car_range": {"entity_id": "sensor.car_range", "state": "172", "attributes": {"unit_of_measurement": "mi"}},
+    "binary_sensor.car_plug": {"entity_id": "binary_sensor.car_plug", "state": "off", "attributes": {}},
+    "binary_sensor.car_charging": {"entity_id": "binary_sensor.car_charging", "state": "unavailable", "attributes": {}},
+}
+
+
+def test_the_car_block_reads_range_in_km_and_plug_state(tmp_path: Path) -> None:
+    opts = {**OPTS, "layout": "strip", "car_range": "sensor.car_range", "car_plug": "binary_sensor.car_plug", "car_charging": "binary_sensor.car_charging", "car_name": "ID.7"}
+    out = S._fetch(opts, {}, ctx={"data_dir": str(tmp_path)}, now=at(2, 8), core=FakeCore({**STATES, **CAR_STATES}))
+    assert out["layout"] == "strip" and out["car"] == {"name": "ID.7", "km": 277, "plugged": False, "charging": None, "soc": None}
+    assert [p["name"] for p in out["people"]][0] == "Alex" and out["state"] == "ok"
+
+
+def test_without_car_sensors_there_is_no_car(tmp_path: Path) -> None:
+    out = S._fetch(OPTS, {}, ctx={"data_dir": str(tmp_path)}, now=at(2, 8), core=FakeCore(STATES))
+    assert out["car"] is None and out["layout"] == "rows"
+
+
+def test_at_the_weekend_a_strip_keeps_the_car_but_rows_stay_empty(tmp_path: Path) -> None:
+    car = {"car_range": "sensor.car_range"}
+    core = FakeCore({**STATES, **CAR_STATES})
+    saturday = at(7, 9)
+    strip = S._fetch({**OPTS, **car, "layout": "strip"}, {}, ctx={"data_dir": str(tmp_path)}, now=saturday, core=core)
+    assert strip["state"] == "ok" and strip["people"] == [] and strip["car"]["km"] == 277
+    rows = S._fetch({**OPTS, **car}, {}, ctx={"data_dir": str(tmp_path)}, now=saturday, core=core)
+    assert rows["state"] == "off"
+
+
+def test_the_car_sensors_are_secrets_and_a_choice_of_entities() -> None:
+    manifest = json.loads((HERE / "plugin.json").read_text())
+    opts = {o["name"]: o for o in manifest["cell_options"]}
+    for name in ("car_range", "car_plug", "car_charging", "car_name"):
+        assert opts[name]["secret"] is True
+    assert opts["car_range"]["choices_from"] == "entity" and opts["layout"]["default"] == "rows"

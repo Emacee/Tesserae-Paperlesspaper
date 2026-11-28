@@ -35,7 +35,13 @@ morgen zijn verzonnen, want die waren nog niet gepubliceerd.)*
   vandaag is één blauwe lijn met het huidige percentage erbij. De legenda is
   dan één regel: het gemiddelde, en wat de lijn en de banden zijn.
 
+- **Auto** (opties *Car: state of charge*, *Car: charging*): de laadtoestand van
+  de auto van middernacht tot nu als zwarte lijn over de prijzen, dik waar de
+  auto laadde, met het percentage aan het eind en de auto in de legenda. Samen
+  met de thuisbatterij heet de grafiek *Stroomprijs & batterijen*.
+
 ![thuisbatterij](screenshots/battery.png)
+![auto en thuisbatterij](screenshots/car.png)
  Zijn de prijzen van morgen er nog niet, dan staat er op lg
   "Prijzen morgen vanaf ~13:00".
 

@@ -81,6 +81,11 @@ def choices(name: str) -> list[dict[str, str]]:
     """The editor's sensor dropdowns: travel-time sensors only, Waze first,
     each with its current value so the right one is easy to spot."""
     core = _core()
+    if name == "entity" and core is not None:
+        try:
+            return [{"value": "", "label": "—"}] + core.entity_choices(("sensor", "binary_sensor"))
+        except Exception:  # noqa: BLE001
+            return [{"value": "", "label": "Home Assistant unreachable, check URL + token"}]
     if name != "travel_sensor" or core is None:
         return []
     if not core.is_configured():
@@ -277,6 +282,42 @@ def _int(value: Any, default: int, low: int, high: int) -> int:
         return default
 
 
+def _km(st: dict[str, Any] | None) -> int | None:
+    """A range sensor in km, whatever unit it reports (m, km, mi)."""
+    v = _minutes((st or {}).get("state"))
+    if v is None:
+        return None
+    unit = str(((st or {}).get("attributes") or {}).get("unit_of_measurement") or "km").lower()
+    return round(v * {"m": 0.001, "km": 1.0, "mi": 1.609344}.get(unit, 1.0))
+
+
+def car_block(core: Any, options: dict[str, Any]) -> dict[str, Any] | None:
+    """The car beside the commutes: its range in km and whether it is plugged in or
+    charging, from Home Assistant. None when no car sensor is set."""
+    ids = {k: str(options.get(f"car_{k}") or "").strip() for k in ("range", "plug", "charging", "soc")}
+    if not any(ids.values()):
+        return None
+
+    def get(eid: str) -> dict[str, Any]:
+        try:
+            return core.get_state(eid) if eid else {}
+        except Exception:  # noqa: BLE001 - one sensor down is not the cell's
+            return {}
+
+    def on(eid: str) -> bool | None:
+        state = str((get(eid) or {}).get("state") or "").lower()
+        return None if state in ("", "unknown", "unavailable") else state in ("on", "true", "plugged", "connected")
+
+    soc = _minutes((get(ids["soc"]) or {}).get("state")) if ids["soc"] else None
+    return {
+        "name": str(options.get("car_name") or "").strip(),
+        "km": _km(get(ids["range"])) if ids["range"] else None,
+        "plugged": on(ids["plug"]) if ids["plug"] else None,
+        "charging": on(ids["charging"]) if ids["charging"] else None,
+        "soc": round(soc) if soc is not None else None,
+    }
+
+
 def _fetch(
     options: dict[str, Any],
     settings: dict[str, Any],
@@ -295,8 +336,12 @@ def _fetch(
     switch = _int(options.get("switch_hour"), 14, 0, 23)
     direction = "work" if local.hour < switch else "home"
     weekend = local.weekday() >= 5
+    layout = "strip" if str(options.get("layout") or "rows") == "strip" else "rows"
+    car = car_block(core, options)
+    only_car = {"state": "ok", "direction": direction, "title": title, "time": local.strftime("%H:%M"), "people": [], "car": car, "layout": layout, "source": "", "est": False}
     if weekend and str(options.get("weekend") or "hide") == "hide":
-        return {"state": "off", "reason": "weekend", "direction": direction, "title": title}
+        # the commutes rest at the weekend; the car, in a strip, still shows
+        return only_car if car and layout == "strip" else {"state": "off", "reason": "weekend", "direction": direction, "title": title}
 
     people = []
     for i in range(1, PEOPLE + 1):
@@ -312,7 +357,7 @@ def _fetch(
                 people.append((i, str(options.get(f"person_{i}_name") or "").strip(), ""))
         people.sort(key=lambda p: p[0])
     if not people:
-        return {"state": "empty", "direction": direction, "title": title}
+        return only_car if car and layout == "strip" else {"state": "empty", "direction": direction, "title": title}
 
     delay_min = _int(options.get("delay_min"), 2, 1, 30)
     weeks = _int(options.get("baseline_weeks"), 6, 2, 12)
@@ -368,6 +413,8 @@ def _fetch(
         "people": rows,
         "source": "Waze" if any(r["waze"] and not r.get("est") for r in rows) else ("OSRM" if used_osrm else ""),
         "est": used_osrm,
+        "car": car,
+        "layout": layout,
     }
 
 

@@ -3,7 +3,7 @@
   "name": "Travel time",
   "version": "0.1.0",
   "kind": "widget",
-  "description": "Travel time to work in the morning and home in the afternoon, for up to three people, from travel-time sensors in Home Assistant (Waze Travel Time, Google Maps Travel Time). A delay against what is normal for that weekday and time shows as +x min. Hidden at the weekend if you like. Without a value from the sensor, the drive can come from the free OSRM service, using the work address. Requires the Home Assistant Core plugin.",
+  "description": "Travel time to work in the morning and home in the afternoon, for up to three people, from travel-time sensors in Home Assistant (Waze Travel Time, Google Maps Travel Time). A delay against what is normal for that weekday and time shows as +x min. Hidden at the weekend if you like. Without a value from the sensor, the drive can come from the free OSRM service, using the work address. Requires the Home Assistant Core plugin. It can show the range of the car beside the commutes, in a strip.",
   "icon": "ph-car",
   "category": "home-assistant",
   "locales": [
@@ -169,6 +169,60 @@
       "unit": "%",
       "advanced": true,
       "help": "Added to an OSRM drive, which knows no traffic."
+    },
+    {
+      "name": "layout",
+      "type": "select",
+      "label": "Layout",
+      "default": "rows",
+      "choices": [
+        {
+          "value": "rows",
+          "label": "Rows, one under the other"
+        },
+        {
+          "value": "strip",
+          "label": "A strip: the blocks side by side (for a wide, low cell)"
+        }
+      ],
+      "help": "The strip puts the car and each person next to each other, the minutes large, in a cell about 900 wide and 150 high."
+    },
+    {
+      "name": "car_range",
+      "type": "select",
+      "label": "Car: range",
+      "default": "",
+      "choices_from": "entity",
+      "secret": true,
+      "mask": false,
+      "help": "In m, km or mi: shown in km, in a block of its own before the commutes. Leave blank for no car. All car sensors are kept as secrets."
+    },
+    {
+      "name": "car_plug",
+      "type": "select",
+      "label": "Car: plugged in",
+      "default": "",
+      "choices_from": "entity",
+      "secret": true,
+      "mask": false
+    },
+    {
+      "name": "car_charging",
+      "type": "select",
+      "label": "Car: charging",
+      "default": "",
+      "choices_from": "entity",
+      "secret": true,
+      "mask": false
+    },
+    {
+      "name": "car_name",
+      "type": "string",
+      "label": "Car: name",
+      "default": "",
+      "secret": true,
+      "mask": false,
+      "help": "Blank: the word for car in the widget's language."
     },
     {
       "name": "switch_hour",

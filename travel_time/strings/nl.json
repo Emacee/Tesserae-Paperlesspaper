@@ -6,5 +6,12 @@
   "no_people": "Kies de reistijdsensoren in de celinstellingen.",
   "weekend": "Weekend",
   "unavailable": "geen waarde",
-  "estimate": "≈ geschat, zonder actuele files"
+  "estimate": "≈ geschat, zonder actuele files",
+  "car": "Auto",
+  "km": "km",
+  "plugged": "aangesloten",
+  "unplugged": "niet aangesloten",
+  "charging": "laadt",
+  "to_work_short": "naar werk",
+  "to_home_short": "naar huis"
 }

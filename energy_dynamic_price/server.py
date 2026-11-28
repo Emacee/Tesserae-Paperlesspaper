@@ -356,6 +356,11 @@ def _core() -> Any:
 
 def choices(name: str) -> list[dict[str, str]]:
     core, deye = _core(), _deye()
+    if name == "entity" and core is not None:
+        try:
+            return [{"value": "", "label": "—"}] + core.entity_choices(("sensor", "binary_sensor"))
+        except Exception:  # noqa: BLE001
+            return [{"value": "", "label": "Home Assistant unreachable, check URL + token"}]
     if name != "solarman_device" or core is None or deye is None:
         return []
     try:
@@ -445,6 +450,69 @@ def battery_overlay(
     return out
 
 
+def _history_points(core: Any, entity: str, hours: int, x_of: Any) -> list[tuple[float, str]]:
+    """(x in slots, state) for an entity's history; samples without a usable time are dropped."""
+    out: list[tuple[float, str]] = []
+    with contextlib.suppress(Exception):
+        for smp in core.history(entity, hours=min(max(hours, 1), 48), timeout=5):
+            t = smp.get("last_changed") or smp.get("last_updated")
+            try:
+                dt = datetime.fromisoformat(str(t).replace("Z", "+00:00"))
+            except (TypeError, ValueError):
+                continue
+            out.append((round(x_of(dt), 3), str(smp.get("state"))))
+    return out
+
+
+def car_overlay(view: dict[str, Any], options: dict[str, Any], now: datetime, core: Any = None) -> dict[str, Any]:
+    """The car's state of charge today, as the home battery's line, and when it was charging:
+    x in slots from the window's first, SOC in %."""
+    core = core if core is not None else _core()
+    soc_id = str(options.get("car_soc") or "").strip()
+    if core is None or not soc_id:
+        return {"reason": "no Home Assistant Core" if core is None else "no car sensor"}
+    start = datetime.fromisoformat(view["start"])
+    local = now.astimezone(start.tzinfo)
+    slot = timedelta(minutes=int(view.get("minutes") or 15))
+    x_of = lambda dt: (dt - start) / slot  # noqa: E731
+    nx = x_of(local)
+    day0 = start.replace(hour=0, minute=0, second=0, microsecond=0)
+    hours = max(1, int((local - day0).total_seconds() // 3600) + 1)
+    pts: list[list[float]] = []
+    for x, state in _history_points(core, soc_id, hours, x_of):
+        with contextlib.suppress(ValueError):
+            pts.append([x, round(float(state), 1)])
+    pts = [p for p in pts if 0 <= p[0] <= nx]
+    soc = None
+    with contextlib.suppress(Exception):
+        soc = round(float((core.get_state(soc_id) or {}).get("state")))
+    if soc is None and pts:
+        soc = round(pts[-1][1])
+    if soc is not None:
+        pts.append([round(nx, 3), float(soc)])
+    out: dict[str, Any] = {
+        "name": str(options.get("car_name") or "").strip(),
+        "soc": soc,
+        "now_x": round(nx, 3),
+        "history": _downsample(pts, 5 / (slot.total_seconds() / 60)),
+        "charging": [],
+    }
+    charge_id = str(options.get("car_charging") or "").strip()
+    if charge_id:
+        begin: float | None = None
+        spans: list[list[float]] = []
+        for x, state in _history_points(core, charge_id, hours, x_of):
+            if state == "on" and begin is None:
+                begin = max(0.0, x)
+            elif state != "on" and begin is not None:
+                spans.append([round(begin, 3), round(min(x, nx), 3)])
+                begin = None
+        if begin is not None:
+            spans.append([round(begin, 3), round(nx, 3)])
+        out["charging"] = [sp for sp in spans if sp[1] > sp[0] and sp[0] <= nx]
+    return out
+
+
 # ----------------------------------------------------------------------
 # Entry point
 # ----------------------------------------------------------------------
@@ -504,6 +572,11 @@ def _fetch(
             view["battery"] = battery_overlay(view, options, now)
         except Exception as err:  # noqa: BLE001 - the prices without the battery
             view["battery"] = {"reason": f"{type(err).__name__}: {str(err)[:160]}"}
+    if options.get("car_soc") and "error" not in view:
+        try:
+            view["car"] = car_overlay(view, options, now)
+        except Exception as err:  # noqa: BLE001 - the prices without the car
+            view["car"] = {"reason": f"{type(err).__name__}: {str(err)[:160]}"}
     view["title"] = title
     view["source"] = source
     return view
