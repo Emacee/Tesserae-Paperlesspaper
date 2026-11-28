@@ -3,7 +3,7 @@
   "name": "Agenda, with travel time",
   "version": "0.1.0",
   "kind": "widget",
-  "description": "The next days as a list: each day on a row, events with their time, location and the drive from home with the time to leave (Waze, through Home Assistant). Events come from Widgets → Calendar Feeds. Requires the Calendar Core plugin. The drive comes from Waze through Home Assistant (Waze Travel Time integration) or, without it, from the free OSRM service.",
+  "description": "The next days as a list: each day on a row, events with their time, location and the drive from home with the time to leave (Waze, through Home Assistant). Events come from Widgets → Calendar Feeds; waste collections can be added from Mijn Afvalwijzer. Requires the Calendar Core plugin. The drive comes from Waze through Home Assistant (Waze Travel Time integration) or, without it, from the free OSRM service.",
   "icon": "ph-calendar-check",
   "category": "plans",
   "locales": [
@@ -50,6 +50,23 @@
       "label": "Feed symbol before titles",
       "default": false,
       "help": "The symbol set for a feed in Calendar Feeds. Off by default: it takes width on every title."
+    },
+    {
+      "name": "show_waste",
+      "type": "boolean",
+      "label": "Waste collection",
+      "default": false,
+      "help": "Shows the waste collections (from Mijn Afvalwijzer) on their days, with an icon. Needs your postcode and house number under Settings › Widgets › Mijn Afvalwijzer."
+    },
+    {
+      "name": "waste_types",
+      "type": "string",
+      "label": "Waste: only these types",
+      "default": "",
+      "show_if": {
+        "show_waste": true
+      },
+      "help": "Types separated by commas, for instance gft,restafval. Blank shows every type."
     },
     {
       "name": "show_travel",

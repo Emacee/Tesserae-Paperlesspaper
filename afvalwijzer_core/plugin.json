@@ -1,0 +1,17 @@
+{
+  "tesserae_compat": "1.x",
+  "name": "Mijn Afvalwijzer",
+  "version": "0.1.0",
+  "kind": "data",
+  "description": "The collection dates of your household waste from Mijn Afvalwijzer (the Dutch waste calendar of most municipalities). Give your postcode and house number once here and the waste widgets (Waste, next collection; the waste line in Agenda, with travel time) read the dates from it. No cell of its own. It uses the unofficial web service behind mijnafvalwijzer.nl, asked once every twelve hours.",
+  "icon": "ph-trash",
+  "supports": {"sizes": []},
+  "requires": ["network:api.mijnafvalwijzer.nl"],
+  "settings": [
+    {"name": "postcode", "type": "string", "label": "Postcode", "secret": true, "default": "", "help": "Four digits and two letters, for instance 1234 AB. Kept as a secret and only sent to mijnafvalwijzer.nl."},
+    {"name": "huisnummer", "type": "string", "label": "House number", "secret": true, "default": ""},
+    {"name": "toevoeging", "type": "string", "label": "Addition (optional)", "secret": true, "default": "", "help": "A letter or number after the house number, such as A or 2."},
+    {"name": "api_key", "type": "string", "label": "Service key", "secret": true, "default": "5ef443e778f41c4f75c69459eea6e6ae0c2d92de729aa0fc61653815fbd6a8ca", "help": "The key the Mijn Afvalwijzer app and website use, which is public and found in many open-source projects. Replace it if mijnafvalwijzer.nl stops accepting it."}
+  ],
+  "render": {"needs_network": true}
+}

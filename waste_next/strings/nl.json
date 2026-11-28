@@ -1,0 +1,17 @@
+{
+  "title": "Afval",
+  "today": "Vandaag",
+  "tomorrow": "Morgen",
+  "in_days": "over {n} dagen",
+  "nothing": "Geen ophaaldagen gevonden",
+  "setup": "Vul je postcode en huisnummer in onder Instellingen › Widgets › Mijn Afvalwijzer.",
+  "papier": "Papier",
+  "gft": "GFT",
+  "restafval": "Restafval",
+  "pmd": "PMD",
+  "glas": "Glas",
+  "textiel": "Textiel",
+  "kerstbomen": "Kerstbomen",
+  "tuinafval": "Tuinafval",
+  "grofvuil": "Grofvuil"
+}

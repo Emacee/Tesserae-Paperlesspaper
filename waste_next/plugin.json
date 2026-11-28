@@ -1,0 +1,36 @@
+{
+  "tesserae_compat": "1.x",
+  "name": "Waste, next collection",
+  "version": "0.1.0",
+  "kind": "widget",
+  "description": "The next waste collection from Mijn Afvalwijzer: which bin goes out and on what day, with an icon. As a round tile in the style of the home battery rings (the next collection, with a ring that fills as the day comes closer), or as a short list of the next collections. Needs your postcode and house number under Settings › Widgets › Mijn Afvalwijzer. The same dates can also show in Agenda, with travel time.",
+  "icon": "ph-trash",
+  "category": "plans",
+  "locales": ["en", "nl", "de"],
+  "supports": {"sizes": ["xs", "sm", "md", "lg"]},
+  "cell_options": [
+    {"name": "display", "type": "select", "label": "Show as", "default": "tile", "choices": [
+      {"value": "tile", "label": "A round tile: the next collection"},
+      {"value": "list", "label": "A list of the next collections"}
+    ], "help": "The tile suits a small cell next to the battery rings; the list a taller one."},
+    {"name": "count", "type": "slider", "label": "Collections in the list", "default": 4, "min": 1, "max": 8, "step": 1, "show_if": {"display": "list"}},
+    {"name": "types", "type": "string", "label": "Only these types", "default": "", "help": "Types separated by commas, for instance gft,restafval. Blank shows every type. The types are those of your calendar: papier, gft, restafval, pmd, glas, textiel, kerstbomen …"},
+    {"name": "title", "type": "string", "label": "Title", "default": "", "help": "Blank uses \"Waste\". Shown above the list."},
+    {"name": "language", "type": "select", "label": "Language", "default": "auto", "choices": [
+      {"value": "auto", "label": "The dashboard's language"}, {"value": "nl", "label": "Nederlands"},
+      {"value": "en", "label": "English"}, {"value": "de", "label": "Deutsch"}
+    ], "help": "The widget's words in this language, whatever the dashboard's."}
+  ],
+  "render": {"dither": "none", "needs_network": true},
+  "data_schema": {
+    "color": "#22706A",
+    "fields": [{"name": "groups", "type": "arr", "label": "Next collection days"}],
+    "sample": {
+      "state": "ok",
+      "groups": [
+        {"date": "2026-12-04", "days": 1, "weekday": 4, "items": [{"type": "gft", "name": "GFT"}]},
+        {"date": "2026-12-09", "days": 6, "weekday": 2, "items": [{"type": "restafval", "name": "Restafval"}, {"type": "pmd", "name": "PMD"}]}
+      ]
+    }
+  }
+}
