@@ -310,3 +310,39 @@ def test_waste_is_off_by_default_and_can_be_limited_to_types() -> None:
 def test_waste_says_why_it_is_not_shown() -> None:
     assert run([], waste=FakeWaste(ok=False), show_waste="true", show_travel="false")["waste_note"] == "waste_setup"
     assert run([], waste=FakeWaste(fail=LookupError("No Afvaldata")), show_waste="true", show_travel="false")["waste_note"].startswith("waste_error: LookupError")
+
+
+def allday(day, title, feed="household"):
+    return {"summary": title, "start": f"2026-11-{day:02d}", "end": f"2026-11-{day + 1:02d}", "all_day": True, "feed_colour": "#f900f4", "feed_symbol": "🏡", "feed_id": feed}
+
+
+def test_waste_titles_are_read_as_streams_and_other_titles_are_left_alone() -> None:
+    assert S.waste_type("🍏 GFTE") == "gft" and S.waste_type("🧴 PMD") == "pmd" and S.waste_type("Restafval") == "restafval"
+    assert S.waste_type("Papier ophalen") == "papier" and S.waste_type("Kliko glas") == "glas"
+    for other in ("Restaurant", "Rest day", "Borus", "GFT en restafval", "", "🍏"):
+        assert S.waste_type(other) == "", other
+
+
+def test_a_waste_event_in_a_calendar_gets_the_bin_and_is_shown_once() -> None:
+    events = [allday(20, "🍏 GFTE"), allday(20, "Borus"), allday(22, "🧴 PMD")]
+    out = run(events, waste=FakeWaste(), show_waste="true", show_travel="false")
+    fri = out["days"][1]["all_day"]
+    # the calendar's GFT first (the plugin's GFT of that day is not added again), Borus as it was, the plugin's PMD
+    assert fri == [
+        {"title": "🍏 GFTE", "waste": "gft", "colour": ""},
+        {"title": "Borus", "colour": "#f900f4"},
+        {"title": "PMD", "waste": "pmd", "colour": ""},
+    ]
+    sun = out["days"][3]["all_day"]  # the 22nd: the calendar's PMD, then the plugin's paper
+    assert [a["waste"] for a in sun] == ["pmd", "papier"]
+
+
+def test_without_the_option_a_waste_event_stays_an_ordinary_event() -> None:
+    out = run([allday(20, "🍏 GFTE")], waste=FakeWaste(), show_travel="false")
+    assert out["days"][1]["all_day"] == [{"title": "🍏 GFTE", "colour": "#f900f4"}]
+
+
+def test_calendar_waste_needs_no_plugin_and_no_setup_note() -> None:
+    out = run([allday(20, "🍏 GFTE")], waste=FakeWaste(ok=False), show_waste="true", show_travel="false")
+    assert out["days"][1]["all_day"][0]["waste"] == "gft" and out["waste_note"] == ""
+    assert run([], waste=FakeWaste(ok=False), show_waste="true", show_travel="false")["waste_note"] == "waste_setup"

@@ -54,9 +54,9 @@
     {
       "name": "show_waste",
       "type": "boolean",
-      "label": "Waste collection",
+      "label": "Waste collection (with icons)",
       "default": false,
-      "help": "Shows the waste collections (from Mijn Afvalwijzer) on their days, with an icon. Needs your postcode and house number under Settings › Widgets › Mijn Afvalwijzer."
+      "help": "Shows the waste collections on their days with a bin icon, once each: from Mijn Afvalwijzer (postcode and house number under Settings › Widgets › Mijn Afvalwijzer) and from waste events in your calendars (titles such as GFT, Restafval, PMD, Papier, with or without an emoji, for instance the Mijn Afvalwijzer iCal subscription added under Calendar Feeds). Either one is enough."
     },
     {
       "name": "waste_types",
@@ -66,7 +66,7 @@
       "show_if": {
         "show_waste": true
       },
-      "help": "Types separated by commas, for instance gft,restafval. Blank shows every type."
+      "help": "Types separated by commas, for instance gft,restafval. Blank shows every type. Applies to the Mijn Afvalwijzer dates."
     },
     {
       "name": "show_travel",

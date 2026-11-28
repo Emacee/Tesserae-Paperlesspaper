@@ -389,8 +389,41 @@ def _flag(value: Any, default: bool) -> bool:
     return str(value).lower() not in ("false", "0", "off", "no")
 
 
+# ----------------------------------------------------------------------
+# Waste events in a calendar feed (Mijn Afvalwijzer's iCal, or any waste calendar)
+# ----------------------------------------------------------------------
+WASTE_WORDS = {
+    "gft": {"gft", "gfte", "groente", "keukenafval", "organisch", "groen"},
+    "restafval": {"restafval", "rest", "grijs", "grijze", "residual"},
+    "pmd": {"pmd", "plastic", "plasticafval", "verpakkingen", "blik", "drinkpakken"},
+    "papier": {"papier", "karton", "papiercontainer", "oudpapier", "papiercont", "blauwe"},
+    "glas": {"glas"},
+    "textiel": {"textiel", "kleding"},
+    "kerstbomen": {"kerstboom", "kerstbomen"},
+    "tuinafval": {"tuinafval", "snoeiafval"},
+    "grofvuil": {"grofvuil", "grof"},
+}
+WASTE_FILLER = {"afval", "ophalen", "ophaaldag", "container", "kliko", "bak", "wordt", "opgehaald", "en", "van", "de", "het"}
+
+
+def waste_type(title: str) -> str:
+    """The waste stream an event title names ("🍏 GFTE" -> "gft"), or "". The title must say
+    nothing else: "Restafval" is a collection, "Restaurant" or "Rest day" is not."""
+    words = re.findall(r"[a-zà-ÿ]+", title.lower())
+    words = [w for w in words if w not in WASTE_FILLER]
+    if not words:
+        return ""
+    found = set()
+    for w in words:
+        kind = next((k for k, names in WASTE_WORDS.items() if w in names), "")
+        if not kind:
+            return ""
+        found.add(kind)
+    return found.pop() if len(found) == 1 else ""
+
+
 def build_days(
-    events: list[dict[str, Any]], today: date, days: int, zone: Any, *, symbols: bool
+    events: list[dict[str, Any]], today: date, days: int, zone: Any, *, symbols: bool, waste: bool = False
 ) -> list[dict[str, Any]]:
     """Per day: all-day events (a multi-day one once, on its first visible day,
     with the day it runs through) and timed events in order of start."""
@@ -417,6 +450,12 @@ def build_days(
             if row is None or through < today or shown > last:
                 continue
             item = {"title": title(ev), "colour": colour}
+            kind = waste_type(str(ev.get("summary") or "")) if waste else ""
+            if kind and through == shown:
+                # a waste collection in the calendar: the same bin as the plugin's, once
+                if not any(a.get("waste") == kind for a in row["all_day"]):
+                    row["all_day"].append({"title": str(ev.get("summary") or "").strip(), "waste": kind, "colour": ""})
+                continue
             if through > shown:
                 item["through"] = min(through, last).isoformat()
                 item["through_weekday"] = min(through, last).weekday()
@@ -504,7 +543,7 @@ def add_waste(rows: list[dict[str, Any]], core: Any, options: dict[str, Any], to
     index = {r["date"]: r for r in rows}
     for p in found:
         row = index.get(p["date"])
-        if row is not None:
+        if row is not None and not any(a.get("waste") == p["type"] for a in row["all_day"]):
             row["all_day"].append({"title": p["name"], "waste": p["type"], "colour": ""})
     return ""
 
@@ -554,7 +593,8 @@ def _fetch(
     except Exception as err:  # noqa: BLE001
         return {"error": f"{type(err).__name__}: {err}", "days": []}
 
-    rows = build_days(events, today, days, zone, symbols=_flag(options.get("show_symbol"), False))
+    show_waste = _flag(options.get("show_waste"), False)
+    rows = build_days(events, today, days, zone, symbols=_flag(options.get("show_symbol"), False), waste=show_waste)
     del _trace[:]
     _last_error[0] = ""
     travel, via = "off", ""
@@ -568,9 +608,11 @@ def _fetch(
             via = add_travel(rows, core, options, now, data_dir)
             travel = "unavailable" if via == "" else "ok"
     waste_note = ""
-    if _flag(options.get("show_waste"), False):
+    if show_waste:
         waste_core = waste if waste is not None else getattr(_plugin("afvalwijzer_core"), "server_module", None)
         waste_note = add_waste(rows, waste_core, options, today, days, Path(str(ctx.get("data_dir"))) if ctx.get("data_dir") else None)
+        if waste_note in ("no_waste_core", "waste_setup") and any(a.get("waste") for r in rows for a in r["all_day"]):
+            waste_note = ""  # the collections come from a calendar: nothing to set up
     for row in rows:
         for ev in row["events"]:
             ev.pop("_start", None)
