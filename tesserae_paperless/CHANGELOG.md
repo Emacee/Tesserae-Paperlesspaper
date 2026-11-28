@@ -11,6 +11,10 @@ under its version number.
 
 ## [Unreleased]
 
+## [0.6.2] - 2026-11-29
+
+Built on Tesserae 0.480.0, from commit `cdc102f`.
+
 ### Changed
 - Agenda, with travel time: *Waste collection* now also reads the waste events in
   your calendars (titles such as *GFT*, *🍏 GFTE*, *Restafval*, *PMD*, *Papier*,
@@ -407,7 +411,8 @@ Built on Tesserae 0.480.0, from commit `ad7e2ba`.
 - Energy, Dynamic Price: EPEX and Tibber electricity prices for today and
   tomorrow.
 
-[Unreleased]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/281b802...master
+[Unreleased]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/cdc102f...master
+[0.6.2]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/281b802...cdc102f
 [0.6.1]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/b9676ad...281b802
 [0.6.0]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/3a9f308...b9676ad
 [0.5.2]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/6471250...3a9f308
