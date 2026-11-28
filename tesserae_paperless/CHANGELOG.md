@@ -11,6 +11,10 @@ under its version number.
 
 ## [Unreleased]
 
+## [0.6.1] - 2026-11-29
+
+Built on Tesserae 0.480.0, from commit `281b802`.
+
 ### Fixed
 - The car in the price chart shows its line also when the car has not changed
   since yesterday (a parked car): its last value runs from midnight.
@@ -395,7 +399,8 @@ Built on Tesserae 0.480.0, from commit `ad7e2ba`.
 - Energy, Dynamic Price: EPEX and Tibber electricity prices for today and
   tomorrow.
 
-[Unreleased]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/b9676ad...master
+[Unreleased]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/281b802...master
+[0.6.1]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/b9676ad...281b802
 [0.6.0]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/3a9f308...b9676ad
 [0.5.2]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/6471250...3a9f308
 [0.5.1]: https://github.com/Emacee/Tesserae-Paperlesspaper/compare/2cb7b85...6471250
