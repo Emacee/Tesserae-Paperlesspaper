@@ -1,0 +1,17 @@
+{
+  "title": "Waste",
+  "today": "Today",
+  "tomorrow": "Tomorrow",
+  "in_days": "in {n} days",
+  "nothing": "No collection days found",
+  "setup": "Enter your postcode and house number under Settings › Widgets › Mijn Afvalwijzer.",
+  "papier": "Paper",
+  "gft": "Garden & food",
+  "restafval": "General waste",
+  "pmd": "Plastic & cans",
+  "glas": "Glass",
+  "textiel": "Textiles",
+  "kerstbomen": "Christmas trees",
+  "tuinafval": "Garden waste",
+  "grofvuil": "Bulky waste"
+}

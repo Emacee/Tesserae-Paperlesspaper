@@ -1,0 +1,17 @@
+{
+  "title": "Abfall",
+  "today": "Heute",
+  "tomorrow": "Morgen",
+  "in_days": "in {n} Tagen",
+  "nothing": "Keine Abholtermine gefunden",
+  "setup": "Postleitzahl und Hausnummer unter Einstellungen › Widgets › Mijn Afvalwijzer eintragen.",
+  "papier": "Papier",
+  "gft": "Bio- & Gartenabfall",
+  "restafval": "Restmüll",
+  "pmd": "Plastik & Dosen",
+  "glas": "Glas",
+  "textiel": "Textilien",
+  "kerstbomen": "Weihnachtsbäume",
+  "tuinafval": "Gartenabfall",
+  "grofvuil": "Sperrmüll"
+}

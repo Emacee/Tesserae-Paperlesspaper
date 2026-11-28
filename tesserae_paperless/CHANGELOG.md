@@ -11,6 +11,16 @@ under its version number.
 
 ## [Unreleased]
 
+### Added
+- A new widget, **Waste, next collection**, from Mijn Afvalwijzer: which bin
+  goes out next and on what day, with an icon. Show it as a round tile in the
+  style of the Deye and car rings (the ring fills as the day comes closer, two
+  bins on one day side by side) or as a list of the next collections, and limit
+  it to some types if you like. Enter your postcode and house number once under
+  Settings › Widgets › Mijn Afvalwijzer.
+- **Agenda, with travel time** can show the waste collections on their days,
+  with the same icon: switch on *Waste collection* in the cell.
+
 ## [0.4.4] - 2026-11-21
 
 Built on Tesserae 0.480.0, from commit `0fba937`.

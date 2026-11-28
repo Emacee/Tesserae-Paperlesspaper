@@ -83,9 +83,9 @@ def ev(day, h, title, loc="", dur=1):
             "location": loc, "feed_colour": "#f900f4", "feed_symbol": "🏡"}
 
 
-def run(events, core=None, **opts):
+def run(events, core=None, waste=None, **opts):
     S._cache.clear()
-    return S._fetch({"timezone": "Europe/Amsterdam", **opts}, {}, ctx={}, now=NOW, cal=FakeCal(events), core=core if core is not None else FakeCore())
+    return S._fetch({"timezone": "Europe/Amsterdam", **opts}, {}, ctx={}, now=NOW, cal=FakeCal(events), core=core if core is not None else FakeCore(), waste=waste)
 
 
 def test_drive_and_time_to_leave_with_margin():
@@ -271,3 +271,42 @@ def test_a_venue_name_in_front_of_an_address_is_dropped_when_not_found(offline):
     assert got is None  # none of the forms is in the offline table
     assert sum("nominatim" in u for u in offline) == 4
     assert S._candidates("Vinkeveen") == ["Vinkeveen"]
+
+
+class FakeWaste:
+    def __init__(self, ok=True, fail=None):
+        self.ok, self.fail = ok, fail
+
+    def configured(self):
+        return self.ok
+
+    def pickups(self, start, end, *, data_dir=None, types=None):
+        if self.fail:
+            raise self.fail
+        rows = [
+            {"date": "2026-11-20", "type": "gft", "name": "GFT"},
+            {"date": "2026-11-20", "type": "pmd", "name": "PMD"},
+            {"date": "2026-11-22", "type": "papier", "name": "papier en karton"},
+            {"date": "2026-12-30", "type": "gft", "name": "GFT"},
+        ]
+        wanted = {t.strip() for t in types or []}
+        return [r for r in rows if start.isoformat() <= r["date"] <= end.isoformat() and (not wanted or r["type"] in wanted)]
+
+
+def test_waste_collections_are_all_day_items_on_their_days() -> None:
+    out = run([ev(20, 10, "Visit")], waste=FakeWaste(), show_waste="true", show_travel="false")
+    fri, sun = out["days"][1], out["days"][3]
+    assert [(a["waste"], a["title"]) for a in fri["all_day"]] == [("gft", "GFT"), ("pmd", "PMD")]
+    assert sun["all_day"][0]["waste"] == "papier" and out["waste_note"] == ""
+    assert out["days"][0]["all_day"] == [] and fri["events"][0]["title"] == "Visit"
+
+
+def test_waste_is_off_by_default_and_can_be_limited_to_types() -> None:
+    assert all(not d["all_day"] for d in run([], waste=FakeWaste(), show_travel="false")["days"])
+    out = run([], waste=FakeWaste(), show_waste="true", waste_types="papier", show_travel="false")
+    assert [a["waste"] for d in out["days"] for a in d["all_day"]] == ["papier"]
+
+
+def test_waste_says_why_it_is_not_shown() -> None:
+    assert run([], waste=FakeWaste(ok=False), show_waste="true", show_travel="false")["waste_note"] == "waste_setup"
+    assert run([], waste=FakeWaste(fail=LookupError("No Afvaldata")), show_waste="true", show_travel="false")["waste_note"].startswith("waste_error: LookupError")

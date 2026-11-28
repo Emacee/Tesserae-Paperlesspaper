@@ -23,6 +23,8 @@ PLUGINS = (
     "energy_dynamic_price",
     "travel_time",
     "agenda_list",
+    "afvalwijzer_core",
+    "waste_next",
     "weather_today",
     "home_batteries",
     "paperlesspaper_core",

@@ -487,6 +487,29 @@ def add_travel(
 
 
 # ----------------------------------------------------------------------
+# Waste collection, from the Mijn Afvalwijzer plugin
+# ----------------------------------------------------------------------
+def add_waste(rows: list[dict[str, Any]], core: Any, options: dict[str, Any], today: date, days: int, data_dir: Path | None) -> str:
+    """Put each waste collection of the window on its day as an all-day item
+    ({"waste": "gft", "title": "GFT"}). Returns a short note when it cannot, else ""."""
+    if core is None:
+        return "no_waste_core"
+    if not core.configured():
+        return "waste_setup"
+    types = [t for t in str(options.get("waste_types") or "").replace(";", ",").split(",") if t.strip()]
+    try:
+        found = core.pickups(today, today + timedelta(days=days - 1), data_dir=data_dir, types=types)
+    except Exception as err:  # noqa: BLE001 - shown as a note
+        return f"waste_error: {type(err).__name__}: {err}"[:140]
+    index = {r["date"]: r for r in rows}
+    for p in found:
+        row = index.get(p["date"])
+        if row is not None:
+            row["all_day"].append({"title": p["name"], "waste": p["type"], "colour": ""})
+    return ""
+
+
+# ----------------------------------------------------------------------
 # The widget's own language (a cell option), whatever the dashboard's
 # ----------------------------------------------------------------------
 LANGUAGES = ("nl", "en", "de")
@@ -511,6 +534,7 @@ def _fetch(
     now: datetime | None = None,
     cal: Any = None,
     core: Any = None,
+    waste: Any = None,
 ) -> dict[str, Any]:
     del settings
     cal = cal if cal is not None else _plugin("calendar_core")
@@ -543,6 +567,10 @@ def _fetch(
         else:
             via = add_travel(rows, core, options, now, data_dir)
             travel = "unavailable" if via == "" else "ok"
+    waste_note = ""
+    if _flag(options.get("show_waste"), False):
+        waste_core = waste if waste is not None else getattr(_plugin("afvalwijzer_core"), "server_module", None)
+        waste_note = add_waste(rows, waste_core, options, today, days, Path(str(ctx.get("data_dir"))) if ctx.get("data_dir") else None)
     for row in rows:
         for ev in row["events"]:
             ev.pop("_start", None)
@@ -551,6 +579,7 @@ def _fetch(
         "margin": _int(options.get("margin_min"), 5, 0, 60),
         "travel": travel,
         "via": via,
+        "waste_note": waste_note,
         "why": "; ".join(_trace + ([_last_error[0]] if _last_error[0] else [])) if travel == "unavailable" else "",
         "days": rows,
     }
